@@ -20,6 +20,7 @@ import {
 import { UsersService } from '../services/users.service';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UserResponseDto } from '../dto/user-response.dto';
+import { User } from '../entities/user.entity';
 
 /**
  * Controller de Users.
@@ -65,12 +66,7 @@ export class UsersController {
     const users = await this.usersService.findAll();
 
     // Mapear entidades a DTOs de respuesta (sin información sensible)
-    return users.map((user) => ({
-      id: user.id,
-      nombre: user.nombre,
-      email: user.email,
-      createdAt: user.createdAt,
-    }));
+    return users.map((user) => this.mapToResponseDto(user));
   }
 
   /**
@@ -102,12 +98,7 @@ export class UsersController {
     const user = await this.usersService.findOne(id);
 
     // Mapear entidad a DTO de respuesta (sin información sensible)
-    return {
-      id: user.id,
-      nombre: user.nombre,
-      email: user.email,
-      createdAt: user.createdAt,
-    };
+    return this.mapToResponseDto(user);
   }
 
   /**
@@ -153,6 +144,19 @@ export class UsersController {
     const user = await this.usersService.update(id, updateUserDto);
 
     // Mapear entidad a DTO de respuesta (sin información sensible)
+    return this.mapToResponseDto(user);
+  }
+
+  /**
+   * Mapea una entidad User a un DTO de respuesta.
+   * Centraliza la lógica de mapeo para evitar duplicación.
+   *
+   * @private
+   * @method mapToResponseDto
+   * @param {User} user - Entidad User a mapear
+   * @returns {UserResponseDto} DTO de respuesta con los campos públicos
+   */
+  private mapToResponseDto(user: User): UserResponseDto {
     return {
       id: user.id,
       nombre: user.nombre,
