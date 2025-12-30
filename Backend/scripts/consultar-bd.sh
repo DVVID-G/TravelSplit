@@ -4,15 +4,29 @@
 # Uso: ./consultar-bd.sh [comando]
 # Requiere variables de entorno: DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD, DB_NAME
 
-DB_HOST=${DB_HOST:-localhost}
-DB_PORT=${DB_PORT:-5432}
-DB_USERNAME=${DB_USERNAME:-postgres}
-DB_NAME=${DB_NAME:-travelsplit}
+# Todas las variables deben estar configuradas en el entorno
+# No se usan valores por defecto para mayor seguridad
+if [ -z "$DB_HOST" ]; then
+    echo "Error: DB_HOST no está configurada."
+    exit 1
+fi
+if [ -z "$DB_PORT" ]; then
+    echo "Error: DB_PORT no está configurada."
+    exit 1
+fi
+if [ -z "$DB_USERNAME" ]; then
+    echo "Error: DB_USERNAME no está configurada."
+    exit 1
+fi
+if [ -z "$DB_NAME" ]; then
+    echo "Error: DB_NAME no está configurada."
+    exit 1
+fi
 
 # Verificar que la contraseña esté configurada
 if [ -z "$DB_PASSWORD" ]; then
     echo "Error: DB_PASSWORD no está configurada. Por favor, configura la variable de entorno."
-    echo "Ejemplo: export DB_PASSWORD=tu_contraseña"
+    echo "Ejemplo: export DB_PASSWORD=<valor-desde-env>"
     exit 1
 fi
 

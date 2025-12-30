@@ -2,15 +2,34 @@
 # Uso: .\consultar-bd.ps1
 # Requiere variables de entorno: DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD, DB_NAME
 
-$DB_HOST = if ($env:DB_HOST) { $env:DB_HOST } else { "localhost" }
-$DB_PORT = if ($env:DB_PORT) { $env:DB_PORT } else { "5432" }
-$DB_USERNAME = if ($env:DB_USERNAME) { $env:DB_USERNAME } else { "postgres" }
-$DB_NAME = if ($env:DB_NAME) { $env:DB_NAME } else { "travelsplit" }
+# Todas las variables deben estar configuradas en el entorno
+# No se usan valores por defecto para mayor seguridad
+if (-not $env:DB_HOST) {
+    Write-Host "Error: DB_HOST no está configurada." -ForegroundColor Red
+    exit 1
+}
+if (-not $env:DB_PORT) {
+    Write-Host "Error: DB_PORT no está configurada." -ForegroundColor Red
+    exit 1
+}
+if (-not $env:DB_USERNAME) {
+    Write-Host "Error: DB_USERNAME no está configurada." -ForegroundColor Red
+    exit 1
+}
+if (-not $env:DB_NAME) {
+    Write-Host "Error: DB_NAME no está configurada." -ForegroundColor Red
+    exit 1
+}
+
+$DB_HOST = $env:DB_HOST
+$DB_PORT = $env:DB_PORT
+$DB_USERNAME = $env:DB_USERNAME
+$DB_NAME = $env:DB_NAME
 
 # Verificar que la contraseña esté configurada
 if (-not $env:DB_PASSWORD) {
     Write-Host "Error: DB_PASSWORD no está configurada. Por favor, configura la variable de entorno." -ForegroundColor Red
-    Write-Host "Ejemplo: `$env:DB_PASSWORD = 'tu_contraseña'" -ForegroundColor Yellow
+    Write-Host "Ejemplo: `$env:DB_PASSWORD = '<valor-desde-env>'" -ForegroundColor Yellow
     exit 1
 }
 
