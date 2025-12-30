@@ -97,7 +97,10 @@ export class AuthService {
    * @returns Token JWT firmado
    */
   private async generateToken(user: User): Promise<string> {
-    const payload = { sub: user.id, email: user.email };
+    const payload = {
+      sub: user.id,
+      email: user.email,
+    };
     return await this.jwtService.signAsync(payload);
   }
 
