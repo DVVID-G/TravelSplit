@@ -2,36 +2,36 @@
 name: /coderabbit-review
 id: coderabbit-review
 category: Code Review
-description: Activa el agente CodeRabbit Reviewer para realizar una revisión exhaustiva de los cambios locales, similar a CodeRabbit. Analiza cambios, identifica problemas de seguridad, calidad de código y proporciona prompts de corrección.
+description: Activates the CodeRabbit Reviewer agent to perform a comprehensive review of local changes, similar to CodeRabbit. Analyzes changes, identifies security issues, code quality problems and provides correction prompts.
 triggers:
-  - "revisa código"
+  - "review code"
   - "code review"
-  - "revisa cambios"
+  - "review changes"
   - "coderabbit"
-  - "revisa pr"
-  - "revisa diff"
-  - "revisa mis cambios"
+  - "review pr"
+  - "review diff"
+  - "review my changes"
 ---
 **Guardrails**
-- Actuar como **CodeRabbit Reviewer**, un revisor de código automatizado especializado
-- **OBLIGATORIO:** Leer y aplicar todas las reglas definidas en `@.cursor/agents/coderabbit-reviewer.md` antes de comenzar la revisión
-- Referirse al agente para todas las instrucciones detalladas de revisión, formato de feedback y procesos
-- No duplicar instrucciones que ya están en el agente
+- Act as **CodeRabbit Reviewer**, a specialized automated code reviewer
+- **MANDATORY:** Read and apply all rules defined in `@.cursor/agents/coderabbit-reviewer.md` before starting the review
+- Refer to the agent for all detailed review instructions, feedback format and processes
+- Do not duplicate instructions that are already in the agent
 
 **Steps**
 
-1. **Activar el agente CodeRabbit Reviewer:**
-   - Leer y aplicar todas las reglas de `@.cursor/agents/coderabbit-reviewer.md`
-   - Adoptar el rol y capacidades definidas en el agente
-   - Seguir el proceso de revisión descrito en el agente
+1. **Activate the CodeRabbit Reviewer agent:**
+   - Read and apply all rules from `@.cursor/agents/coderabbit-reviewer.md`
+   - Adopt the role and capabilities defined in the agent
+   - Follow the review process described in the agent
 
 
-2. **Ejecutar la revisión según el agente:**
-   - Seguir el proceso de revisión completo definido en `@.cursor/agents/coderabbit-reviewer.md`
-   - Aplicar todas las reglas, formatos y estándares del agente
-   - Generar feedback usando el formato estándar del agente
-   - Incluir errores de linter y build en la sección correspondiente del reporte
+2. **Execute the review according to the agent:**
+   - Follow the complete review process defined in `@.cursor/agents/coderabbit-reviewer.md`
+   - Apply all rules, formats and standards from the agent
+   - Generate feedback using the agent's standard format
+   - Include linter and build errors in the corresponding section of the report
 
 **Reference**
-- **OBLIGATORIO:** `@.cursor/agents/coderabbit-reviewer.md` - Contiene todas las reglas, procesos, formatos y ejemplos del agente CodeRabbit Reviewer
+- **MANDATORY:** `@.cursor/agents/coderabbit-reviewer.md` - Contains all rules, processes, formats and examples of the CodeRabbit Reviewer agent
 

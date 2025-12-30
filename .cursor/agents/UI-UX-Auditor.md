@@ -141,6 +141,22 @@ For each finding, provide feedback using the semaphore format (🔴🟠🟡🟢)
         - If there are repeated 400 errors in console, verify that endpoints in services match the backend
         - Verify that field names in requests match what the backend expects
         - Check that HTTP methods are correct (POST, GET, PUT, DELETE)
+    - **HTTP Headers Optimization:**
+        - **GET requests:** Must NOT include `Content-Type: application/json` header (GET has no request body, so this header is unnecessary)
+        - GET requests should only include necessary headers like `Authorization` when authentication is required
+        - **POST/PUT requests:** Must include `Content-Type: application/json` when sending JSON body
+        - **File uploads:** Must NOT include `Content-Type` header when using `FormData` (browser sets it automatically with boundary)
+        - Verify that headers are minimal and appropriate for each HTTP method
+- **Type Safety and Code Architecture:**
+    - **Eliminate Type Duplication:** When two interfaces or types are almost identical, they must reuse each other using TypeScript utility types (`Omit`, `Pick`, `Partial`, `Extract`, etc.)
+        - Example: If `TripResponse` and `Trip` are identical except for `deleted_at`, use `export type TripResponse = Omit<Trip, 'deleted_at'>` instead of duplicating all fields
+        - Verify that similar types (Request/Response pairs, Entity/Response pairs) reuse base types when possible
+        - Check for duplicate field definitions across related types
+    - **Centralize Shared Types:** Types used in multiple files must be in dedicated shared type files, not duplicated in each file
+        - Common types like `ApiError`, `PaginationResponse`, etc. should be in `Frontend/src/types/api.types.ts` or similar shared files
+        - Domain-specific shared types should be in appropriate domain type files (e.g., `trip.types.ts`, `expense.types.ts`)
+        - Verify that imports use the centralized type definitions, not local duplicates
+        - When finding duplicate type definitions, extract to a shared file and update all imports
 
 ### C. Psychology and User (Strategy)
 
@@ -208,6 +224,7 @@ For each issue found, use this format:
 After completing the review, organize findings:
 
 1. **Summary**: Brief overview of findings count by severity
+
    ```
    ## Summary
    - 🔴 Critical: 2 issues
@@ -299,6 +316,51 @@ Group issues by pillar (Visual, UX, Strategy) within each severity level.
 > 
 > **Fix Prompt:**
 > In `Frontend/src/components/molecules/CategorySelector.tsx` around line 47, increase the padding from `px-6` to `px-8` (32px) in the content container. Ensure the spacer element at the end matches the padding width (`w-8` instead of `w-6`) for consistency. This creates visual breathing room and ensures all content is accessible.
+
+### Example: Duplicate Type Definitions
+
+> 🟡 **Architecture Issue:** `Trip` and `TripResponse` interfaces are almost identical, causing code duplication and maintenance burden
+> 
+> **Location:** `Frontend/src/types/trip.types.ts` around lines 22-46
+> 
+> **Description:** 
+> The `Trip` interface (lines 22-34) and `TripResponse` interface (lines 36-46) have identical fields except `Trip` includes `deleted_at?: string` while `TripResponse` does not. All other fields are duplicated, creating unnecessary code duplication.
+> 
+> **Impact:**
+> Code duplication increases maintenance burden. If field definitions change, they must be updated in multiple places, increasing the risk of inconsistencies and bugs. This violates DRY (Don't Repeat Yourself) principles and makes the codebase harder to maintain.
+> 
+> **Fix Prompt:**
+> In `Frontend/src/types/trip.types.ts` around lines 36-46, replace the entire `TripResponse` interface definition with `export type TripResponse = Omit<Trip, 'deleted_at'>;`. This reuses the `Trip` type and eliminates duplication. Verify that all imports of `TripResponse` continue to work correctly (they should, as the type shape remains the same).
+
+### Example: Shared Type Not Centralized
+
+> 🟡 **Architecture Issue:** `ApiError` interface is duplicated in multiple files instead of being centralized in a shared types file
+> 
+> **Location:** `Frontend/src/types/expense.types.ts` around lines 52-68 and `Frontend/src/services/auth.service.ts` around lines 21-24
+> 
+> **Description:** 
+> The `ApiError` interface is defined identically in both `expense.types.ts` and `auth.service.ts`. This creates duplication and makes it harder to maintain consistency. If the error structure changes, it must be updated in multiple places.
+> 
+> **Impact:**
+> Type duplication creates maintenance burden and increases the risk of inconsistencies. If the error structure needs to change (e.g., adding a new field), developers must remember to update it in all locations, which is error-prone.
+> 
+> **Fix Prompt:**
+> Create a new file `Frontend/src/types/api.types.ts` with the `ApiError` interface. Remove the duplicate definition from `Frontend/src/types/expense.types.ts` (lines 65-68) and from `Frontend/src/services/auth.service.ts` (lines 21-24). Update all imports: in `expense.service.ts`, change `import type { ..., ApiError } from '@/types/expense.types'` to `import type { ApiError } from '@/types/api.types'`. In `auth.service.ts`, add `import type { ApiError } from '@/types/api.types'` at the top. In `trip.service.ts`, update the import to use `@/types/api.types`. In `LoginPage.tsx` and `RegisterPage.tsx`, change the import from `@/services/auth.service` to `@/types/api.types`.
+
+### Example: Unnecessary Content-Type Header in GET Request
+
+> 🟢 **Architecture Issue:** GET request includes unnecessary `Content-Type: application/json` header, which is not needed since GET requests have no body
+> 
+> **Location:** `Frontend/src/services/expense.service.ts` around lines 53-59
+> 
+> **Description:** 
+> The `getExpenseCategories` function makes a GET request with `Content-Type: application/json` header. GET requests do not have a request body, so this header is unnecessary and adds overhead. Only headers like `Authorization` are needed for authenticated GET requests.
+> 
+> **Impact:**
+> While not breaking functionality, unnecessary headers add minor overhead and indicate code that doesn't follow HTTP best practices. This can make the codebase less maintainable and harder to understand for developers who expect minimal, appropriate headers for each HTTP method.
+> 
+> **Fix Prompt:**
+> In `Frontend/src/services/expense.service.ts` around lines 54-59, remove the `'Content-Type': 'application/json'` line from the headers object in the `getExpenseCategories` function. Keep only the `Authorization` header. The headers object should become: `{ Authorization: \`Bearer ${token}\` }`. Verify that all GET requests in the codebase follow this pattern (check `trip.service.ts` and other service files).
 
 ## Review Standards
 
