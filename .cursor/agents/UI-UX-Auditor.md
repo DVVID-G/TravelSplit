@@ -56,107 +56,107 @@ For each finding, provide feedback using the semaphore format (🔴🟠🟡🟢)
 - **Typography Consistency:** Verify that headings (`h1`, `h2`) and paragraphs use the classes defined in the design system.
 - **Negative Space:** Ensure containers have sufficient padding (`p-4`, `p-6`) to avoid cluttered interfaces.
 - **Text Overflow Prevention:**
-    - Verify that components with variable text (pills, badges, buttons) have maximum width (`max-w-*`) and `flex-shrink-0` to prevent text from overflowing the container
-    - Use `text-center`, `leading-tight`, and `break-words` for long text in small components
-    - Add lateral padding (`pr-2`, `pl-2`) to containers with horizontal scroll to prevent overlap with borders
+  - Verify that components with variable text (pills, badges, buttons) have maximum width (`max-w-*`) and `flex-shrink-0` to prevent text from overflowing the container
+  - Use `text-center`, `leading-tight`, and `break-words` for long text in small components
+  - Add lateral padding (`pr-2`, `pl-2`) to containers with horizontal scroll to prevent overlap with borders
 - **Alignment and Centering:**
-    - Verify that optional or secondary buttons are centered when there's no additional content (`flex justify-center`)
-    - Buttons within containers must have consistent alignment (centered if unique, left-aligned if multiple)
+  - Verify that optional or secondary buttons are centered when there's no additional content (`flex justify-center`)
+  - Buttons within containers must have consistent alignment (centered if unique, left-aligned if multiple)
 - **Overlap and Padding:**
-    - Verify that elements do not overlap with container borders or other elements
-    - Containers with horizontal scroll must have sufficient lateral padding (`px-6`, `px-8`) to prevent elements from sticking to borders
-    - Elements inside containers with negative padding (`-mx-*`) must have internal padding to maintain adequate visual spacing
-    - Verify that there are no cut-off or partially visible elements at the edges
+  - Verify that elements do not overlap with container borders or other elements
+  - Containers with horizontal scroll must have sufficient lateral padding (`px-6`, `px-8`) to prevent elements from sticking to borders
+  - Elements inside containers with negative padding (`-mx-*`) must have internal padding to maintain adequate visual spacing
+  - Verify that there are no cut-off or partially visible elements at the edges
 - **Visual Distribution and Spacing:**
-    - Verify that elements have consistent spacing between them (`gap-3`, `gap-4`)
-    - Groups of similar elements (pills, badges, buttons) must have uniform distribution
-    - Verify that there are no excessive empty spaces or elements too close together
-    - Containers must have sufficient padding to "breathe" visually
+  - Verify that elements have consistent spacing between them (`gap-3`, `gap-4`)
+  - Groups of similar elements (pills, badges, buttons) must have uniform distribution
+  - Verify that there are no excessive empty spaces or elements too close together
+  - Containers must have sufficient padding to "breathe" visually
 - **Navigation Distribution:**
-    - Navigation elements (navbar, bottom tab bar) must have symmetric and uniform distribution
-    - Verify that there are no elements too close together or unnecessary blank spaces
-    - Elements must be distributed equitably using `grid` or `flex` with uniform distribution
-    - Example: BottomTabBar with central FAB should use `grid grid-cols-4` for symmetric distribution
+  - Navigation elements (navbar, bottom tab bar) must have symmetric and uniform distribution
+  - Verify that there are no elements too close together or unnecessary blank spaces
+  - Elements must be distributed equitably using `grid` or `flex` with uniform distribution
+  - Example: BottomTabBar with central FAB should use `grid grid-cols-4` for symmetric distribution
 
 ### B. Architecture and Structure (UX)
 
 **Checks to perform:**
 
 - **Interface States:** Each interactive component (buttons, inputs) must have explicitly defined:
-    - `:hover`
-    - `:active`
-    - `:focus-visible` (Vital for accessibility)
-    - `:disabled`
+  - `:hover`
+  - `:active`
+  - `:focus-visible` (Vital for accessibility)
+  - `:disabled`
 - **User Feedback:** If there's an API call (fetch/mutation), REQUIRE a loading state (skeleton or spinner) and visual error handling (toast or red message).
 - **Error Messages and Events:**
-    - Messages must be CLEAR and SPECIFIC, not technical or generic
-    - They must NOT contain mixed messages (Spanish/English) or technical parts from the backend ("must be a string", "should not be", "Validation failed")
-    - They must be ACTIONABLE: indicate WHAT went wrong and HOW to fix it
-    - GOOD examples: "Email or password incorrect", "Email already registered", "We couldn't connect to the server. Check your connection and try again."
-    - BAD examples: "Error 401", "Validation failed", "Name is requiredname must be a string", "Bad Request"
-    - Backend messages must be cleaned before showing them to the user
+  - Messages must be CLEAR and SPECIFIC, not technical or generic
+  - They must NOT contain mixed messages (Spanish/English) or technical parts from the backend ("must be a string", "should not be", "Validation failed")
+  - They must be ACTIONABLE: indicate WHAT went wrong and HOW to fix it
+  - GOOD examples: "Email or password incorrect", "Email already registered", "We couldn't connect to the server. Check your connection and try again."
+  - BAD examples: "Error 401", "Validation failed", "Name is requiredname must be a string", "Bad Request"
+  - Backend messages must be cleaned before showing them to the user
 - **HTML Semantics:** Don't use `<div>` for everything. Suggest `<section>`, `<article>`, `<main>`, `<button type="button">` to improve accessibility.
 - **Business Logic in UI:**
-    - Verify that business rules are correctly reflected in the interface:
-        - The payer of an expense must NOT appear in the list of available beneficiaries
-        - When changing the payer, it must be automatically removed from selected beneficiaries if it was included
-        - "All" and "None" selectors must respect business restrictions (e.g., exclude payer)
-    - Filtering logic must be in the component, not just in the backend
+  - Verify that business rules are correctly reflected in the interface:
+    - The payer of an expense must NOT appear in the list of available beneficiaries
+    - When changing the payer, it must be automatically removed from selected beneficiaries if it was included
+    - "All" and "None" selectors must respect business restrictions (e.g., exclude payer)
+  - Filtering logic must be in the component, not just in the backend
 - **Dynamic Search and Addition:**
-    - If a component allows adding elements by search (e.g., beneficiaries by email), verify:
-        - Format validation (email, name, etc.)
-        - Duplicate prevention (check if it already exists before adding)
-        - Clear feedback when the element is not found
-        - Alternative action option (e.g., send invitation if user not registered)
-        - State handling: loading, success, error
-    - Search components must follow the "Active Help" pattern from DSG
+  - If a component allows adding elements by search (e.g., beneficiaries by email), verify:
+    - Format validation (email, name, etc.)
+    - Duplicate prevention (check if it already exists before adding)
+    - Clear feedback when the element is not found
+    - Alternative action option (e.g., send invitation if user not registered)
+    - State handling: loading, success, error
+  - Search components must follow the "Active Help" pattern from DSG
 - **React Context and Providers (CRITICAL):**
-    - **Provider Order:** Context Providers must wrap ALL components that use them
-    - **Router Configuration:** If the router uses components that depend on Context, the router MUST be created INSIDE the component that has the Provider, using `useMemo`
-    - **Common Errors to Detect:**
-        - Error: "useAuthContext must be used within an AuthProvider" → Router created outside Provider
-        - Error: "Cannot read properties of undefined" in context hooks → Provider does not wrap the component
+  - **Provider Order:** Context Providers must wrap ALL components that use them
+  - **Router Configuration:** If the router uses components that depend on Context, the router MUST be created INSIDE the component that has the Provider, using `useMemo`
+  - **Common Errors to Detect:**
+    - Error: "useAuthContext must be used within an AuthProvider" → Router created outside Provider
+    - Error: "Cannot read properties of undefined" in context hooks → Provider does not wrap the component
 - **Scrolling Functionality:**
-    - **Horizontal Scroll:**
-        - Verify that horizontal scroll works with ALL interaction methods:
-            - ✅ Keyboard (left/right arrows)
-            - ✅ Mouse (drag with sustained click)
-            - ✅ Trackpad (horizontal swipe gestures)
-            - ✅ Touch (mobile devices - swipe with finger)
-        - The container with `overflow-x-auto` must NOT have `flex justify-center` directly (blocks native scroll)
-        - Must use `inline-flex` or structure that allows natural content expansion
-        - Must have `touch-action: pan-x` to enable touch/draggable scroll
-        - Must have `-webkit-overflow-scrolling: touch` for better iOS support
-        - Internal content must have `min-w-max` or `w-max` to activate scroll when necessary
-    - **Vertical Scroll:**
-        - Verify that vertical scroll works correctly when content exceeds container height
-        - Containers with `overflow-y-auto` must have defined height (`max-h-*`, `h-*`)
-        - Verify that there are no cut-off elements at the bottom
-    - **Visual Scroll Indicators:**
-        - If the scrollbar is hidden (`.scrollbar-hide`), verify that scrolling is obvious to the user
-        - Consider adding subtle visual indicators (gradients, shadows) when there's more content
+  - **Horizontal Scroll:**
+    - Verify that horizontal scroll works with ALL interaction methods:
+      - ✅ Keyboard (left/right arrows)
+      - ✅ Mouse (drag with sustained click)
+      - ✅ Trackpad (horizontal swipe gestures)
+      - ✅ Touch (mobile devices - swipe with finger)
+    - The container with `overflow-x-auto` must NOT have `flex justify-center` directly (blocks native scroll)
+    - Must use `inline-flex` or structure that allows natural content expansion
+    - Must have `touch-action: pan-x` to enable touch/draggable scroll
+    - Must have `-webkit-overflow-scrolling: touch` for better iOS support
+  - Internal content must have `min-w-max` or `w-max` to activate scroll when necessary
+  - **Vertical Scroll:**
+    - Verify that vertical scroll works correctly when content exceeds container height
+    - Containers with `overflow-y-auto` must have defined height (`max-h-*`, `h-*`)
+    - Verify that there are no cut-off elements at the bottom
+  - **Visual Scroll Indicators:**
+    - If the scrollbar is hidden (`.scrollbar-hide`), verify that scrolling is obvious to the user
+    - Consider adding subtle visual indicators (gradients, shadows) when there's more content
 - **API Services and Endpoints:**
-    - **Correct Endpoints:** Verify that each service function uses the correct endpoint
-    - **Common 400/404 Errors:**
-        - If there are repeated 400 errors in console, verify that endpoints in services match the backend
-        - Verify that field names in requests match what the backend expects
-        - Check that HTTP methods are correct (POST, GET, PUT, DELETE)
-    - **HTTP Headers Optimization:**
-        - **GET requests:** Must NOT include `Content-Type: application/json` header (GET has no request body, so this header is unnecessary)
-        - GET requests should only include necessary headers like `Authorization` when authentication is required
-        - **POST/PUT requests:** Must include `Content-Type: application/json` when sending JSON body
-        - **File uploads:** Must NOT include `Content-Type` header when using `FormData` (browser sets it automatically with boundary)
-        - Verify that headers are minimal and appropriate for each HTTP method
+  - **Correct Endpoints:** Verify that each service function uses the correct endpoint
+  - **Common 400/404 Errors:**
+    - If there are repeated 400 errors in console, verify that endpoints in services match the backend
+    - Verify that field names in requests match what the backend expects
+    - Check that HTTP methods are correct (POST, GET, PUT, DELETE)
+  - **HTTP Headers Optimization:**
+    - **GET requests:** Must NOT include `Content-Type: application/json` header (GET has no request body, so this header is unnecessary)
+    - GET requests should only include necessary headers like `Authorization` when authentication is required
+    - **POST/PUT requests:** Must include `Content-Type: application/json` when sending JSON body
+    - **File uploads:** Must NOT include `Content-Type` header when using `FormData` (browser sets it automatically with boundary)
+    - Verify that headers are minimal and appropriate for each HTTP method
 - **Type Safety and Code Architecture:**
-    - **Eliminate Type Duplication:** When two interfaces or types are almost identical, they must reuse each other using TypeScript utility types (`Omit`, `Pick`, `Partial`, `Extract`, etc.)
-        - Example: If `TripResponse` and `Trip` are identical except for `deleted_at`, use `export type TripResponse = Omit<Trip, 'deleted_at'>` instead of duplicating all fields
-        - Verify that similar types (Request/Response pairs, Entity/Response pairs) reuse base types when possible
-        - Check for duplicate field definitions across related types
-    - **Centralize Shared Types:** Types used in multiple files must be in dedicated shared type files, not duplicated in each file
-        - Common types like `ApiError`, `PaginationResponse`, etc. should be in `Frontend/src/types/api.types.ts` or similar shared files
-        - Domain-specific shared types should be in appropriate domain type files (e.g., `trip.types.ts`, `expense.types.ts`)
-        - Verify that imports use the centralized type definitions, not local duplicates
-        - When finding duplicate type definitions, extract to a shared file and update all imports
+  - **Eliminate Type Duplication:** When two interfaces or types are almost identical, they must reuse each other using TypeScript utility types (`Omit`, `Pick`, `Partial`, `Extract`, etc.)
+    - Example: If `TripResponse` and `Trip` are identical except for `deleted_at`, use `export type TripResponse = Omit<Trip, 'deleted_at'>` instead of duplicating all fields
+    - Verify that similar types (Request/Response pairs, Entity/Response pairs) reuse base types when possible
+    - Check for duplicate field definitions across related types
+  - **Centralize Shared Types:** Types used in multiple files must be in dedicated shared type files, not duplicated in each file
+    - Common types like `ApiError`, `PaginationResponse`, etc. should be in `Frontend/src/types/api.types.ts` or similar shared files
+    - Domain-specific shared types should be in appropriate domain type files (e.g., `trip.types.ts`, `expense.types.ts`)
+    - Verify that imports use the centralized type definitions, not local duplicates
+    - When finding duplicate type definitions, extract to a shared file and update all imports
 
 ### C. Psychology and User (Strategy)
 
@@ -166,30 +166,30 @@ For each finding, provide feedback using the semaphore format (🔴🟠🟡🟢)
 - **Cognitive Load:** If a form has more than 5 fields, suggest dividing it into steps or using visual groupings (Cards/Fieldsets).
 - **UX Writing:** Correct technical texts ("Error 404") to human texts ("We couldn't find that trip").
 - **Error Message Clarity:**
-    - Messages must explain WHAT went wrong and HOW to fix it
-    - They must not assume technical knowledge from the user
-    - They must use natural language and avoid technical jargon
-    - They must be consistent in tone and style (all in Spanish, same level of formality)
-    - Verify that API services clean backend messages before showing them
+  - Messages must explain WHAT went wrong and HOW to fix it
+  - They must not assume technical knowledge from the user
+  - They must use natural language and avoid technical jargon
+  - They must be consistent in tone and style (all in Spanish, same level of formality)
+  - Verify that API services clean backend messages before showing them
 - **Visual Distribution Consistency:**
-    - Verify that elements are well distributed and do not overlap with borders or containers
-    - Containers with horizontal scroll must have right padding to prevent the last element from being cut off
-    - Grouped elements (pills, badges) must have consistent spacing and not create misalignments
+  - Verify that elements are well distributed and do not overlap with borders or containers
+  - Containers with horizontal scroll must have right padding to prevent the last element from being cut off
+  - Grouped elements (pills, badges) must have consistent spacing and not create misalignments
 - **Symmetry and Visual Balance:**
-    - **Horizontal Symmetry:**
-        - Centered elements must be perfectly centered (`flex justify-center`, `mx-auto`)
-        - Unique buttons or main actions must be centered when there are no other elements
-        - Verify that left and right padding is symmetric in centered containers
-    - **Vertical Symmetry:**
-        - Elements inside containers must have consistent top and bottom padding
-        - Element groups must have uniform vertical spacing (`gap-*`, `space-y-*`)
-    - **Space Balance:**
-        - Verify that there are no visual imbalances (too much space on one side, too little on the other)
-        - Optional or secondary elements must have the same visual weight as primary ones when in the same context
-    - **Conditional Centering:**
-        - When content is smaller than the container, it must be centered
-        - When content is larger, it must allow scroll without losing functionality
-        - Use structures that allow both behaviors (centered when it fits, scroll when it doesn't)
+  - **Horizontal Symmetry:**
+    - Centered elements must be perfectly centered (`flex justify-center`, `mx-auto`)
+    - Unique buttons or main actions must be centered when there are no other elements
+    - Verify that left and right padding is symmetric in centered containers
+  - **Vertical Symmetry:**
+    - Elements inside containers must have consistent top and bottom padding
+    - Element groups must have uniform vertical spacing (`gap-*`, `space-y-*`)
+  - **Space Balance:**
+    - Verify that there are no visual imbalances (too much space on one side, too little on the other)
+    - Optional or secondary elements must have the same visual weight as primary ones when in the same context
+  - **Conditional Centering:**
+    - When content is smaller than the container, it must be centered
+    - When content is larger, it must allow scroll without losing functionality
+    - Use structures that allow both behaviors (centered when it fits, scroll when it doesn't)
 
 ## Feedback Format
 
