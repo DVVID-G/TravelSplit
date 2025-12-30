@@ -3,6 +3,8 @@
  * Handles user registration and authentication API calls
  */
 
+import type { ApiError } from '@/types/api.types';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
 export interface RegisterRequest {
@@ -16,11 +18,6 @@ export interface RegisterResponse {
   nombre: string;
   email: string;
   createdAt: string;
-}
-
-export interface ApiError {
-  message: string;
-  statusCode: number;
 }
 
 export interface LoginRequest {

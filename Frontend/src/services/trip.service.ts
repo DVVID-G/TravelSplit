@@ -3,7 +3,8 @@
  * Handles trip-related API calls
  */
 
-import type { TripResponse, TripParticipant, ApiError } from '@/types/trip.types';
+import type { TripResponse, TripParticipant } from '@/types/trip.types';
+import type { ApiError } from '@/types/api.types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 

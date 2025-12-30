@@ -3,7 +3,8 @@
  * Handles expense-related API calls
  */
 
-import type { CreateExpenseRequest, CreateExpenseResponse, ExpenseCategory, ApiError } from '@/types/expense.types';
+import type { CreateExpenseRequest, CreateExpenseResponse, ExpenseCategory } from '@/types/expense.types';
+import type { ApiError } from '@/types/api.types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
@@ -53,7 +54,6 @@ export async function getExpenseCategories(): Promise<ExpenseCategory[]> {
   const response = await fetch(`${API_BASE_URL}/expense-categories`, {
     method: 'GET',
     headers: {
-      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
   });
