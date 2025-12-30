@@ -1,7 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../../users/services/users.service';
-import { UsersRepository } from '../../users/repositories/users.repository';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { UserResponseDto } from '../../users/dto/user-response.dto';
@@ -18,7 +17,6 @@ import * as bcrypt from 'bcrypt';
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
-    private readonly usersRepository: UsersRepository,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -62,7 +60,7 @@ export class AuthService {
    */
   async login(loginDto: LoginDto): Promise<AuthResponseDto> {
     // Buscar usuario por email
-    const user = await this.usersRepository.findByEmail(loginDto.email);
+    const user = await this.usersService.findByEmail(loginDto.email);
 
     // Validar que el usuario exista
     if (!user) {

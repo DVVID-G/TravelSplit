@@ -10,7 +10,7 @@ import jwtConfig from '../../config/jwt.config';
  * Módulo de Auth.
  *
  * Este módulo gestiona la autenticación y registro de usuarios.
- * Importa UsersModule para utilizar UsersService y UsersRepository.
+ * Importa UsersModule para utilizar UsersService.
  * Configura JwtModule para generar tokens de autenticación.
  */
 @Module({

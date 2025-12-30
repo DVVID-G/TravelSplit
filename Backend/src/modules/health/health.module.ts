@@ -4,12 +4,14 @@ import { HealthService } from './services/health.service';
 
 /**
  * Módulo de Health Check.
- * Ejemplo de implementación del patrón CSR (Controller-Service-Repository).
+ * Implementación del patrón CSED (Controller-Service-Entity-DTO).
  *
  * Estructura:
  * - Controller: Maneja las peticiones HTTP
  * - Service: Contiene la lógica de negocio
- * - Repository: (No necesario en este caso simple, pero la estructura está lista)
+ *
+ * Nota: Este módulo no requiere Entity ni DTO ya que solo retorna información
+ * del estado de la aplicación sin acceso a base de datos.
  */
 @Module({
   controllers: [HealthController],
