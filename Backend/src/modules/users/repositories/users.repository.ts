@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { User } from '../entities/user.entity';
 
 /**
@@ -45,5 +45,40 @@ export class UsersRepository {
       where: { id },
     });
   }
-}
 
+  /**
+   * Obtiene todos los usuarios activos (no eliminados).
+   * @returns Lista de usuarios activos
+   */
+  async findAll(): Promise<User[]> {
+    return await this.userRepository.find({
+      where: { deletedAt: IsNull() },
+    });
+  }
+
+  /**
+   * Actualiza un usuario existente en la base de datos.
+   * @param id - ID del usuario a actualizar
+   * @param userData - Datos parciales del usuario a actualizar
+   * @returns Usuario actualizado o null si no existe
+   */
+  async update(id: string, userData: Partial<User>): Promise<User | null> {
+    const user = await this.findById(id);
+    if (!user) {
+      return null;
+    }
+
+    Object.assign(user, userData);
+    return await this.userRepository.save(user);
+  }
+
+  /**
+   * Elimina un usuario de forma lógica (soft delete).
+   * @param id - ID del usuario a eliminar
+   * @returns true si se eliminó correctamente, false si no existe
+   */
+  async remove(id: string): Promise<boolean> {
+    const result = await this.userRepository.softDelete(id);
+    return result.affected !== undefined && result.affected > 0;
+  }
+}
