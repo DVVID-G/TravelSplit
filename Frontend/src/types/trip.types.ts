@@ -33,15 +33,5 @@ export interface Trip {
   participants?: TripParticipant[];
 }
 
-export interface TripResponse {
-  id: string;
-  name: string;
-  description?: string;
-  invite_code: string;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-  is_active: boolean;
-  participants?: TripParticipant[];
-}
+export type TripResponse = Omit<Trip, 'deleted_at'>;
 

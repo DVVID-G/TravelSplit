@@ -62,8 +62,3 @@ export interface CreateExpenseResponse {
   updated_at: string;
 }
 
-export interface ApiError {
-  message: string;
-  statusCode: number;
-}
-
