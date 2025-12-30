@@ -2,11 +2,11 @@ import { Injectable } from '@nestjs/common';
 
 /**
  * Health Check Service.
- * 
+ *
  * This service contains the business logic for health check operations.
  * It is responsible for gathering and returning the health status information
  * of the application, including status, timestamp, uptime, and environment.
- * 
+ *
  * @class HealthService
  * @description Service for managing application health status
  * @example
@@ -17,12 +17,12 @@ import { Injectable } from '@nestjs/common';
 export class HealthService {
   /**
    * Gets the health status of the application.
-   * 
+   *
    * This method collects various metrics about the application's current state,
    * including the operational status, current timestamp, system uptime, and
    * the current environment. This information is useful for monitoring and
    * debugging purposes.
-   * 
+   *
    * @method getHealthStatus
    * @returns {Object} Object containing the health status information
    * @returns {string} returns.status - Current status of the application (always 'ok')
