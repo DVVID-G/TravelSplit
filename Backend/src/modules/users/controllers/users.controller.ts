@@ -7,6 +7,10 @@ import {
   Body,
   HttpCode,
   HttpStatus,
+  Request,
+  ParseUUIDPipe,
+  ForbiddenException,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -15,12 +19,15 @@ import {
   ApiBadRequestResponse,
   ApiNotFoundResponse,
   ApiConflictResponse,
+  ApiForbiddenResponse,
   ApiParam,
 } from '@nestjs/swagger';
 import { UsersService } from '../services/users.service';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UserResponseDto } from '../dto/user-response.dto';
 import { User } from '../entities/user.entity';
+import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
+import type { AuthenticatedRequest } from '../../../common/interfaces/authenticated-request.interface';
 
 /**
  * Controller de Users.
@@ -129,7 +136,7 @@ export class UsersController {
     type: UserResponseDto,
   })
   @ApiBadRequestResponse({
-    description: 'Datos de entrada inválidos (validación fallida)',
+    description: 'Datos de entrada inválidos o ID inválido (debe ser un UUID válido)',
   })
   @ApiNotFoundResponse({
     description: 'Usuario no encontrado',
@@ -137,10 +144,22 @@ export class UsersController {
   @ApiConflictResponse({
     description: 'El email ya está registrado por otro usuario',
   })
+  @ApiForbiddenResponse({
+    description: 'No tienes permisos para actualizar este usuario',
+  })
+  @UseGuards(JwtAuthGuard)
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateUserDto: UpdateUserDto,
+    @Request() req: AuthenticatedRequest,
   ): Promise<UserResponseDto> {
+    // Verificar autorización: usuarios solo pueden actualizar su propio perfil
+    if (req.user?.id !== id) {
+      throw new ForbiddenException(
+        'Solo puedes actualizar tu propio perfil',
+      );
+    }
+
     const user = await this.usersService.update(id, updateUserDto);
 
     // Mapear entidad a DTO de respuesta (sin información sensible)
