@@ -10,6 +10,23 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const apiPrefix = configService.get<string>('app.apiPrefix', 'api');
   const port = configService.get<number>('app.port', 3000);
+  const environment = configService.get<string>(
+    'app.environment',
+    'development',
+  );
+  const corsOrigins = configService.get<string[]>('app.corsOrigins', []);
+
+  // Configuración de CORS
+  app.enableCors({
+    origin:
+      environment === 'production' && corsOrigins.length > 0
+        ? corsOrigins
+        : true, // En desarrollo permite todos, en producción solo los especificados
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    credentials: true,
+  });
+
   app.setGlobalPrefix(apiPrefix);
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalPipes(
@@ -31,7 +48,11 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(`${apiPrefix}/docs`, app, document);
   await app.listen(port);
-  console.log(`Application is running on: http://localhost:${port}/${apiPrefix}`);
-  console.log(`Swagger documentation: http://localhost:${port}/${apiPrefix}/docs`);
+  console.log(
+    `Application is running on: http://localhost:${port}/${apiPrefix}`,
+  );
+  console.log(
+    `Swagger documentation: http://localhost:${port}/${apiPrefix}/docs`,
+  );
 }
 bootstrap();
