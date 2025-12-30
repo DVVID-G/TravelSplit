@@ -281,85 +281,85 @@ Include in the report:
 ### Example: Asymmetric Navigation Distribution
 
 > 🟠 **UI Issue:** BottomTabBar navigation items have uneven distribution - "Viajes" is too close to FAB button, and there's unnecessary blank space to the right of FAB before "Perfil"
-> 
+>
 > **Location:** `Frontend/src/components/organisms/BottomTabBar.tsx` around line 17
-> 
-> **Description:** 
+>
+> **Description:**
 > The BottomTabBar uses `flex items-center justify-around` which creates uneven spacing. The "Viajes" link is positioned too close to the FAB button, and there's a visible blank space (`flex-1` placeholder) between the FAB and "Perfil" link, breaking visual symmetry and balance.
-> 
+>
 > **Impact:**
 > Uneven distribution creates visual imbalance and makes the navigation feel unprofessional. Users may perceive the interface as inconsistent or poorly designed. The close proximity of "Viajes" to the FAB can also cause accidental taps on mobile devices.
-> 
+>
 > **Fix Prompt:**
 > In `Frontend/src/components/organisms/BottomTabBar.tsx` around line 17, replace `flex items-center justify-around` with `grid grid-cols-4 items-center` to create 4 equal columns. Remove the `flex-1` placeholder div (around line 50) and ensure each navigation item (Home, Viajes, FAB space, Perfil) occupies one column. The FAB should remain absolutely positioned in the center column, overlaying the grid. This ensures symmetric distribution where each element gets equal space (25% width each).
 
 ### Example: Scroll Not Working with Mouse/Trackpad
 
 > 🔴 **Architecture Issue:** Horizontal scroll works with keyboard arrows but not with mouse drag, trackpad gestures, or touch, blocking natural user interaction
-> 
+>
 > **Location:** `Frontend/src/components/molecules/CategorySelector.tsx` around line 45
-> 
-> **Description:** 
+>
+> **Description:**
 > The scroll container uses `flex justify-center` directly on the element with `overflow-x-auto`, which interferes with native browser scroll behavior. Keyboard scroll works because it's a keyboard event, but mouse/trackpad/touch scroll requires native scroll behavior without flexbox interference.
-> 
+>
 > **Impact:**
 > Users cannot scroll horizontally using natural gestures (mouse drag, trackpad swipe, touch swipe), forcing them to use keyboard arrows only. This severely limits accessibility and creates a poor user experience, especially on mobile devices where touch scrolling is the primary interaction method.
-> 
+>
 > **Fix Prompt:**
 > In `Frontend/src/components/molecules/CategorySelector.tsx` around line 45, remove `flex justify-center` from the container with `overflow-x-auto`. Change the content container to use `inline-flex` instead of `flex`. Add `touch-action: pan-x` class to the scroll container. In `Frontend/src/index.css`, add `.category-scroll { touch-action: pan-x; -webkit-overflow-scrolling: touch; }` to enable touch scrolling. Ensure the content container has `min-w-max` or `w-max` to trigger scroll when needed.
 
 ### Example: Text Overflow in CategoryPill
 
 > 🟠 **UI Issue:** Text "Entretenimiento" overflows the CategoryPill container and overlaps with right border
-> 
+>
 > **Location:** `Frontend/src/components/atoms/CategoryPill.tsx` around line 20
-> 
-> **Description:** 
+>
+> **Description:**
 > The CategoryPill component doesn't have width constraints, causing long text like "Entretenimiento" to overflow the container boundaries and overlap with adjacent elements or container borders.
-> 
+>
 > **Impact:**
 > Text overflow creates visual inconsistency and makes the category name unreadable or partially hidden. This breaks the visual hierarchy and can confuse users trying to identify categories.
-> 
+>
 > **Fix Prompt:**
 > In `Frontend/src/components/atoms/CategoryPill.tsx` around line 20, add `min-w-[90px] max-w-[90px] flex-shrink-0` to the button element. Add `text-center leading-tight break-words` to the text span element (around line 28). In `Frontend/src/components/molecules/CategorySelector.tsx`, ensure the container has `pr-2` padding to prevent edge overlap.
 
 ### Example: Router Created Outside Provider
 
 > 🔴 **Architecture Issue:** Router created in module before AuthProvider is available, causing error "useAuthContext must be used within an AuthProvider"
-> 
+>
 > **Location:** `Frontend/src/routes/index.tsx` around line [number]
-> 
-> **Description:** 
+>
+> **Description:**
 > The router is created at module level using `createBrowserRouter([...])` before the AuthProvider is mounted. When ProtectedRoute components try to use `useAuthContext`, the context is not available because the router was created before the Provider existed in the component tree.
-> 
+>
 > **Impact:**
 > Application crashes on load with "useAuthContext must be used within an AuthProvider" error. Users cannot access the application at all. This is a critical blocking issue.
-> 
+>
 > **Fix Prompt:**
 > Move `createBrowserRouter` inside the `App` component in `Frontend/src/App.tsx`. Use `useMemo(() => createBrowserRouter([...]), [])` to create the router after the component mounts. Ensure the router is created inside the component that has the AuthProvider, so the router is created after the Provider is available in the component tree.
 
 ### Example: Elements Overlapping Container Borders
 
 > 🟡 **UI Issue:** Category pills overlap with container right border, making last item partially hidden and creating visual inconsistency
-> 
+>
 > **Location:** `Frontend/src/components/molecules/CategorySelector.tsx` around line 47
-> 
-> **Description:** 
+>
+> **Description:**
 > The content container inside the scroll wrapper doesn't have sufficient lateral padding, causing category pills to touch or overlap the container's right border when scrolled to the end.
-> 
+>
 > **Impact:**
 > Visual inconsistency and poor spacing make the interface feel cramped. Users may not be able to fully see the last category, reducing usability.
-> 
+>
 > **Fix Prompt:**
 > In `Frontend/src/components/molecules/CategorySelector.tsx` around line 47, increase the padding from `px-6` to `px-8` (32px) in the content container. Ensure the spacer element at the end matches the padding width (`w-8` instead of `w-6`) for consistency. This creates visual breathing room and ensures all content is accessible.
 
 ### Example: Duplicate Type Definitions
 
 > 🟡 **Architecture Issue:** `Trip` and `TripResponse` interfaces are almost identical, causing code duplication and maintenance burden
-> 
+>
 > **Location:** `Frontend/src/types/trip.types.ts` around lines 22-46
-> 
-> **Description:** 
+>
+> **Description:**
 > The `Trip` interface (lines 22-34) and `TripResponse` interface (lines 36-46) have identical fields except `Trip` includes `deleted_at?: string` while `TripResponse` does not. All other fields are duplicated, creating unnecessary code duplication.
 > 
 > **Impact:**
