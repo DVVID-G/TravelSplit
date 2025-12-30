@@ -110,7 +110,7 @@ For each finding, provide:
 
 ### Standard Feedback Template
 
-```
+```markdown
 > 🔴 **Critical Issue:** [Brief description]
 > 
 > **Location:** `file/path/to/file.ts` around line 42
@@ -127,7 +127,7 @@ For each finding, provide:
 
 ### Example (Based on CodeRabbit Style)
 
-```
+```markdown
 > 🔴 **Critical Issue:** Dependency with known CVE
 > 
 > **Location:** `package.json` around line 6
@@ -144,7 +144,7 @@ For each finding, provide:
 
 ### Example: Linter Error
 
-```
+```markdown
 > 🔴 **Critical Issue:** ESLint error - Type mismatch in repository query
 > 
 > **Location:** `Backend/src/modules/users/repositories/users.repository.ts` around line 55
@@ -161,7 +161,7 @@ For each finding, provide:
 
 ### Example: Build Error
 
-```
+```markdown
 > 🔴 **Critical Issue:** TypeScript compilation error - Missing type definition
 > 
 > **Location:** `Backend/src/modules/auth/services/auth.service.ts` around line 45
@@ -178,7 +178,7 @@ For each finding, provide:
 
 ### Example: Security Issue - Missing Authentication
 
-```
+```markdown
 > 🟠 **High Issue:** Missing authentication guards on user management endpoints
 > 
 > **Location:** `Backend/src/modules/users/controllers/users.controller.ts` around lines 57-74
@@ -195,7 +195,7 @@ For each finding, provide:
 
 ### Example: Code Duplication
 
-```
+```markdown
 > 🟠 **High Issue:** Extract entity-to-DTO mapping into a reusable method
 > 
 > **Location:** `Backend/src/modules/users/controllers/users.controller.ts` around lines 64-74
@@ -212,7 +212,7 @@ For each finding, provide:
 
 ### Example: Architecture Violation
 
-```
+```markdown
 > 🧹 **Nitpick:** Consider using UsersService instead of UsersRepository directly
 > 
 > **Location:** `Backend/src/modules/auth/services/auth.service.ts` around line 72
@@ -229,7 +229,7 @@ For each finding, provide:
 
 ### Example: Markdown Formatting
 
-```
+```markdown
 > 🟡 **Minor Issue:** Fix markdown formatting issues
 > 
 > **Location:** `.cursor/agents/csr-architect.md` around lines 1-17
@@ -246,7 +246,7 @@ For each finding, provide:
 
 ### Example: HTTP Best Practices
 
-```
+```markdown
 > 🧹 **Nitpick:** Remove unnecessary Content-Type header for GET request
 > 
 > **Location:** `Frontend/src/services/expense.service.ts` around line 56
@@ -263,7 +263,7 @@ For each finding, provide:
 
 ### Example: Type Consolidation
 
-```
+```markdown
 > 🧹 **Nitpick:** Consider consolidating duplicate ApiError interface
 > 
 > **Location:** `Frontend/src/types/expense.types.ts` around line 65
