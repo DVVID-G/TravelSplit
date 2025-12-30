@@ -283,3 +283,5 @@ Una vez que PostgreSQL esté corriendo y conectado:
 
 **¿Necesitas ayuda?** Revisa los logs con `docker-compose logs postgres` o `npm run start:dev` para ver los errores específicos.
 
+
+
