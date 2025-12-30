@@ -49,6 +49,12 @@ export const LoginPage = () => {
           type: 'manual',
           message: 'Email o contraseña incorrectos',
         });
+      } else if (error.statusCode === 400) {
+        // Backend validation error - show user-friendly message
+        setError('root', {
+          type: 'manual',
+          message: 'Los datos ingresados no son válidos. Por favor verifica tu email y contraseña.',
+        });
       } else if (error.statusCode === 0 || error.statusCode >= 500) {
         // Network or server error
         setError('root', {
@@ -56,10 +62,14 @@ export const LoginPage = () => {
           message: 'No pudimos conectarnos con el servidor. Verifica tu conexión e intenta de nuevo.',
         });
       } else {
-        // Other errors
+        // Other errors - clean up the message
+        const cleanMessage = error.message
+          ? error.message.split('must be')[0].split('should not be')[0].trim()
+          : 'Ocurrió un error inesperado. Por favor intenta nuevamente en unos momentos.';
+        
         setError('root', {
           type: 'manual',
-          message: error.message || 'Ocurrió un error inesperado. Por favor intenta nuevamente en unos momentos.',
+          message: cleanMessage || 'Ocurrió un error inesperado. Por favor intenta nuevamente en unos momentos.',
         });
       }
     },

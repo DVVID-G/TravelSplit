@@ -44,7 +44,7 @@ export interface LoginResponse {
  * @throws Error with status code and message on failure
  */
 export async function registerUser(data: RegisterRequest): Promise<RegisterResponse> {
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+  const response = await fetch(`${API_BASE_URL}/auth/register`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -90,8 +90,28 @@ export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
       statusCode: response.status,
     }));
 
+    // Parse validation errors from backend
+    let errorMessage = errorData.message || 'Error al iniciar sesión';
+    
+    // If it's a validation error (400), try to extract a cleaner message
+    if (response.status === 400 && Array.isArray(errorData.message)) {
+      // NestJS validation errors come as an array
+      errorMessage = errorData.message
+        .map((err: string) => {
+          // Remove technical validation messages, keep only user-friendly parts
+          return err.split('must be')[0].trim();
+        })
+        .join('. ');
+    } else if (response.status === 400 && typeof errorData.message === 'string') {
+      // Clean up mixed language messages
+      errorMessage = errorData.message
+        .split('must be')[0] // Remove English technical part
+        .split('should not be')[0] // Remove other technical parts
+        .trim();
+    }
+
     const error: ApiError = {
-      message: errorData.message || 'Error al iniciar sesión',
+      message: errorMessage,
       statusCode: response.status,
     };
 
