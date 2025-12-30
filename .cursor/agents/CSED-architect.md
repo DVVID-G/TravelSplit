@@ -147,7 +147,7 @@ modules/[module-name]/services/
 **TypeORM Access Pattern:**
 ```typescript
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { Entity } from '../entities/entity.entity';
 
 @Injectable()
@@ -162,8 +162,40 @@ export class EntityService {
       where: { deletedAt: IsNull() },
     });
   }
+  
+  async findOne(id: string): Promise<Entity> {
+    return await this.entityRepository.findOne({
+      where: { id, deletedAt: IsNull() },
+    });
+  }
+  
+  async findByEmail(email: string): Promise<Entity | null> {
+    return await this.entityRepository.findOne({
+      where: { email, deletedAt: IsNull() },
+    });
+  }
+  
+  async create(dto: CreateEntityDto): Promise<Entity> {
+    // Uniqueness check excludes soft-deleted records
+    const existing = await this.entityRepository.findOne({
+      where: { email: dto.email, deletedAt: IsNull() },
+    });
+    if (existing) {
+      throw new ConflictException('Email already exists');
+    }
+    // ...
+  }
 }
 ```
+
+**CRITICAL: Soft Delete Filtering**
+- **MANDATORY:** All queries for lookup, authentication, and uniqueness checks MUST exclude soft-deleted records
+- Use `where: { deletedAt: IsNull(), ...existingCriteria }` to merge with existing conditions
+- This applies to: `find()`, `findOne()`, `findOneBy()`, and any query used for:
+  - User/entity lookup by ID or unique field
+  - Authentication (e.g., `findByEmail` for login)
+  - Uniqueness validation (e.g., checking if email exists before create/update)
+- Soft-deleted records should NOT appear in search results, authentication, or duplicate checks
 
 ## Audit Checklist
 
@@ -210,6 +242,7 @@ When reviewing or creating code, perform a detailed audit of each layer:
 - [ ] **Transactions:** Complex operations use TypeORM transactions when needed
 - [ ] **Validation:** Services validate business rules beyond DTO validation
 - [ ] **Error Messages:** Exception messages are clear and user-friendly
+- [ ] **Soft Delete Filtering:** All queries for lookup, authentication, and uniqueness checks exclude soft-deleted records using `where: { deletedAt: IsNull(), ...existingCriteria }`
 
 ## Common Violations to Detect
 
@@ -253,7 +286,9 @@ async findAll(): Promise<UserResponseDto[]> {
 
 // GOOD: Return entities, map in Controller
 async findAll(): Promise<User[]> {
-  return await this.userRepository.find();
+  return await this.userRepository.find({
+    where: { deletedAt: IsNull() },
+  });
 }
 ```
 
@@ -265,6 +300,57 @@ async create(@Req() req: Request, dto: CreateUserDto) {
 
 // GOOD: No HTTP dependencies
 async create(dto: CreateUserDto): Promise<User> {
+  // ...
+}
+```
+
+```typescript
+// BAD: Queries don't exclude soft-deleted records
+async findByEmail(email: string): Promise<User | null> {
+  return await this.userRepository.findOne({
+    where: { email },
+  });
+}
+
+async findOne(id: string): Promise<User> {
+  const user = await this.userRepository.findOne({
+    where: { id },
+  });
+  // ...
+}
+
+async create(dto: CreateUserDto): Promise<User> {
+  const existingUser = await this.userRepository.findOne({
+    where: { email: dto.email },
+  });
+  if (existingUser) {
+    throw new ConflictException('El email ya está registrado');
+  }
+  // ...
+}
+
+// GOOD: All lookup queries exclude soft-deleted records
+async findByEmail(email: string): Promise<User | null> {
+  return await this.userRepository.findOne({
+    where: { email, deletedAt: IsNull() },
+  });
+}
+
+async findOne(id: string): Promise<User> {
+  const user = await this.userRepository.findOne({
+    where: { id, deletedAt: IsNull() },
+  });
+  // ...
+}
+
+// GOOD: Uniqueness checks also exclude soft-deleted records
+async create(dto: CreateUserDto): Promise<User> {
+  const existingUser = await this.userRepository.findOne({
+    where: { email: dto.email, deletedAt: IsNull() },
+  });
+  if (existingUser) {
+    throw new ConflictException('El email ya está registrado');
+  }
   // ...
 }
 ```
@@ -393,6 +479,11 @@ When performing an architecture audit, follow these steps:
 - Ensure services return entities, not DTOs
 - Validate DTOs have proper validation decorators
 - Confirm entities don't have validation decorators
+- **CRITICAL:** Verify all service queries exclude soft-deleted records:
+  - Lookup queries (`findOne`, `findByEmail`, `findAll`, etc.) must include `deletedAt: IsNull()`
+  - Authentication queries must exclude soft-deleted records
+  - Uniqueness checks (duplicate email, etc.) must exclude soft-deleted records
+  - All `find()`, `findOne()`, `findOneBy()` operations should filter soft-deleted records unless explicitly querying deleted records
 
 ### Step 4: Generate Detailed Feedback
 - For each violation found, provide:
