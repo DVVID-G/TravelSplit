@@ -1,22 +1,24 @@
+import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import {
-  Controller,
-  Post,
-  Body,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBadRequestResponse, ApiConflictResponse } from '@nestjs/swagger';
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBadRequestResponse,
+  ApiConflictResponse,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { AuthService } from '../services/auth.service';
 import { LoginDto } from '../dto/login.dto';
-import { UserResponseDto } from '../../users/dto/user-response.dto';
+import { RegisterDto } from '../dto/register.dto';
+import { AuthResponseDto } from '../dto/auth-response.dto';
 
 /**
  * Controller de Auth.
- * 
+ *
  * Este controlador maneja las peticiones HTTP relacionadas con autenticación.
  * Su responsabilidad principal es manejar peticiones HTTP y validaciones de entrada,
  * delegando toda la lógica de negocio al AuthService.
- * 
+ *
  * @class AuthController
  * @description Controlador para gestionar autenticación
  */
@@ -25,34 +27,68 @@ import { UserResponseDto } from '../../users/dto/user-response.dto';
 export class AuthController {
   /**
    * Crea una instancia del AuthController.
-   * 
+   *
    * @constructor
    * @param {AuthService} authService - Servicio inyectado para gestionar autenticación
    */
   constructor(private readonly authService: AuthService) {}
 
   /**
-   * Crea un nuevo login (registro de usuario) en el sistema.
-   * 
+   * Autentica un usuario con email y contraseña.
+   *
    * Este método maneja las peticiones POST al endpoint /auth/login y delega
-   * la creación del usuario al AuthService. No contiene lógica de negocio,
-   * solo actúa como intermediario entre la petición HTTP y el servicio.
-   * 
-   * @method createLogin
-   * @param {LoginDto} loginDto - DTO con los datos del usuario a crear
-   * @returns {UserResponseDto} Usuario creado (sin información sensible)
+   * la autenticación al AuthService. Retorna un token JWT si las credenciales son válidas.
+   *
+   * @method login
+   * @param {LoginDto} loginDto - DTO con email y contraseña
+   * @returns {AuthResponseDto} Token JWT y datos del usuario
    * @example
    * // POST /auth/login
-   * // Body: { nombre: "Juan Pérez", email: "juan@example.com", contraseña: "password123" }
-   * // Respuesta: { id: "...", nombre: "Juan Pérez", email: "juan@example.com", createdAt: "..." }
+   * // Body: { email: "juan@example.com", contraseña: "password123" }
+   * // Respuesta: { accessToken: "...", user: { id: "...", nombre: "...", email: "...", createdAt: "..." } }
    */
   @Post('login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Autenticar usuario y obtener token JWT' })
+  @ApiResponse({
+    status: 200,
+    description: 'Autenticación exitosa',
+    type: AuthResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Datos de entrada inválidos (validación fallida)',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Credenciales inválidas',
+  })
+  async login(@Body() loginDto: LoginDto): Promise<AuthResponseDto> {
+    // El controller solo delega al service
+    return await this.authService.login(loginDto);
+  }
+
+  /**
+   * Registra un nuevo usuario en el sistema y genera un token JWT automáticamente.
+   *
+   * Este método maneja las peticiones POST al endpoint /auth/register y delega
+   * la creación del usuario al AuthService. El usuario queda autenticado tras registrarse,
+   * recibiendo un token JWT que puede usar inmediatamente.
+   *
+   * @method register
+   * @param {RegisterDto} registerDto - DTO con los datos del usuario a crear
+   * @returns {AuthResponseDto} Token JWT y datos del usuario (sin información sensible)
+   * @example
+   * // POST /auth/register
+   * // Body: { nombre: "Juan Pérez", email: "juan@example.com", contraseña: "password123" }
+   * // Respuesta: { accessToken: "...", user: { id: "...", nombre: "Juan Pérez", email: "juan@example.com", createdAt: "..." } }
+   */
+  @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Crear un nuevo login (registro de usuario)' })
+  @ApiOperation({ summary: 'Registrar un nuevo usuario y obtener token JWT' })
   @ApiResponse({
     status: 201,
-    description: 'Login creado exitosamente',
-    type: UserResponseDto,
+    description:
+      'Usuario registrado exitosamente y autenticado automáticamente',
+    type: AuthResponseDto,
   })
   @ApiBadRequestResponse({
     description: 'Datos de entrada inválidos (validación fallida)',
@@ -60,9 +96,8 @@ export class AuthController {
   @ApiConflictResponse({
     description: 'El email ya está registrado',
   })
-  async createLogin(@Body() loginDto: LoginDto): Promise<UserResponseDto> {
+  async register(@Body() registerDto: RegisterDto): Promise<AuthResponseDto> {
     // El controller solo delega al service
-    return await this.authService.createLogin(loginDto);
+    return await this.authService.register(registerDto);
   }
 }
-
