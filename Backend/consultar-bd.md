@@ -10,7 +10,12 @@ docker exec -it travelsplit-postgres psql -U postgres -d travelsplit
 
 ### Si tienes PostgreSQL instalado localmente:
 ```bash
+# Configura las variables de entorno desde tu archivo .env
+export DB_PASSWORD=tu_contraseña_desde_env
 psql -h localhost -U postgres -d travelsplit
+
+# O usa los scripts proporcionados (requieren DB_PASSWORD configurada)
+./Backend/scripts/consultar-bd.sh
 ```
 
 ### Comandos SQL útiles una vez conectado:
@@ -59,15 +64,15 @@ Esto mostrará todas las consultas SQL en la consola del servidor.
    - Port: `5432`
    - Database: `travelsplit`
    - Username: `postgres`
-   - Password: `postgres`
+   - Password: (configura desde tu archivo `.env` o variables de entorno)
 
 ### pgAdmin (Oficial de PostgreSQL)
 1. Descarga pgAdmin: https://www.pgadmin.org/
-2. Crea un nuevo servidor con las mismas credenciales
+2. Crea un nuevo servidor con las credenciales de tu archivo `.env`
 
 ### TablePlus (Windows/Mac, con versión gratuita)
 1. Descarga TablePlus: https://tableplus.com/
-2. Crea conexión PostgreSQL con las credenciales
+2. Crea conexión PostgreSQL con las credenciales de tu archivo `.env`
 
 ## Opción 4: Usar los Endpoints de la API
 
