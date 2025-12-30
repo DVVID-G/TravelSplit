@@ -23,6 +23,20 @@ export interface ApiError {
   statusCode: number;
 }
 
+export interface LoginRequest {
+  email: string;
+  contraseña: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  user?: {
+    id: string;
+    nombre: string;
+    email: string;
+  };
+}
+
 /**
  * Registers a new user
  * @param data - User registration data
@@ -46,6 +60,38 @@ export async function registerUser(data: RegisterRequest): Promise<RegisterRespo
 
     const error: ApiError = {
       message: errorData.message || 'Error al registrar usuario',
+      statusCode: response.status,
+    };
+
+    throw error;
+  }
+
+  return response.json();
+}
+
+/**
+ * Logs in a user with email and password
+ * @param data - User login credentials
+ * @returns Promise with JWT token and user data on success
+ * @throws Error with status code and message on failure
+ */
+export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({
+      message: response.statusText || 'Error desconocido',
+      statusCode: response.status,
+    }));
+
+    const error: ApiError = {
+      message: errorData.message || 'Error al iniciar sesión',
       statusCode: response.status,
     };
 
