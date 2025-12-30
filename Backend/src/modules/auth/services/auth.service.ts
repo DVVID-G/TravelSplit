@@ -7,6 +7,7 @@ import { RegisterDto } from '../dto/register.dto';
 import { UserResponseDto } from '../../users/dto/user-response.dto';
 import { AuthResponseDto } from '../dto/auth-response.dto';
 import { CreateUserDto } from '../../users/dto/create-user.dto';
+import { User } from '../../users/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 
 /**
@@ -40,17 +41,9 @@ export class AuthService {
     // Crear el usuario usando el servicio de usuarios
     const user = await this.usersService.create(createUserDto);
 
-    // Generar token JWT para autenticar al usuario automáticamente
-    const payload = { sub: user.id, email: user.email };
-    const accessToken = await this.jwtService.signAsync(payload);
-
-    // Mapear la entidad a DTO de respuesta (sin información sensible)
-    const userResponse: UserResponseDto = {
-      id: user.id,
-      nombre: user.nombre,
-      email: user.email,
-      createdAt: user.createdAt,
-    };
+    // Generar token JWT y mapear respuesta
+    const accessToken = await this.generateToken(user);
+    const userResponse = this.mapToUserResponse(user);
 
     // Retornar token y datos del usuario
     return {
@@ -87,22 +80,42 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    // Generar token JWT
-    const payload = { sub: user.id, email: user.email };
-    const accessToken = await this.jwtService.signAsync(payload);
-
-    // Mapear la entidad a DTO de respuesta (sin información sensible)
-    const userResponse: UserResponseDto = {
-      id: user.id,
-      nombre: user.nombre,
-      email: user.email,
-      createdAt: user.createdAt,
-    };
+    // Generar token JWT y mapear respuesta
+    const accessToken = await this.generateToken(user);
+    const userResponse = this.mapToUserResponse(user);
 
     // Retornar token y datos del usuario
     return {
       accessToken,
       user: userResponse,
+    };
+  }
+
+  /**
+   * Genera un token JWT para un usuario.
+   * Construye el payload con el ID y email del usuario.
+   *
+   * @param user - Entidad User para generar el token
+   * @returns Token JWT firmado
+   */
+  private async generateToken(user: User): Promise<string> {
+    const payload = { sub: user.id, email: user.email };
+    return await this.jwtService.signAsync(payload);
+  }
+
+  /**
+   * Mapea una entidad User a UserResponseDto.
+   * Excluye información sensible como passwordHash.
+   *
+   * @param user - Entidad User a mapear
+   * @returns UserResponseDto sin información sensible
+   */
+  private mapToUserResponse(user: User): UserResponseDto {
+    return {
+      id: user.id,
+      nombre: user.nombre,
+      email: user.email,
+      createdAt: user.createdAt,
     };
   }
 }
