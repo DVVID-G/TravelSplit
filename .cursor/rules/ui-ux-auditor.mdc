@@ -26,12 +26,80 @@ Antes de sugerir código o revisar un archivo, DEBES leer (o tener en cuenta) la
     - `:focus-visible` (Vital para accesibilidad).
     - `:disabled`
 - **Feedback al Usuario:** Si hay una llamada a API (fetch/mutation), EXIGE un estado de carga (skeleton o spinner) y un manejo de errores visual (toast o mensaje en rojo).
+- **Mensajes de Error y Eventos:**
+    - Los mensajes deben ser CLAROS y ESPECÍFICOS, no técnicos ni genéricos
+    - NO deben contener mensajes mezclados (español/inglés) o partes técnicas del backend ("must be a string", "should not be", "Validation failed")
+    - Deben ser ACCIONABLES: indicar QUÉ salió mal y CÓMO corregirlo
+    - Ejemplos BUENOS: "Email o contraseña incorrectos", "El email ya está registrado", "No pudimos conectarnos con el servidor. Verifica tu conexión e intenta de nuevo."
+    - Ejemplos MALOS: "Error 401", "Validation failed", "El nombre es requeridonombre must be a string", "Bad Request"
+    - Deben limpiarse los mensajes del backend antes de mostrarlos al usuario
 - **Semántica HTML:** No uses `<div>` para todo. Sugiere `<section>`, `<article>`, `<main>`, `<button type="button">` para mejorar la accesibilidad.
+- **React Context y Providers (CRÍTICO):**
+    - **Orden de Providers:** Los Context Providers deben envolver TODOS los componentes que los usan. Verifica que el orden sea correcto:
+        ```tsx
+        // ✅ CORRECTO: Provider envuelve RouterProvider
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+        
+        // ❌ INCORRECTO: Router creado fuera, antes de que AuthProvider exista
+        const router = createBrowserRouter([...]); // Se ejecuta antes del render
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+        ```
+    - **Router Configuration:** Si el router usa componentes que dependen de Context (como `ProtectedRoute` que usa `useAuthContext`), el router DEBE crearse DENTRO del componente que tiene el Provider, usando `useMemo`:
+        ```tsx
+        // ✅ CORRECTO: Router creado dentro del componente con Provider
+        function App() {
+          const router = useMemo(() => createBrowserRouter([...]), []);
+          return (
+            <AuthProvider>
+              <RouterProvider router={router} />
+            </AuthProvider>
+          );
+        }
+        
+        // ❌ INCORRECTO: Router creado en módulo, fuera del componente
+        export const router = createBrowserRouter([...]); // Se ejecuta al importar
+        ```
+    - **Errores Comunes a Detectar:**
+        - Error: "useAuthContext must be used within an AuthProvider" → Router creado fuera del Provider
+        - Error: "Cannot read properties of undefined" en hooks de contexto → Provider no envuelve el componente
+        - Componentes que usan hooks de contexto pero no están dentro del árbol del Provider
+    - **Verificación:** Busca en el código:
+        1. ¿Dónde se crea el router? (debe estar dentro del componente con Providers)
+        2. ¿Los componentes que usan `useContext` están dentro del árbol del Provider?
+        3. ¿El orden de Providers es correcto? (QueryClient → AuthProvider → RouterProvider)
+- **Servicios API y Endpoints:**
+    - **Endpoints Correctos:** Verifica que cada función de servicio use el endpoint correcto:
+        ```tsx
+        // ✅ CORRECTO: registerUser usa /auth/register
+        export async function registerUser(data) {
+          return fetch(`${API_BASE_URL}/auth/register`, {...});
+        }
+        
+        // ❌ INCORRECTO: registerUser usando /auth/login
+        export async function registerUser(data) {
+          return fetch(`${API_BASE_URL}/auth/login`, {...}); // Endpoint incorrecto
+        }
+        ```
+    - **Errores 400/404 Comunes:**
+        - Si hay errores 400 repetidos en consola, verifica que los endpoints en servicios coincidan con el backend
+        - Verifica que los nombres de campos en requests coincidan con lo que espera el backend (ej: `contraseña` vs `password`)
+        - Revisa que los métodos HTTP sean correctos (POST, GET, PUT, DELETE)
+    - **Verificación:** Compara los endpoints en `services/*.ts` con las rutas definidas en el backend
 
 ### C. Psicología y Usuario (Estrategia)
 - **Ley de Fitts:** Los botones en móvil deben ser fáciles de tocar (mínimo `h-10` o `h-12`).
 - **Carga Cognitiva:** Si un formulario tiene más de 5 campos, sugiere dividirlo en pasos o usar agrupaciones visuales (Cards/Fieldsets).
 - **Redacción (UX Writing):** Corrige textos técnicos ("Error 404") por textos humanos ("No encontramos ese viaje").
+- **Claridad de Mensajes de Error:**
+    - Los mensajes deben explicar QUÉ salió mal y CÓMO corregirlo
+    - No deben asumir conocimiento técnico del usuario
+    - Deben usar lenguaje natural y evitar jerga técnica
+    - Deben ser consistentes en tono y estilo (todos en español, mismo nivel de formalidad)
+    - Verificar que los servicios de API limpien los mensajes del backend antes de mostrarlos
 
 ## 3. Comandos de Activación (Triggers)
 
@@ -45,5 +113,17 @@ Cuando encuentres un error de UI/UX, usa este formato:
 > 🚨 **UI Issue:** [Descripción del problema, ej: Botón muy pequeño para móvil]
 > 💡 **Fix:** [Solución técnica en Tailwind, ej: Cambiar `h-8` por `h-12`]
 > 🧠 **Razón:** [Principio psicológico o de diseño, ej: Ley de Fitts]
+
+### Ejemplos de Problemas Arquitectónicos de React:
+
+**Problema: Router creado fuera del Provider**
+> 🚨 **Architecture Issue:** Router creado en módulo antes de que AuthProvider esté disponible, causando error "useAuthContext must be used within an AuthProvider"
+> 💡 **Fix:** Mover `createBrowserRouter` dentro del componente `App` usando `useMemo`, asegurando que se cree después de que el Provider esté montado
+> 🧠 **Razón:** React Context requiere que los Providers estén en el árbol de componentes antes de que los hooks de contexto se ejecuten. El router se crea al importar el módulo, antes del render.
+
+**Problema: Endpoint incorrecto en servicio**
+> 🚨 **API Issue:** Función `registerUser` usando endpoint `/auth/login` en lugar de `/auth/register`, causando errores 400
+> 💡 **Fix:** Corregir el endpoint en `auth.service.ts` de `/auth/login` a `/auth/register`
+> 🧠 **Razón:** Cada operación debe usar su endpoint correspondiente. Endpoints incorrectos causan errores 400/404 y confunden al usuario con mensajes de error incorrectos.
 
 ---
