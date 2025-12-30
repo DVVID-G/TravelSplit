@@ -2,6 +2,7 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
@@ -30,9 +31,9 @@ export class UsersService {
    * @throws ConflictException si el email ya existe
    */
   async create(createUserDto: CreateUserDto): Promise<User> {
-    // Verificar si el email ya existe
+    // Verificar si el email ya existe (excluyendo usuarios eliminados)
     const existingUser = await this.userRepository.findOne({
-      where: { email: createUserDto.email },
+      where: { email: createUserDto.email, deletedAt: IsNull() },
     });
 
     if (existingUser) {
@@ -76,7 +77,7 @@ export class UsersService {
    */
   async findOne(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
-      where: { id },
+      where: { id, deletedAt: IsNull() },
     });
 
     if (!user) {
@@ -94,7 +95,7 @@ export class UsersService {
    */
   async findByEmail(email: string): Promise<User | null> {
     return await this.userRepository.findOne({
-      where: { email },
+      where: { email, deletedAt: IsNull() },
     });
   }
 
@@ -109,18 +110,18 @@ export class UsersService {
    * @throws ConflictException si el email ya está en uso por otro usuario
    */
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    // Verificar que el usuario existe
+    // Verificar que el usuario existe (excluyendo usuarios eliminados)
     const existingUser = await this.userRepository.findOne({
-      where: { id },
+      where: { id, deletedAt: IsNull() },
     });
     if (!existingUser) {
       throw new NotFoundException('Usuario no encontrado');
     }
 
-    // Si se actualiza el email, verificar que no esté duplicado
+    // Si se actualiza el email, verificar que no esté duplicado (excluyendo usuarios eliminados)
     if (updateUserDto.email && updateUserDto.email !== existingUser.email) {
       const userWithEmail = await this.userRepository.findOne({
-        where: { email: updateUserDto.email },
+        where: { email: updateUserDto.email, deletedAt: IsNull() },
       });
       if (userWithEmail && userWithEmail.id !== id) {
         throw new ConflictException('El email ya está registrado');
@@ -136,8 +137,20 @@ export class UsersService {
       existingUser.email = updateUserDto.email;
     }
 
-    // Si se actualiza la contraseña, hashearla
-    if (updateUserDto.contraseña) {
+    // Si se actualiza la contraseña, validar y hashearla
+    if (updateUserDto.contraseña !== undefined) {
+      // Validar que la contraseña no esté vacía
+      if (updateUserDto.contraseña === '') {
+        throw new BadRequestException(
+          'La contraseña no puede estar vacía. Debe tener al menos 8 caracteres.',
+        );
+      }
+      // Validar longitud mínima (el DTO ya valida esto, pero agregamos validación adicional)
+      if (updateUserDto.contraseña.length < 8) {
+        throw new BadRequestException(
+          'La contraseña debe tener al menos 8 caracteres',
+        );
+      }
       const saltRounds = 10;
       existingUser.passwordHash = await bcrypt.hash(
         updateUserDto.contraseña,
@@ -156,14 +169,6 @@ export class UsersService {
    * @throws NotFoundException si el usuario no existe
    */
   async remove(id: string): Promise<void> {
-    // Verificar que el usuario existe
-    const user = await this.userRepository.findOne({
-      where: { id },
-    });
-    if (!user) {
-      throw new NotFoundException('Usuario no encontrado');
-    }
-
     // Eliminar de forma lógica (soft delete)
     const result = await this.userRepository.softDelete(id);
     if (result.affected === 0) {
