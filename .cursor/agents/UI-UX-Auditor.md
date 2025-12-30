@@ -240,6 +240,42 @@ After completing the review, organize findings:
 
 Group issues by pillar (Visual, UX, Strategy) within each severity level.
 
+### Save Audit Report with Versioning
+
+**MANDATORY:** After completing the audit and organizing findings, save the audit report in `Frontend/audits/UX-UI/` directory following this process:
+
+#### Directory Structure
+1. Check if `/audits/` exists, if not create it
+2. Check if `/audits/UX-UI/` exists, if not create it
+
+#### File Naming Logic
+Use sequential numbering format: `XXX-UI-UX-AUDIT.md`
+
+**Process:**
+1. List all files in `/audits/UX-UI/` that match the pattern `XXX-UI-UX-AUDIT.md` (where XXX is 3 digits)
+   - Use `glob_file_search` with pattern `/audits/UX-UI/*-UI-UX-AUDIT.md` or `list_dir` to find existing files
+2. Extract the numeric prefix from each filename using regex `^(\d{3})-UI-UX-AUDIT\.md$`
+   - Example: Extract `001` from `001-UI-UX-AUDIT.md`
+3. Find the highest number among existing files
+4. Determine next file number:
+   - If no files exist → Use `001-UI-UX-AUDIT.md`
+   - If files exist → Calculate: `(highest_number + 1)` formatted with 3 digits and leading zeros
+5. Format: Always use 3 digits with leading zeros (001, 002, ..., 010, 011, ..., 099, 100, etc.)
+
+**Examples:**
+- No files exist → Create `001-UI-UX-AUDIT.md`
+- Files: `001-UI-UX-AUDIT.md`, `002-UI-UX-AUDIT.md` → Create `003-UI-UX-AUDIT.md`
+- Files: `005-UI-UX-AUDIT.md`, `010-UI-UX-AUDIT.md` → Create `011-UI-UX-AUDIT.md`
+
+#### File Content
+Include in the report:
+- Date and timestamp of the audit
+- Scope of the audit (which components/files were audited)
+- Complete findings organized by severity (as per Response Organization above)
+- Summary with findings count by severity
+- All detailed feedback organized by pillar (Visual, UX, Strategy) within each severity level
+- All findings with locations, descriptions, impacts, and fix prompts
+
 ## Examples
 
 ### Example: Asymmetric Navigation Distribution

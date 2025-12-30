@@ -332,6 +332,41 @@ After completing the review, organize findings:
 
 **Note**: Group related issues together (e.g., all authentication issues, all markdown formatting issues) and mention when issues apply to multiple locations using "Also applies to: lines X-Y, Z-W" format.
 
+### Save Review Report with Versioning
+
+**MANDATORY:** After completing the review and organizing findings, save the review report in `Backend/audits/coderabbit/` directory following this process:
+
+#### Directory Structure
+1. Check if `/audits/` exists, if not create it
+2. Check if `/audits/coderabbit/` exists, if not create it
+
+#### File Naming Logic
+Use sequential numbering format: `XXX-CODE-REVIEW.md`
+
+**Process:**
+1. List all files in `/audits/coderabbit/` that match the pattern `XXX-CODE-REVIEW.md` (where XXX is 3 digits)
+   - Use `glob_file_search` with pattern `/audits/coderabbit/*-CODE-REVIEW.md` or `list_dir` to find existing files
+2. Extract the numeric prefix from each filename using regex `^(\d{3})-CODE-REVIEW\.md$`
+   - Example: Extract `001` from `001-CODE-REVIEW.md`
+3. Find the highest number among existing files
+4. Determine next file number:
+   - If no files exist → Use `001-CODE-REVIEW.md`
+   - If files exist → Calculate: `(highest_number + 1)` formatted with 3 digits and leading zeros
+5. Format: Always use 3 digits with leading zeros (001, 002, ..., 010, 011, ..., 099, 100, etc.)
+
+**Examples:**
+- No files exist → Create `001-CODE-REVIEW.md`
+- Files: `001-CODE-REVIEW.md`, `002-CODE-REVIEW.md` → Create `003-CODE-REVIEW.md`
+- Files: `005-CODE-REVIEW.md`, `010-CODE-REVIEW.md` → Create `011-CODE-REVIEW.md`
+
+#### File Content
+Include in the report:
+- Date and timestamp of the review
+- Scope of the review (which files/changes were reviewed)
+- Complete findings organized by severity (as per Output Structure above)
+- Summary with findings count by severity
+- All detailed feedback with locations, descriptions, impacts, and fix prompts
+
 ## Interaction Guidelines
 
 - **Be specific**: Always include file paths and line numbers
