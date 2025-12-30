@@ -50,21 +50,39 @@ triggers:
      - Modified directories (e.g.: `modules/users` → `user-management`)
      - If it cannot be inferred, use format: `feature-[timestamp]` or ask the user
    - Create new branch: `git checkout -b feature/[feature-name]` (use kebab-case, no spaces)
-   - **ANALYZE CHANGES FOR ATOMIC COMMITS:**
+   - **ANALYZE ALL CHANGES FOR ATOMIC COMMITS:**
      - Group files by logical change type (use step 5)
-     - If there are multiple logical groups, create separate atomic commits
-     - If there is only one logical group, create a single commit
-   - For each group of changes:
-     - Add files from the group: `git add [group-files]`
-     - Generate standard commit message by analyzing changes (use step 5.1)
-     - **REQUEST MESSAGE APPROVAL:**
-       - Display the proposed message clearly: "📝 Proposed commit message: `[standard-message]`"
-       - Show list of files included in this commit
-       - Ask: "Do you approve this message? (yes/no/modify)"
-       - If user approves (yes/y/ok): continue with commit
-       - If user wants to modify: ask for new message and use it
+     - Generate commit message for EACH group using step 5.1
+     - Store all groups with their proposed messages in a list
+   - **SHOW ALL PROPOSED COMMITS AT ONCE:**
+     - Display all proposed commits in a numbered list format:
+       ```
+       📝 Proposed commits (will be created in this order):
+       
+       1. [type(scope): brief description]
+          Files: [list of files]
+          Message:
+          [full commit message with body]
+       
+       2. [type(scope): brief description]
+          Files: [list of files]
+          Message:
+          [full commit message with body]
+       
+       ... (continue for all groups)
+       ```
+     - **REQUEST GLOBAL APPROVAL:**
+       - Ask: "Do you approve all these commits? (yes/no/modify)"
+       - If user approves (yes/y/ok): proceed to create all commits
+       - If user wants to modify (modify/m): 
+         - Ask: "Which commit number(s) do you want to modify? (e.g., 1, 3-5, or 'all')"
+         - For each selected commit, ask for the new message
+         - Show updated list and ask for approval again
        - If user rejects (no/n/cancel): cancel operation and terminate
-     - Create commit: `git commit -m "[approved-message]"`
+   - **CREATE ALL COMMITS:**
+     - For each approved group (in order):
+       - Add files from the group: `git add [group-files]`
+       - Create commit: `git commit -m "[approved-message]"`
    - Verify if remote is configured: `git remote -v`
    - If remote exists, push the new branch: `git push -u origin feature/[feature-name]`
    - If no remote, inform that commits are ready but remote needs to be configured
@@ -72,21 +90,39 @@ triggers:
 
 4. **If it's an EXISTING FEATURE:**
    - Get current branch name
-   - **ANALYZE CHANGES FOR ATOMIC COMMITS:**
+   - **ANALYZE ALL CHANGES FOR ATOMIC COMMITS:**
      - Group files by logical change type (use step 5)
-     - If there are multiple logical groups, create separate atomic commits
-     - If there is only one logical group, create a single commit
-   - For each group of changes:
-     - Add files from the group: `git add [group-files]`
-     - Generate standard commit message by analyzing changes (use step 5.1)
-     - **REQUEST MESSAGE APPROVAL:**
-       - Display the proposed message clearly: "📝 Proposed commit message: `[standard-message]`"
-       - Show list of files included in this commit
-       - Ask: "Do you approve this message? (yes/no/modify)"
-       - If user approves (yes/y/ok): continue with commit
-       - If user wants to modify: ask for new message and use it
+     - Generate commit message for EACH group using step 5.1
+     - Store all groups with their proposed messages in a list
+   - **SHOW ALL PROPOSED COMMITS AT ONCE:**
+     - Display all proposed commits in a numbered list format:
+       ```
+       📝 Proposed commits (will be created in this order):
+       
+       1. [type(scope): brief description]
+          Files: [list of files]
+          Message:
+          [full commit message with body]
+       
+       2. [type(scope): brief description]
+          Files: [list of files]
+          Message:
+          [full commit message with body]
+       
+       ... (continue for all groups)
+       ```
+     - **REQUEST GLOBAL APPROVAL:**
+       - Ask: "Do you approve all these commits? (yes/no/modify)"
+       - If user approves (yes/y/ok): proceed to create all commits
+       - If user wants to modify (modify/m): 
+         - Ask: "Which commit number(s) do you want to modify? (e.g., 1, 3-5, or 'all')"
+         - For each selected commit, ask for the new message
+         - Show updated list and ask for approval again
        - If user rejects (no/n/cancel): cancel operation and terminate
-     - Create commit: `git commit -m "[approved-message]"`
+   - **CREATE ALL COMMITS:**
+     - For each approved group (in order):
+       - Add files from the group: `git add [group-files]`
+       - Create commit: `git commit -m "[approved-message]"`
    - Verify if there are local commits without push: `git status -sb` (look for "ahead")
    - Verify if remote is configured: `git remote -v`
    - If remote exists, push: `git push` (without -u since branch already exists)
