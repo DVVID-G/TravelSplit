@@ -10,6 +10,7 @@ export { Input } from './atoms/Input';
 // Molecules
 export { Card } from './molecules/Card';
 export { FormField } from './molecules/FormField';
+export { ProtectedRoute } from './molecules/ProtectedRoute';
 
 // Organisms
 export { Header } from './organisms/Header';
