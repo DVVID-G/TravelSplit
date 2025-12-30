@@ -56,7 +56,7 @@
 ### 7. REQUISITOS TÉCNICOS (ALTO NIVEL)
 * **Frontend:** React (TypeScript) + TailwindCSS. Diseño Responsive full pautas WCAG.
 * **Backend:** NestJS (Node.js). Estructura modular estricta.
-* **Patrón de Diseño:** Controller-Service-Repository (CSR)
+* **Patrón de Diseño:** CSEC
 * **Arquitectura:** Layered Architecture (Arquitectura en Capas)
 El sistema no es un bloque de código desordenado; está dividido en "estratos" horizontales. Cada capa tiene una responsabilidad única y solo puede comunicarse con la capa inmediatamente inferior.
 
