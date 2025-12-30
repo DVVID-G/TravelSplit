@@ -6,7 +6,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms/Button';
 import { useAuthContext } from '@/contexts/AuthContext';
-import type { LoginRequest, ApiError } from '@/services/auth.service';
+import type { LoginRequest } from '@/services/auth.service';
+import type { ApiError } from '@/types/api.types';
 
 /**
  * Login form schema

@@ -5,7 +5,8 @@ import { useMutation } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
 import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms/Button';
-import { registerUser, type RegisterRequest, type ApiError } from '@/services/auth.service';
+import { registerUser, type RegisterRequest } from '@/services/auth.service';
+import type { ApiError } from '@/types/api.types';
 
 /**
  * Registration form schema
