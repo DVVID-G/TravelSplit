@@ -48,3 +48,12 @@ export function parseCurrency(value: string): number {
   return isNaN(parsed) ? 0 : parsed;
 }
 
+
+
+
+
+
+
+
+
+
