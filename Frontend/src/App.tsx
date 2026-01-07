@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider, createBrowserRouter, Outlet, useLocation } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuthContext } from './contexts/AuthContext';
 import { BottomTabBar } from '@/components/organisms/BottomTabBar';
 import { HomePage } from '@/pages/HomePage';
 import { LoginPage } from '@/pages/LoginPage';
@@ -23,11 +23,16 @@ const queryClient = new QueryClient({
 
 /**
  * Layout component that conditionally shows BottomTabBar
+ * Hides BottomTabBar on auth pages and when user is not authenticated
  */
 function AppLayout() {
   const location = useLocation();
+  const { isAuthenticated } = useAuthContext();
   const hideNavRoutes = ['/login', '/register'];
-  const shouldShowNav = !hideNavRoutes.includes(location.pathname);
+  const isAuthPage = hideNavRoutes.includes(location.pathname);
+  
+  // Show BottomTabBar only if authenticated and not on auth pages
+  const shouldShowNav = isAuthenticated && !isAuthPage;
 
   return (
     <>
@@ -51,11 +56,7 @@ function App() {
           children: [
             {
               path: '/',
-              element: (
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              ),
+              element: <HomePage />,
             },
             {
               path: '/login',
