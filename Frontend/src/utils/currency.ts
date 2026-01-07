@@ -14,8 +14,8 @@ export function formatCurrency(amount: number): string {
     return '$ 0';
   }
 
-  // Remove decimals and format with thousands separator
-  const integerAmount = Math.floor(amount);
+  // Round to nearest whole unit and format with thousands separator
+  const integerAmount = Math.round(amount);
   const formatted = integerAmount.toLocaleString('es-CO', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
