@@ -11,6 +11,8 @@ import { AuthService } from '../services/auth.service';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { AuthResponseDto } from '../dto/auth-response.dto';
+import { User } from '../../users/entities/user.entity';
+import { UserResponseDto } from '../../users/dto/user-response.dto';
 
 /**
  * Controller de Auth.
@@ -32,6 +34,24 @@ export class AuthController {
    * @param {AuthService} authService - Servicio inyectado para gestionar autenticación
    */
   constructor(private readonly authService: AuthService) {}
+
+  /**
+   * Mapea una entidad User a UserResponseDto.
+   * Excluye información sensible como passwordHash.
+   *
+   * @private
+   * @method mapToUserResponse
+   * @param {User} user - Entidad User a mapear
+   * @returns {UserResponseDto} DTO de respuesta con los campos públicos
+   */
+  private mapToUserResponse(user: User): UserResponseDto {
+    return {
+      id: user.id,
+      nombre: user.nombre,
+      email: user.email,
+      createdAt: user.createdAt,
+    };
+  }
 
   /**
    * Autentica un usuario con email y contraseña.
@@ -62,8 +82,9 @@ export class AuthController {
     description: 'Credenciales inválidas',
   })
   async login(@Body() loginDto: LoginDto): Promise<AuthResponseDto> {
-    // El controller solo delega al service
-    return await this.authService.login(loginDto);
+    const { user, accessToken } = await this.authService.login(loginDto);
+    const userResponse = this.mapToUserResponse(user);
+    return new AuthResponseDto(accessToken, userResponse);
   }
 
   /**
@@ -97,7 +118,8 @@ export class AuthController {
     description: 'El email ya está registrado',
   })
   async register(@Body() registerDto: RegisterDto): Promise<AuthResponseDto> {
-    // El controller solo delega al service
-    return await this.authService.register(registerDto);
+    const { user, accessToken } = await this.authService.register(registerDto);
+    const userResponse = this.mapToUserResponse(user);
+    return new AuthResponseDto(accessToken, userResponse);
   }
 }
