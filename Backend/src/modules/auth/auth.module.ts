@@ -24,12 +24,20 @@ import jwtConfig from '../../config/jwt.config';
       imports: [ConfigModule.forFeature(jwtConfig)],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
+        const jwtSecret = configService.get<string>('jwt.secret');
+        
+        if (!jwtSecret || jwtSecret.trim() === '') {
+          throw new Error(
+            'JWT_SECRET no está configurado. Por favor, configure la variable de entorno JWT_SECRET antes de iniciar la aplicación.',
+          );
+        }
+
         const expiresInSeconds = parseInt(
           configService.get<string>('jwt.expiresIn') || '3600',
           10,
         );
         return {
-          secret: configService.get<string>('jwt.secret') || 'default-secret',
+          secret: jwtSecret,
           signOptions: {
             expiresIn: expiresInSeconds,
           },

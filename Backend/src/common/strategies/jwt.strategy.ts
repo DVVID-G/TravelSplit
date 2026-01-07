@@ -5,6 +5,19 @@ import { ConfigService } from '@nestjs/config';
 import { AuthenticatedUser } from '../interfaces/authenticated-request.interface';
 
 /**
+ * Interfaz que define la estructura del payload JWT.
+ * 
+ * El campo `sub` (subject) contiene el identificador del usuario y puede ser
+ * string o number según el estándar JWT. En este sistema siempre será string (UUID).
+ * El campo `email` contiene el email del usuario autenticado.
+ */
+export interface JwtPayload {
+  sub: string | number;
+  email: string;
+  [key: string]: any;
+}
+
+/**
  * Estrategia JWT de Passport para validar tokens JWT.
  * 
  * Esta estrategia:
@@ -15,13 +28,21 @@ import { AuthenticatedUser } from '../interfaces/authenticated-request.interface
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(configService: ConfigService) {
+    const jwtSecret = configService.get<string>('jwt.secret');
+    
+    if (!jwtSecret || jwtSecret.trim() === '') {
+      throw new Error(
+        'JWT_SECRET no está configurado. Por favor, configure la variable de entorno JWT_SECRET antes de iniciar la aplicación.',
+      );
+    }
+
     super({
       // Extrae el token del header Authorization como "Bearer <token>"
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       // Indica si el secret debe ser verificado en cada request
       ignoreExpiration: false,
       // Secret usado para verificar la firma del token
-      secretOrKey: configService.get<string>('jwt.secret') || 'default-secret',
+      secretOrKey: jwtSecret,
     });
   }
 
@@ -33,16 +54,33 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    * @returns Usuario autenticado que será asignado a req.user
    * @throws UnauthorizedException si el payload es inválido
    */
-  async validate(payload: any): Promise<AuthenticatedUser> {
+  async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
     // Validar que el payload tenga los campos mínimos requeridos
-    if (!payload.sub || !payload.email) {
-      throw new UnauthorizedException('Token inválido: payload incompleto');
+    // Validar sub: puede ser string o number, pero no puede ser undefined, null o vacío
+    if (
+      payload.sub === undefined ||
+      payload.sub === null ||
+      (typeof payload.sub === 'string' && payload.sub.trim() === '')
+    ) {
+      throw new UnauthorizedException('Token inválido: campo sub faltante o inválido');
     }
+
+    // Validar email: debe ser string no vacío
+    if (
+      !payload.email ||
+      typeof payload.email !== 'string' ||
+      payload.email.trim() === ''
+    ) {
+      throw new UnauthorizedException('Token inválido: campo email inválido o faltante');
+    }
+
+    // Convertir sub a string si es number (aunque en este sistema siempre será string/UUID)
+    const userId = typeof payload.sub === 'number' ? String(payload.sub) : payload.sub;
 
     // Retornar el usuario autenticado
     // El payload del token debe contener: { sub: user.id, email: user.email }
     return {
-      id: payload.sub,
+      id: userId,
       email: payload.email,
     };
   }
