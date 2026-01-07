@@ -1,9 +1,12 @@
 # TravelSplit - Diseño de Interfaz Visual Coherente
 ## Mock y Flujos de Navegación
 
-**Versión:** 2.0  
+**Versión:** 2.1  
 **Fecha:** 2025-01-02  
+**Última actualización:** 2025-01-02  
 **Principio:** La interfaz debe reflejar la jerarquía de negocio: **Viaje → Gastos**
+
+**Nota sobre Header:** El componente Header muestra diferentes acciones según el estado de autenticación del usuario. Cuando el usuario está autenticado, el botón "Iniciar Sesión" se oculta automáticamente y se muestra el nombre del usuario junto con el botón "Cerrar Sesión".
 
 ---
 
@@ -199,7 +202,7 @@ Home (no auth) → Login/Register → Home (auth) → Viajes → [Crear Viaje] �
 #### Pantalla 1: HomePage - Usuario No Autenticado
 ```
 ┌─────────────────────────────────────┐
-│  TravelSplit                         │ ← Header estándar (sin acciones)
+│  TravelSplit    [Inicio] [Iniciar] │ ← Header con acciones: Inicio + Iniciar Sesión
 ├─────────────────────────────────────┤
 │                                     │
 │         [Map Icon - 64px]           │ ← Icono grande, color slate-300
@@ -232,7 +235,7 @@ Home (no auth) → Login/Register → Home (auth) → Viajes → [Crear Viaje] �
 #### Pantalla 1b: HomePage - Usuario Autenticado (Sin Viajes)
 ```
 ┌─────────────────────────────────────┐
-│  TravelSplit                         │ ← Header estándar (sin acciones)
+│  TravelSplit  [Inicio] Juan [Cerrar]│ ← Header con acciones: Inicio + Nombre + Cerrar Sesión
 ├─────────────────────────────────────┤
 │                                     │
 │         [Map Icon - 64px]           │ ← Icono grande, color slate-300
@@ -275,6 +278,24 @@ Home (no auth) → Login/Register → Home (auth) → Viajes → [Crear Viaje] �
 │  │  ℹ️ Se generará un código   │   │
 │  │     único para invitar     │   │
 │  │                             │   │
+│  │  ─────────────────────────  │   │ ← Separador (border-b border-slate-200)
+│  │                             │   │
+│  │  Participantes              │   │ ← Label, text-sm font-medium
+│  │                             │   │
+│  │  Agregar por correo         │   │ ← Subtítulo, text-slate-600
+│  │  ┌───────────────────────┐ │   │
+│  │  │ maria@example.com     │ │   │ ← Input email (h-12, rounded-xl)
+│  │  │              [Buscar]│ │   │ ← Botón secundario inline
+│  │  └───────────────────────┘ │   │
+│  │                             │   │
+│  │  [Usuario encontrado]       │   │ ← Si existe: Badge verde + botón "Agregar"
+│  │  o                          │   │
+│  │  [Usuario no registrado]    │   │ ← Si no existe: Badge rojo + botón "Invitar"
+│  │                             │   │
+│  │  Participantes agregados:   │   │ ← Lista de participantes
+│  │  • Juan Pérez (Tú)          │   │ ← Badge violeta "Creador"
+│  │  • María García             │   │ ← Badge gris "Participante"
+│  │                             │   │
 │  │  ┌───────────────────────┐ │   │
 │  │  │    Crear Viaje        │ │   │ ← Botón primario (h-12, full-width)
 │  │  └───────────────────────┘ │   │
@@ -286,7 +307,13 @@ Home (no auth) → Login/Register → Home (auth) → Viajes → [Crear Viaje] �
 └─────────────────────────────────────┘
 ```
 
-**Acción**: Crear viaje → Redirige a `/trips/:tripId`
+**Acciones**:
+- Crear viaje → Redirige a `/trips/:tripId`
+- Buscar usuario por email → Valida si existe en la plataforma
+- Agregar participante → Si el usuario existe, se agrega al viaje
+- Invitar participante → Si el usuario no existe, se envía invitación por email
+
+**Nota**: Solo el creador del viaje puede agregar participantes. El sistema valida que el email exista en la plataforma antes de agregar. Si el usuario no está registrado, se muestra opción para enviar invitación.
 
 ---
 
@@ -610,6 +637,10 @@ El botón "Nuevo Gasto" está integrado directamente en el tab de Gastos del det
 - **Fondo**: Blanco (bg-white)
 - **Borde**: 1px slate-200 inferior (border-b)
 - **Sticky**: top-0 z-40 cuando aplica
+- **Comportamiento según autenticación**:
+  - **Usuario NO autenticado**: Muestra "Inicio" (link) + botón "Iniciar Sesión" (primary)
+  - **Usuario autenticado**: Muestra "Inicio" (link) + nombre del usuario (texto) + botón "Cerrar Sesión" (secondary)
+  - El botón "Iniciar Sesión" se oculta automáticamente cuando el usuario está autenticado
 
 ### Espaciado Estándar
 - **Contenedor principal**: px-6 py-8 (24px horizontal, 32px vertical)
