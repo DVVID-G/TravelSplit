@@ -14,6 +14,11 @@ export function formatCurrency(amount: number): string {
     return '$ 0';
   }
 
+  // Check if amount is finite and within safe integer range
+  if (!Number.isFinite(amount) || Math.abs(Math.floor(amount)) > Number.MAX_SAFE_INTEGER) {
+    return '$ 0';
+  }
+
   // Round to nearest whole unit and format with thousands separator
   const integerAmount = Math.round(amount);
   const formatted = integerAmount.toLocaleString('es-CO', {
