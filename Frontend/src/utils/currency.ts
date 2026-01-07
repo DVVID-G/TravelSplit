@@ -14,8 +14,8 @@ export function formatCurrency(amount: number): string {
     return '$ 0';
   }
 
-  // Check if amount is finite and within safe integer range
-  if (!Number.isFinite(amount) || Math.abs(Math.floor(amount)) > Number.MAX_SAFE_INTEGER) {
+  // Check if amount is finite and within safe integer range after rounding
+  if (!Number.isFinite(amount) || Math.round(amount) > Number.MAX_SAFE_INTEGER) {
     return '$ 0';
   }
 
