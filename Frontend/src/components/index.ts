@@ -22,6 +22,8 @@ export { PayerSelector } from './molecules/PayerSelector';
 export { BeneficiariesSelector } from './molecules/BeneficiariesSelector';
 export { ExpenseForm } from './molecules/ExpenseForm';
 export { ErrorState } from './molecules/ErrorState';
+export { EmptyState } from './molecules/EmptyState';
+export { TripCard } from './molecules/TripCard';
 
 // Organisms
 export { Header } from './organisms/Header';
