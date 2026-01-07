@@ -57,7 +57,8 @@
    Criterios de Aceptación:
    - Solo usuarios autenticados pueden crear viajes.
    - El viaje se guarda con la moneda fija COP sin opción de cambio.
-   - El creador queda registrado con rol CREATOR en TripParticipant. [file:1]
+   - El creador queda registrado con rol CREATOR en TripParticipant.
+   - Se debe poder añadir participantes por medio de correo electronico .
 
 6. US-TRIP-002 – Listar mis viajes
    Como Usuario Recurrente,
