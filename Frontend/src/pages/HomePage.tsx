@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Map, Users, Receipt, Calculator, Camera } from 'lucide-react';
+import { Map as MapIcon, Users, Receipt, Calculator, Camera } from 'lucide-react';
 import { Header } from '@/components';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { TripCard } from '@/components/molecules/TripCard';
@@ -71,7 +71,7 @@ const HomePageNotAuthenticated = () => {
         <div className="max-w-2xl mx-auto text-center">
           <div className="flex justify-center mb-6">
             <div className="bg-violet-100 rounded-full p-4">
-              <Map className="w-12 h-12 text-violet-600" aria-hidden="true" />
+              <MapIcon className="w-12 h-12 text-violet-600" aria-hidden="true" />
             </div>
           </div>
           <h1 className="text-3xl md:text-4xl font-heading font-bold text-slate-900 mb-4">
@@ -152,7 +152,7 @@ const HomePageEmptyState = () => {
       <Header />
       <main className="flex-1">
         <EmptyState
-          icon={<Map size={64} />}
+          icon={<MapIcon size={64} />}
           title="¿Planeando una escapada?"
           description="Crea tu primer viaje para empezar a dividir gastos fácilmente"
           action={
@@ -263,9 +263,13 @@ export const HomePage = () => {
     );
   }
 
+  // Loading state - Show loading indicator during fetch/refetch
+  if (tripsLoading) {
+    return <LoadingState />;
+  }
+
   // State 2: Authenticated without trips
   if (!trips || trips.length === 0) {
-    if (tripsLoading) return <LoadingState />;
     return <HomePageEmptyState />;
   }
 
