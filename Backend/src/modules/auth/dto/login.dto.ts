@@ -2,19 +2,10 @@ import { IsString, IsEmail, IsNotEmpty, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 /**
- * DTO para crear un login (registro de usuario).
+ * DTO para autenticación de usuario (login).
  * Contiene las validaciones necesarias para los campos de entrada.
  */
 export class LoginDto {
-  @ApiProperty({
-    description: 'Nombre del usuario',
-    example: 'Juan Pérez',
-    type: String,
-  })
-  @IsString()
-  @IsNotEmpty({ message: 'El nombre es requerido' })
-  nombre!: string;
-
   @ApiProperty({
     description: 'Email del usuario (debe ser un formato válido)',
     example: 'juan.perez@example.com',
@@ -35,4 +26,3 @@ export class LoginDto {
   @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres' })
   contraseña!: string;
 }
-

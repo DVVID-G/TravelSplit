@@ -10,6 +10,7 @@ erDiagram
         timestamp updated_at
         boolean is_active "Default TRUE"
         timestamp deleted_at "Soft Delete"
+        %% NOTA: No hay campo isAdmin. Los roles se manejan a nivel de viaje en TripParticipant
     }
 
     Trip {
@@ -32,6 +33,10 @@ erDiagram
         timestamp joined_at
         boolean is_active
         %% Esta tabla resuelve la relación N:M entre User y Trip
+        %% IMPORTANTE: Los roles son a nivel de viaje, no globales.
+        %% - CREATOR: Usuario que creó el viaje. Puede editar/eliminar gastos y gestionar participantes.
+        %% - MEMBER: Usuario invitado al viaje. Solo puede crear gastos propios (no editarlos tras crearlos).
+        %% Un mismo usuario puede ser CREATOR en un viaje y MEMBER en otro.
     }
 
     ExpenseCategory {

@@ -2,117 +2,200 @@
 name: /git-workflow
 id: git-workflow
 category: Git
-description: Analiza el flujo de trabajo, crea rama si es feature nueva, hace commits estándar y push al remoto.
+description: Analyzes the workflow, creates a branch if it's a new feature, makes standard commits and pushes to remote.
 triggers:
   - "commit"
   - "push"
   - "feature"
-  - "rama"
+  - "branch"
   - "git workflow"
 ---
 
 **Guardrails**
-- Solo ejecutar comandos git si hay cambios para commitear
-- No forzar push si hay conflictos potenciales
-- Usar mensajes de commit descriptivos y estándar
-- Verificar estado de git antes de cada operación
-- No hacer commit si el working directory está limpio
-- **SIEMPRE pedir aprobación del usuario antes de crear el commit**
-- Si el usuario rechaza el mensaje, ofrecer opción de modificar o cancelar
-- Manejar errores de git de forma descriptiva y no continuar si hay errores críticos
+- Only execute git commands if there are changes to commit
+- Do not force push if there are potential conflicts
+- Use descriptive and standard commit messages
+- Verify git status before each operation
+- Do not commit if the working directory is clean
+- **ALWAYS ask for user approval before creating commits**
+- If the user rejects the message, offer option to modify or cancel
+- Handle git errors descriptively and do not continue if there are critical errors
+- **By default, create atomic and detailed commits** (one commit per logical group of changes)
+- If the user explicitly requests atomic commits, split changes into multiple commits
 
 **Steps**
 
-1. **Verificar estado inicial de Git:**
-   - Ejecutar `git status --short` para ver cambios sin commitear de forma compacta
-   - Ejecutar `git branch --show-current` para obtener rama actual
-   - Ejecutar `git log --oneline -1` para ver último commit local
-   - Ejecutar `git status -sb` para ver relación con remoto (ahead/behind)
-   - Si no hay cambios en working directory ni staged, informar al usuario y terminar
+1. **Verify initial Git status:**
+   - Execute `git status --short` to see uncommitted changes in compact format
+   - Execute `git branch --show-current` to get current branch
+   - Execute `git log --oneline -1` to see last local commit
+   - Execute `git status -sb` to see relationship with remote (ahead/behind)
+   - If there are no changes in working directory or staged, inform the user and terminate
 
-2. **Determinar si es feature nueva o existente:**
-   - Obtener rama actual con `git branch --show-current`
-   - Verificar si la rama existe en remoto: `git ls-remote --heads origin [rama-actual]`
-   - **FEATURE NUEVA si:**
-     - La rama actual es `main`, `master`, `develop`, `dev` o `staging`
-     - La rama actual no existe en remoto Y no empieza con `feature/`
-     - La rama actual no empieza con `feature/`, `fix/`, `hotfix/`, `refactor/`
-   - **FEATURE EXISTENTE si:**
-     - La rama actual empieza con `feature/`, `fix/`, `hotfix/`, `refactor/`
-     - La rama existe en remoto (aunque no tenga commits locales sin push)
+2. **Determine if it's a new or existing feature:**
+   - Get current branch with `git branch --show-current`
+   - Verify if the branch exists in remote: `git ls-remote --heads origin [current-branch]`
+   - **NEW FEATURE if:**
+     - Current branch is `main`, `master`, `develop`, `dev` or `staging`
+     - Current branch does not exist in remote AND does not start with `feature/`
+     - Current branch does not start with `feature/`, `fix/`, `hotfix/`, `refactor/`
+   - **EXISTING FEATURE if:**
+     - Current branch starts with `feature/`, `fix/`, `hotfix/`, `refactor/`
+     - Branch exists in remote (even if it doesn't have local commits without push)
 
-3. **Si es FEATURE NUEVA:**
-   - Analizar archivos modificados con `git diff --name-only` y `git diff --stat`
-   - Generar nombre de feature automáticamente basado en:
-     - Nombres de archivos modificados (extraer palabras clave)
-     - Directorios modificados (ej: `modules/users` → `user-management`)
-     - Si no se puede inferir, usar formato: `feature-[timestamp]` o preguntar al usuario
-   - Crear nueva rama: `git checkout -b feature/[nombre-feature]` (usar kebab-case, sin espacios)
-   - Añadir todos los cambios: `git add .`
-   - Generar mensaje de commit estándar analizando los cambios (usar paso 5)
-   - **PEDIR APROBACIÓN DEL MENSAJE:**
-     - Mostrar el mensaje propuesto de forma clara: "📝 Mensaje de commit propuesto: `[mensaje-estándar]`"
-     - Preguntar: "¿Apruebas este mensaje? (sí/no/modificar)"
-     - Si el usuario aprueba (sí/s/y/ok): continuar con el commit
-     - Si el usuario quiere modificar: pedir el nuevo mensaje y usarlo
-     - Si el usuario rechaza (no/n/cancelar): cancelar la operación y terminar
-   - Crear commit: `git commit -m "[mensaje-aprobado]"`
-   - Verificar si hay remoto configurado: `git remote -v`
-   - Si hay remoto, hacer push de la nueva rama: `git push -u origin feature/[nombre-feature]`
-   - Si no hay remoto, informar que el commit está listo pero falta configurar remoto
-   - Informar al usuario: "✅ Feature branch creada: feature/[nombre-feature] | Commit: [hash] | Push exitoso" (o solo commit si no hay remoto)
+3. **If it's a NEW FEATURE:**
+   - Analyze modified files with `git diff --name-only` and `git diff --stat`
+   - Generate feature name automatically based on:
+     - Modified file names (extract keywords)
+     - Modified directories (e.g.: `modules/users` → `user-management`)
+     - If it cannot be inferred, use format: `feature-[timestamp]` or ask the user
+   - Create new branch: `git checkout -b feature/[feature-name]` (use kebab-case, no spaces)
+   - **ANALYZE ALL CHANGES FOR ATOMIC COMMITS:**
+     - Group files by logical change type (use step 5)
+     - Generate commit message for EACH group using step 5.1
+     - Store all groups with their proposed messages in a list
+   - **SHOW ALL PROPOSED COMMITS AT ONCE:**
+     - Display all proposed commits in a numbered list format:
+       ```
+       📝 Proposed commits (will be created in this order):
+       
+       1. [type(scope): brief description]
+          Files: [list of files]
+          Message:
+          [full commit message with body]
+       
+       2. [type(scope): brief description]
+          Files: [list of files]
+          Message:
+          [full commit message with body]
+       
+       ... (continue for all groups)
+       ```
+     - **REQUEST GLOBAL APPROVAL:**
+       - Ask: "Do you approve all these commits? (yes/no/modify)"
+       - If user approves (yes/y/ok): proceed to create all commits
+       - If user wants to modify (modify/m): 
+         - Ask: "Which commit number(s) do you want to modify? (e.g., 1, 3-5, or 'all')"
+         - For each selected commit, ask for the new message
+         - Show updated list and ask for approval again
+       - If user rejects (no/n/cancel): cancel operation and terminate
+   - **CREATE ALL COMMITS:**
+     - For each approved group (in order):
+       - Add files from the group: `git add [group-files]`
+       - Create commit: `git commit -m "[approved-message]"`
+   - Verify if remote is configured: `git remote -v`
+   - If remote exists, push the new branch: `git push -u origin feature/[feature-name]`
+   - If no remote, inform that commits are ready but remote needs to be configured
+   - Inform user: "✅ Feature branch created: feature/[feature-name] | Commits: [number] | Push successful" (or only commits if no remote)
 
-4. **Si es FEATURE EXISTENTE:**
-   - Obtener nombre de la rama actual
-   - Añadir todos los cambios: `git add .`
-   - Generar mensaje de commit estándar analizando los cambios (usar paso 5)
-   - **PEDIR APROBACIÓN DEL MENSAJE:**
-     - Mostrar el mensaje propuesto de forma clara: "📝 Mensaje de commit propuesto: `[mensaje-estándar]`"
-     - Preguntar: "¿Apruebas este mensaje? (sí/no/modificar)"
-     - Si el usuario aprueba (sí/s/y/ok): continuar con el commit
-     - Si el usuario quiere modificar: pedir el nuevo mensaje y usarlo
-     - Si el usuario rechaza (no/n/cancelar): cancelar la operación y terminar
-   - Crear commit: `git commit -m "[mensaje-aprobado]"`
-   - Verificar si hay commits locales sin push: `git status -sb` (buscar "ahead")
-   - Verificar si hay remoto configurado: `git remote -v`
-   - Si hay remoto, hacer push: `git push` (sin -u ya que la rama ya existe)
-   - Si no hay remoto, informar que el commit está listo pero falta configurar remoto
-   - Informar al usuario: "✅ Commit realizado en [rama-actual] | Push exitoso" (o solo commit si no hay remoto)
+4. **If it's an EXISTING FEATURE:**
+   - Get current branch name
+   - **ANALYZE ALL CHANGES FOR ATOMIC COMMITS:**
+     - Group files by logical change type (use step 5)
+     - Generate commit message for EACH group using step 5.1
+     - Store all groups with their proposed messages in a list
+   - **SHOW ALL PROPOSED COMMITS AT ONCE:**
+     - Display all proposed commits in a numbered list format:
+       ```
+       📝 Proposed commits (will be created in this order):
+       
+       1. [type(scope): brief description]
+          Files: [list of files]
+          Message:
+          [full commit message with body]
+       
+       2. [type(scope): brief description]
+          Files: [list of files]
+          Message:
+          [full commit message with body]
+       
+       ... (continue for all groups)
+       ```
+     - **REQUEST GLOBAL APPROVAL:**
+       - Ask: "Do you approve all these commits? (yes/no/modify)"
+       - If user approves (yes/y/ok): proceed to create all commits
+       - If user wants to modify (modify/m): 
+         - Ask: "Which commit number(s) do you want to modify? (e.g., 1, 3-5, or 'all')"
+         - For each selected commit, ask for the new message
+         - Show updated list and ask for approval again
+       - If user rejects (no/n/cancel): cancel operation and terminate
+   - **CREATE ALL COMMITS:**
+     - For each approved group (in order):
+       - Add files from the group: `git add [group-files]`
+       - Create commit: `git commit -m "[approved-message]"`
+   - Verify if there are local commits without push: `git status -sb` (look for "ahead")
+   - Verify if remote is configured: `git remote -v`
+   - If remote exists, push: `git push` (without -u since branch already exists)
+   - If no remote, inform that commits are ready but remote needs to be configured
+   - Inform user: "✅ Commits made in [current-branch]: [number] commits | Push successful" (or only commits if no remote)
 
-5. **Generación de mensajes de commit estándar:**
-   - Analizar archivos modificados con `git diff --name-only` y `git diff --stat`
-   - Determinar tipo de commit:
-     - `feat`: Nuevos archivos en `modules/`, `components/`, nuevos endpoints
-     - `fix`: Correcciones de bugs, errores
-     - `refactor`: Reestructuración sin cambio de funcionalidad
-     - `docs`: Cambios en documentación, README, comentarios
-     - `style`: Formato, linting, espacios (sin cambio de código)
-     - `test`: Añadir o modificar tests
-     - `chore`: Build, dependencias, configuraciones
-   - Determinar scope basado en:
-     - Directorio principal modificado (ej: `modules/users` → `users`)
-     - Componente principal (ej: `components/Button.tsx` → `button`)
-   - Generar descripción breve (máximo 50 caracteres) basada en:
-     - Archivos nuevos creados
-     - Funcionalidad principal modificada
-     - Cambios más significativos
-   - Formato final: `tipo(scope): descripción breve`
-   - Ejemplos:
-     - `feat(auth): add user registration endpoint`
-     - `fix(users): correct email validation`
-     - `refactor(components): simplify Button component`
+5. **Grouping changes for atomic commits:**
+  - Analyze modified files with `git diff --name-only` and `git diff --stat`.
+  - Group files by logical change type:
+    - **Group 1 - Dependencies:** `package.json`, `package-lock.json`, dependency configuration files.
+    - **Group 2 - Configuration/Styles:** `tailwind.config.ts`, `*.css`, `index.html`, build configuration files.
+    - **Group 3 - Services/API:** Files in `services/`, `api/`, `utils/` related to business logic.
+    - **Group 4 - Components:** Files in `components/`, updates to existing components.
+    - **Group 5 - Pages/Views:** Files in `pages/`, `views/`, new pages or views.
+    - **Group 6 - Routing/Navigation:** Files in `routes/`, `router/`, `App.tsx` (routing configuration).
+    - **Group 7 - Documentation:** Files in `docs/`, `openspec/`, `README.md`, `.md` files.
+    - **Group 8 - Tests:** Files in `test/`, `__tests__/`, `*.test.ts`, `*.spec.ts`.
+    - **Group 9 - Others:** Files that don't fit in the previous groups.
+  - If a file can belong to multiple groups, prioritize by:
+    1. If it's a new file → most specific group.
+    2. If it's a modification → main functionality group.
+  - Create one commit per group that has files.
 
-6. **Manejo de errores:**
-   - Si `git checkout -b` falla (rama ya existe), informar y sugerir usar rama existente
-   - Si `git push` falla por conflictos, informar y NO forzar push
-   - Si `git push` falla por falta de upstream, usar `git push -u origin [rama]`
-   - Si hay errores de permisos o remoto, informar claramente al usuario
-   - Si el working directory tiene conflictos de merge, informar y NO continuar
+5.1. **Standard commit message generation:**
+  - For each group of files, analyze the change type.
+  - Determine commit type:
+    - `feat`: New files in `modules/`, `components/`, `pages/`, new endpoints, new features.
+    - `fix`: Bug fixes, errors, validations.
+    - `refactor`: Restructuring without functionality change, code improvements.
+    - `docs`: Documentation changes, README, comments, OpenSpec.
+    - `style`: Formatting, linting, spaces, visual changes without logic (CSS, Tailwind config).
+    - `test`: Add or modify tests.
+    - `chore`: Build, dependencies, tool configurations.
+  - Determine scope based on:
+    - Main directory modified (e.g.: `modules/users` → `users`).
+    - Main component (e.g.: `components/Button.tsx` → `button`).
+    - Functional area (e.g.: `pages/RegisterPage.tsx` → `auth`).
+  - Generate brief description (maximum 50 characters) based on:
+    - New files created.
+    - Main functionality modified.
+    - Most significant changes in the group.
+  - Add commit body with details (optional but recommended):
+    - List main files modified.
+    - Describe key changes in bullet points.
+    - Format: `- Change description`.
+  - Final format:
 
-**Referencias**
-- Usar `git diff --name-only` para ver archivos modificados
-- Usar `git diff --stat` para ver resumen de cambios
-- Usar `git status -sb` para ver relación con remoto
-- Verificar remoto con `git remote -v` antes de push
-- Usar `git log --oneline -5` para ver contexto de commits recientes
+    ```bash
+    type(scope): brief description
+    
+    - Change detail 1
+    - Change detail 2
+    - Change detail 3
+    ```
+
+  - Examples:
+    - `chore(frontend): add dependencies for form validation and state management`
+    - `style(frontend): configure Tailwind with design system colors and fonts`
+    - `feat(auth): add user registration page with form validation`
+    - `refactor(components): update Input and Button to match design system`
+    - `docs(openspec): update tasks checklist for registration feature`
+
+6. **Error handling:**
+   - If `git checkout -b` fails (branch already exists), inform and suggest using existing branch
+   - If `git push` fails due to conflicts, inform and DO NOT force push
+   - If `git push` fails due to missing upstream, use `git push -u origin [branch]`
+   - If there are permission or remote errors, inform the user clearly
+   - If the working directory has merge conflicts, inform and DO NOT continue
+
+**References**
+- Use `git diff --name-only` to see modified files
+- Use `git diff --stat` to see change summary
+- Use `git status -sb` to see relationship with remote
+- Verify remote with `git remote -v` before push
+- Use `git log --oneline -5` to see context of recent commits
 

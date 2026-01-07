@@ -151,7 +151,7 @@ Funcionalidades core para la creación y configuración de los grupos de viaje.
 > *Propósito:* Facilitar el acceso rápido a un viaje sin esperar invitación por email.
 >
 > **USER STORY:**
-> "Como usuario participante, quiero ingresar un código alfanumérico, para unirme automáticamente a un viaje existente."
+> "Como usuario participante, quie                  lfanumérico, para unirme automáticamente a un viaje existente."
 >
 > **CRITERIOS DE ACEPTACIÓN:**
 > - [ ] Campo de texto para ingresar código.
