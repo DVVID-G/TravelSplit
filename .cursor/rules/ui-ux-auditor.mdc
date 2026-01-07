@@ -37,12 +37,12 @@ Antes de sugerir código o revisar un archivo, DEBES leer (o tener en cuenta) la
 - **React Context y Providers (CRÍTICO):**
     - **Orden de Providers:** Los Context Providers deben envolver TODOS los componentes que los usan. Verifica que el orden sea correcto:
         ```tsx
-        // ✅ CORRECTO: Provider envuelve RouterProvider
+        // CORRECTO: Provider envuelve RouterProvider
         <AuthProvider>
           <RouterProvider router={router} />
         </AuthProvider>
         
-        // ❌ INCORRECTO: Router creado fuera, antes de que AuthProvider exista
+        // INCORRECTO: Router creado fuera, antes de que AuthProvider exista
         const router = createBrowserRouter([...]); // Se ejecuta antes del render
         <AuthProvider>
           <RouterProvider router={router} />
@@ -50,7 +50,7 @@ Antes de sugerir código o revisar un archivo, DEBES leer (o tener en cuenta) la
         ```
     - **Router Configuration:** Si el router usa componentes que dependen de Context (como `ProtectedRoute` que usa `useAuthContext`), el router DEBE crearse DENTRO del componente que tiene el Provider, usando `useMemo`:
         ```tsx
-        // ✅ CORRECTO: Router creado dentro del componente con Provider
+        // CORRECTO: Router creado dentro del componente con Provider
         function App() {
           const router = useMemo(() => createBrowserRouter([...]), []);
           return (
@@ -60,7 +60,7 @@ Antes de sugerir código o revisar un archivo, DEBES leer (o tener en cuenta) la
           );
         }
         
-        // ❌ INCORRECTO: Router creado en módulo, fuera del componente
+        // INCORRECTO: Router creado en módulo, fuera del componente
         export const router = createBrowserRouter([...]); // Se ejecuta al importar
         ```
     - **Errores Comunes a Detectar:**
@@ -74,12 +74,12 @@ Antes de sugerir código o revisar un archivo, DEBES leer (o tener en cuenta) la
 - **Servicios API y Endpoints:**
     - **Endpoints Correctos:** Verifica que cada función de servicio use el endpoint correcto:
         ```tsx
-        // ✅ CORRECTO: registerUser usa /auth/register
+        // CORRECTO: registerUser usa /auth/register
         export async function registerUser(data) {
           return fetch(`${API_BASE_URL}/auth/register`, {...});
         }
         
-        // ❌ INCORRECTO: registerUser usando /auth/login
+        // INCORRECTO: registerUser usando /auth/login
         export async function registerUser(data) {
           return fetch(`${API_BASE_URL}/auth/login`, {...}); // Endpoint incorrecto
         }
