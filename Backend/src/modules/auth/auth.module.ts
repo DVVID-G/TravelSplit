@@ -25,7 +25,7 @@ import jwtConfig from '../../config/jwt.config';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const jwtSecret = configService.get<string>('jwt.secret');
-        
+
         if (!jwtSecret || jwtSecret.trim() === '') {
           throw new Error(
             'JWT_SECRET no está configurado. Por favor, configure la variable de entorno JWT_SECRET antes de iniciar la aplicación.',

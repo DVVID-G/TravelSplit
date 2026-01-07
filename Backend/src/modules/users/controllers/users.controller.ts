@@ -25,8 +25,8 @@ import {
 import { UsersService } from '../services/users.service';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UserResponseDto } from '../dto/user-response.dto';
-import { User } from '../entities/user.entity';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
+import { UserMapper } from '../../../common/mappers/user.mapper';
 import type { AuthenticatedRequest } from '../../../common/interfaces/authenticated-request.interface';
 
 /**
@@ -73,7 +73,7 @@ export class UsersController {
     const users = await this.usersService.findAll();
 
     // Mapear entidades a DTOs de respuesta (sin información sensible)
-    return users.map((user) => this.mapToResponseDto(user));
+    return users.map((user) => UserMapper.toResponseDto(user));
   }
 
   /**
@@ -105,7 +105,7 @@ export class UsersController {
     const user = await this.usersService.findOne(id);
 
     // Mapear entidad a DTO de respuesta (sin información sensible)
-    return this.mapToResponseDto(user);
+    return UserMapper.toResponseDto(user);
   }
 
   /**
@@ -136,7 +136,8 @@ export class UsersController {
     type: UserResponseDto,
   })
   @ApiBadRequestResponse({
-    description: 'Datos de entrada inválidos o ID inválido (debe ser un UUID válido)',
+    description:
+      'Datos de entrada inválidos o ID inválido (debe ser un UUID válido)',
   })
   @ApiNotFoundResponse({
     description: 'Usuario no encontrado',
@@ -155,33 +156,13 @@ export class UsersController {
   ): Promise<UserResponseDto> {
     // Verificar autorización: usuarios solo pueden actualizar su propio perfil
     if (req.user?.id !== id) {
-      throw new ForbiddenException(
-        'Solo puedes actualizar tu propio perfil',
-      );
+      throw new ForbiddenException('Solo puedes actualizar tu propio perfil');
     }
 
     const user = await this.usersService.update(id, updateUserDto);
 
     // Mapear entidad a DTO de respuesta (sin información sensible)
-    return this.mapToResponseDto(user);
-  }
-
-  /**
-   * Mapea una entidad User a un DTO de respuesta.
-   * Centraliza la lógica de mapeo para evitar duplicación.
-   *
-   * @private
-   * @method mapToResponseDto
-   * @param {User} user - Entidad User a mapear
-   * @returns {UserResponseDto} DTO de respuesta con los campos públicos
-   */
-  private mapToResponseDto(user: User): UserResponseDto {
-    return {
-      id: user.id,
-      nombre: user.nombre,
-      email: user.email,
-      createdAt: user.createdAt,
-    };
+    return UserMapper.toResponseDto(user);
   }
 
   /**

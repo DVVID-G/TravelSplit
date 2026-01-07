@@ -55,4 +55,12 @@ async function bootstrap() {
     `Swagger documentation: http://localhost:${port}/${apiPrefix}/docs`,
   );
 }
-bootstrap();
+
+void (async () => {
+  try {
+    await bootstrap();
+  } catch (error) {
+    console.error('Failed to start application:', error);
+    process.exit(1);
+  }
+})();

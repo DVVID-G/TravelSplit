@@ -17,12 +17,3 @@ export class User extends BaseEntity {
   @Column({ name: 'password_hash', type: 'varchar', length: 255 })
   passwordHash!: string;
 }
-
-
-
-
-
-
-
-
-

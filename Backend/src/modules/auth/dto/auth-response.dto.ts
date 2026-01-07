@@ -24,12 +24,3 @@ export class AuthResponseDto {
     this.user = user;
   }
 }
-
-
-
-
-
-
-
-
-

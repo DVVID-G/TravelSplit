@@ -27,7 +27,9 @@ export class AuthService {
    * @returns Entidad User y token JWT
    * @throws ConflictException si el email ya está registrado
    */
-  async register(registerDto: RegisterDto): Promise<{ user: User; accessToken: string }> {
+  async register(
+    registerDto: RegisterDto,
+  ): Promise<{ user: User; accessToken: string }> {
     // Mapear RegisterDto a CreateUserDto
     const createUserDto: CreateUserDto = {
       nombre: registerDto.nombre,
@@ -53,7 +55,9 @@ export class AuthService {
    * @returns Entidad User y token JWT
    * @throws UnauthorizedException si las credenciales son inválidas
    */
-  async login(loginDto: LoginDto): Promise<{ user: User; accessToken: string }> {
+  async login(
+    loginDto: LoginDto,
+  ): Promise<{ user: User; accessToken: string }> {
     // Buscar usuario por email
     const user = await this.usersService.findByEmail(loginDto.email);
 
@@ -94,5 +98,4 @@ export class AuthService {
     };
     return await this.jwtService.signAsync(payload);
   }
-
 }
