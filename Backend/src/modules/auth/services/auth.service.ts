@@ -7,6 +7,7 @@ import { UserResponseDto } from '../../users/dto/user-response.dto';
 import { AuthResponseDto } from '../dto/auth-response.dto';
 import { CreateUserDto } from '../../users/dto/create-user.dto';
 import { User } from '../../users/entities/user.entity';
+import { JwtPayload } from '../../../common/strategies/jwt.strategy';
 import * as bcrypt from 'bcrypt';
 
 /**
@@ -44,10 +45,7 @@ export class AuthService {
     const userResponse = this.mapToUserResponse(user);
 
     // Retornar token y datos del usuario
-    return {
-      accessToken,
-      user: userResponse,
-    };
+    return new AuthResponseDto(accessToken, userResponse);
   }
 
   /**
@@ -83,10 +81,7 @@ export class AuthService {
     const userResponse = this.mapToUserResponse(user);
 
     // Retornar token y datos del usuario
-    return {
-      accessToken,
-      user: userResponse,
-    };
+    return new AuthResponseDto(accessToken, userResponse);
   }
 
   /**
@@ -97,7 +92,7 @@ export class AuthService {
    * @returns Token JWT firmado
    */
   private async generateToken(user: User): Promise<string> {
-    const payload = {
+    const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
     };

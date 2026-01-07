@@ -11,13 +11,18 @@ export class AuthResponseDto {
     example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
     type: String,
   })
-  accessToken!: string;
+  readonly accessToken: string;
 
   @ApiProperty({
     description: 'Datos del usuario autenticado',
     type: UserResponseDto,
   })
-  user!: UserResponseDto;
+  readonly user: UserResponseDto;
+
+  constructor(accessToken: string, user: UserResponseDto) {
+    this.accessToken = accessToken;
+    this.user = user;
+  }
 }
 
 
