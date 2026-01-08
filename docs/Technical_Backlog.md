@@ -69,6 +69,7 @@
 ### TCK-TRIP-001 – Modelo y migración de Trip y TripParticipant
 - Relacionado con: US-TRIP-001, US-PART-001, US-PART-002
 - Tipo: Backend / DB
+- Estado: ✅ Completado
 - Descripción:
   Crear entidades y migraciones para viajes y sus participantes, con roles contextuales CREATOR/MEMBER. 
 - Tareas:
