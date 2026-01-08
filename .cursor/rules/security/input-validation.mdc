@@ -1,0 +1,273 @@
+---
+description: Enforces input validation and sanitization standards to prevent security vulnerabilities for TravelSplit backend.
+globs:
+  - Backend/src/**/*.dto.ts
+  - Backend/src/**/*.controller.ts
+  - Backend/src/**/*.service.ts
+alwaysApply: false
+---
+
+# Input Validation and Sanitization Standards
+
+## Rules
+
+- Validate all inputs using DTOs with class-validator decorators.
+- Never trust client-provided data.
+- Sanitize user inputs to prevent injection attacks.
+- Use ValidationPipe globally with `whitelist: true` and `forbidNonWhitelisted: true`.
+- Validate data types, formats, and constraints.
+- Provide user-friendly error messages in Spanish.
+- Reject unknown properties in request bodies.
+- Validate UUIDs using `ParseUUIDPipe`.
+
+## DTO Validation
+
+- Use `class-validator` decorators for all DTO properties.
+- Use appropriate validators: `@IsString()`, `@IsEmail()`, `@IsNotEmpty()`, `@MinLength()`, `@IsUUID()`.
+- Provide custom error messages in Spanish.
+- Use `@IsOptional()` for optional fields.
+- Use `@Transform()` to sanitize inputs when needed.
+
+## ValidationPipe Configuration
+
+- Use global `ValidationPipe` with strict options.
+- Set `whitelist: true` to strip unknown properties.
+- Set `forbidNonWhitelisted: true` to reject requests with unknown properties.
+- Set `transform: true` to transform payloads to DTO instances.
+- Enable implicit type conversion: `enableImplicitConversion: true`.
+
+## Input Sanitization
+
+- Sanitize strings to prevent XSS attacks.
+- Use `class-transformer` `@Transform()` for sanitization.
+- Trim whitespace from string inputs.
+- Validate email format strictly.
+- Validate UUID format for IDs.
+
+## Parameter Validation
+
+- Use `ParseUUIDPipe` for UUID path parameters.
+- Use `ParseIntPipe` for numeric path parameters.
+- Validate query parameters with DTOs when complex.
+- Reject invalid parameter formats immediately.
+
+## SQL Injection Prevention
+
+- Use TypeORM parameterized queries (automatic).
+- Never concatenate user input into SQL queries.
+- Use TypeORM query builder or repository methods.
+- Validate and sanitize inputs before database operations.
+
+## XSS Prevention
+
+- Sanitize user inputs that will be displayed.
+- Use `class-transformer` to sanitize strings.
+- Escape HTML in user-generated content.
+- Validate and sanitize file uploads.
+
+## DO
+
+```typescript
+// DTO with comprehensive validation
+export class CreateUserDto {
+  @ApiProperty({
+    description: 'Nombre del usuario',
+    example: 'Juan Pérez',
+  })
+  @IsString()
+  @IsNotEmpty({ message: 'El nombre es requerido' })
+  @Transform(({ value }) => value?.trim())
+  @MinLength(2, { message: 'El nombre debe tener al menos 2 caracteres' })
+  @MaxLength(255, { message: 'El nombre no puede exceder 255 caracteres' })
+  nombre!: string;
+  
+  @ApiProperty({
+    description: 'Email del usuario',
+    example: 'juan.perez@example.com',
+  })
+  @IsEmail({}, { message: 'El email debe tener un formato válido' })
+  @IsNotEmpty({ message: 'El email es requerido' })
+  @Transform(({ value }) => value?.trim().toLowerCase())
+  email!: string;
+  
+  @ApiProperty({
+    description: 'Contraseña del usuario',
+    example: 'miPassword123',
+    minLength: 8,
+  })
+  @IsString()
+  @IsNotEmpty({ message: 'La contraseña es requerida' })
+  @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres' })
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
+    message: 'La contraseña debe contener al menos una mayúscula, una minúscula y un número',
+  })
+  contraseña!: string;
+}
+
+// Controller with parameter validation
+@Controller('users')
+export class UsersController {
+  @Get(':id')
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string, // Validates UUID format
+  ): Promise<UserResponseDto> {
+    return this.usersService.findOne(id);
+  }
+  
+  @Put(':id')
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateUserDto: UpdateUserDto, // Validated by ValidationPipe
+  ): Promise<UserResponseDto> {
+    return this.usersService.update(id, updateUserDto);
+  }
+}
+
+// Global ValidationPipe configuration
+app.useGlobalPipes(
+  new ValidationPipe({
+    whitelist: true, // Strip unknown properties
+    forbidNonWhitelisted: true, // Reject requests with unknown properties
+    transform: true, // Transform payloads to DTO instances
+    transformOptions: {
+      enableImplicitConversion: true, // Enable type conversion
+    },
+  }),
+);
+
+// Service with input sanitization
+@Injectable()
+export class UsersService {
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    // DTO validation already handled by ValidationPipe
+    // Additional business validation
+    if (createUserDto.email.includes('test')) {
+      throw new BadRequestException('Emails de prueba no permitidos');
+    }
+    
+    // Sanitize before saving
+    const user = this.userRepository.create({
+      nombre: createUserDto.nombre.trim(),
+      email: createUserDto.email.toLowerCase().trim(),
+      passwordHash: await bcrypt.hash(createUserDto.contraseña, 10),
+    });
+    
+    return this.userRepository.save(user);
+  }
+}
+```
+
+```typescript
+// Query parameter validation
+export class GetTripsQueryDto {
+  @IsOptional()
+  @IsEnum(['active', 'completed', 'all'], {
+    message: 'El filtro debe ser: active, completed o all',
+  })
+  filter?: 'active' | 'completed' | 'all';
+  
+  @IsOptional()
+  @IsInt({ message: 'El límite debe ser un número entero' })
+  @Min(1, { message: 'El límite debe ser al menos 1' })
+  @Max(100, { message: 'El límite no puede exceder 100' })
+  limit?: number;
+}
+
+@Get()
+async findAll(@Query() query: GetTripsQueryDto): Promise<TripResponseDto[]> {
+  return this.tripsService.findAll(query);
+}
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: No validation on DTO
+export class CreateUserDto {
+  nombre!: string; // VIOLATION: Missing @IsString(), @IsNotEmpty()
+  email!: string; // VIOLATION: Missing @IsEmail()
+  contraseña!: string; // VIOLATION: Missing @MinLength()
+}
+```
+
+```typescript
+// VIOLATION: Not using ValidationPipe
+@Post()
+async create(@Body() createUserDto: CreateUserDto) { // VIOLATION: No ValidationPipe
+  // No validation applied
+  return this.usersService.create(createUserDto);
+}
+```
+
+```typescript
+// VIOLATION: Not validating UUID parameter
+@Get(':id')
+async findOne(@Param('id') id: string) { // VIOLATION: Should use ParseUUIDPipe
+  return this.usersService.findOne(id);
+}
+```
+
+```typescript
+// VIOLATION: Allowing unknown properties
+app.useGlobalPipes(
+  new ValidationPipe({
+    whitelist: false, // VIOLATION: Should be true
+    forbidNonWhitelisted: false, // VIOLATION: Should be true
+  }),
+);
+```
+
+```typescript
+// VIOLATION: SQL injection vulnerability
+async findUser(email: string) {
+  return this.repository.query(`SELECT * FROM users WHERE email = '${email}'`); // VIOLATION: Use parameterized queries
+}
+```
+
+```typescript
+// VIOLATION: Not sanitizing user input
+async createUser(dto: CreateUserDto) {
+  const user = this.repository.create({
+    email: dto.email, // VIOLATION: Should trim and lowercase
+    nombre: dto.nombre, // VIOLATION: Should trim
+  });
+}
+```
+
+```typescript
+// VIOLATION: Trusting client data
+async updateUser(id: string, data: any) { // VIOLATION: Should use DTO
+  // No validation, accepts any data
+  return this.repository.update(id, data);
+}
+```
+
+## Validation Best Practices
+
+- Validate early: validate inputs at controller level.
+- Validate strictly: reject invalid data immediately.
+- Provide clear error messages: tell users what's wrong.
+- Sanitize inputs: trim, lowercase, escape as needed.
+- Use type-safe DTOs: leverage TypeScript types.
+
+## Sanitization Guidelines
+
+- Trim whitespace from string inputs.
+- Lowercase email addresses.
+- Escape HTML in user-generated content.
+- Validate file uploads: type, size, content.
+- Sanitize file names to prevent path traversal.
+
+## Security Considerations
+
+- Never trust client-provided data.
+- Validate all inputs, even from authenticated users.
+- Use parameterized queries (TypeORM does this automatically).
+- Sanitize inputs that will be stored or displayed.
+- Log validation failures for security monitoring.
+
+## Exceptions
+
+- Health check endpoints may skip validation.
+- Internal service-to-service calls may use relaxed validation.
+- Test endpoints may bypass validation for testing purposes.

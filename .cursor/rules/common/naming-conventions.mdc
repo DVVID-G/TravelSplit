@@ -1,0 +1,208 @@
+---
+description: Enforces naming conventions for variables, functions, classes, files, and modules across TravelSplit project.
+globs:
+  - Backend/src/**/*.ts
+  - Frontend/src/**/*.ts
+  - Frontend/src/**/*.tsx
+alwaysApply: true
+---
+
+# Naming Conventions
+
+## Rules
+
+- Use `camelCase` for variables, functions, and methods.
+- Use `PascalCase` for classes, interfaces, types, and components.
+- Use `UPPER_SNAKE_CASE` for constants and environment variables.
+- Use `kebab-case` for file names (except React components).
+- Use descriptive names that indicate purpose, not type.
+- Prefix boolean variables with `is`, `has`, `should`, `can`, or `will`.
+- Prefix event handlers with `handle` or `on`.
+- Suffix arrays/collections with plural nouns.
+- Use verb-noun pattern for function names.
+
+## Variables and Functions
+
+- Variables: `camelCase` with descriptive names.
+- Functions: `camelCase` with verb-noun pattern.
+- Boolean variables: prefix with `is`, `has`, `should`, `can`, `will`.
+- Event handlers: prefix with `handle` or `on`.
+
+## Classes and Interfaces
+
+- Classes: `PascalCase` with noun names.
+- Interfaces: `PascalCase` with descriptive names.
+- Abstract classes: `PascalCase` prefixed with `Abstract` if needed.
+- Generic types: single uppercase letter `T`, `K`, `V`, `U`.
+
+## Constants
+
+- Constants: `UPPER_SNAKE_CASE`.
+- Environment variables: `UPPER_SNAKE_CASE`.
+- Enum values: `UPPER_SNAKE_CASE` or `PascalCase` depending on enum type.
+
+## File Naming
+
+- TypeScript files: `kebab-case.ts` or `kebab-case.tsx`.
+- React components: `PascalCase.tsx` matching component name.
+- Test files: `*.spec.ts` or `*.test.ts`.
+- Configuration files: `kebab-case.config.ts`.
+
+## Module and Directory Naming
+
+- Directories: `kebab-case` or `camelCase` (match project convention).
+- Module names: `kebab-case` matching directory name.
+- Barrel exports: `index.ts`.
+
+## Backend-Specific Conventions
+
+- Controllers: `{Resource}Controller` (e.g., `UsersController`).
+- Services: `{Resource}Service` (e.g., `UsersService`).
+- Entities: `PascalCase` singular noun (e.g., `User`, `Trip`).
+- DTOs: `{Action}{Resource}Dto` (e.g., `CreateUserDto`, `UpdateUserDto`).
+- Repositories: Use TypeORM `Repository<Entity>` pattern.
+- Guards: `{Purpose}Guard` (e.g., `JwtAuthGuard`).
+- Filters: `{Purpose}Filter` (e.g., `HttpExceptionFilter`).
+
+## Frontend-Specific Conventions
+
+- Components: `PascalCase` matching file name.
+- Hooks: `use{Name}` (e.g., `useAuth`, `useUser`).
+- Services: `{resource}.service.ts` (e.g., `auth.service.ts`).
+- Types: `PascalCase` interfaces or types.
+- Constants: `UPPER_SNAKE_CASE` in separate files or at top of module.
+
+## React Component Conventions
+
+- Component files: `{ComponentName}.tsx`.
+- Component export: named export matching file name.
+- Props interface: `{ComponentName}Props`.
+- Default props: use default parameters, not `defaultProps`.
+
+## DO
+
+```typescript
+// Variables and functions
+const userCount = 10;
+const isAuthenticated = true;
+const hasPermission = false;
+const shouldRetry = true;
+const canEdit = false;
+
+function getUserById(id: string): User {
+  return repository.findOne({ where: { id } });
+}
+
+function handleSubmit(event: FormEvent) {
+  event.preventDefault();
+}
+
+// Classes and interfaces
+class UserService {
+  private readonly userRepository: Repository<User>;
+}
+
+interface UserResponse {
+  id: string;
+  email: string;
+}
+
+// Constants
+const API_BASE_URL = 'https://api.example.com';
+const MAX_RETRIES = 3;
+const DEFAULT_TIMEOUT = 5000;
+
+// Backend: Controller, Service, DTO
+@Controller('users')
+export class UsersController {}
+
+@Injectable()
+export class UsersService {}
+
+export class CreateUserDto {}
+
+// Frontend: Component, Hook, Service
+export function UserProfile({ userId }: UserProfileProps) {}
+
+export function useAuth() {}
+
+// auth.service.ts
+export async function loginUser(credentials: LoginRequest) {}
+```
+
+```typescript
+// File names
+// users.controller.ts
+// user.service.ts
+// use-auth.ts
+// UserProfile.tsx
+// auth.service.ts
+```
+
+## DON'T
+
+```typescript
+// Bad variable names
+const u = getUser(); // VIOLATION: too short
+const user_data = {}; // VIOLATION: snake_case
+const UserCount = 10; // VIOLATION: PascalCase for variable
+const isauth = true; // VIOLATION: missing camelCase
+
+// Bad function names
+function get() {} // VIOLATION: not descriptive
+function getUserDataById() {} // VIOLATION: redundant "Data"
+function handle_user_submit() {} // VIOLATION: snake_case
+
+// Bad class names
+class userService {} // VIOLATION: camelCase
+class USER_SERVICE {} // VIOLATION: UPPER_SNAKE_CASE
+
+// Bad constants
+const apiBaseUrl = 'https://api.example.com'; // VIOLATION: should be UPPER_SNAKE_CASE
+const maxRetries = 3; // VIOLATION: should be UPPER_SNAKE_CASE
+
+// Bad file names
+// UsersController.ts (should be users.controller.ts)
+// user-service.ts (OK but prefer user.service.ts)
+// useAuth.tsx (should be use-auth.ts or useAuth.ts)
+```
+
+```typescript
+// Bad boolean naming
+const authenticated = true; // VIOLATION: should be isAuthenticated
+const permission = false; // VIOLATION: should be hasPermission
+
+// Bad array naming
+const user = []; // VIOLATION: should be users
+const tripList = []; // VIOLATION: should be trips
+
+// Bad event handler naming
+const submit = () => {}; // VIOLATION: should be handleSubmit or onSubmit
+```
+
+## Special Cases
+
+### Private Members
+- Prefix private class members with underscore: `_privateMethod()`.
+- Use TypeScript `private` keyword, underscore is optional but recommended.
+
+### Generic Types
+- Use single uppercase letters: `T`, `K`, `V`, `U`.
+- Use descriptive names for complex generics: `TEntity`, `TResponse`.
+
+### Abbreviations
+- Avoid abbreviations unless widely understood (e.g., `id`, `url`, `api`).
+- Use full words for clarity: `userId` not `usrId`, `userName` not `usrNm`.
+
+### Boolean Prefixes
+- `is`: state or condition (`isActive`, `isLoading`).
+- `has`: possession or existence (`hasPermission`, `hasError`).
+- `should`: recommendation or requirement (`shouldRetry`, `shouldValidate`).
+- `can`: capability (`canEdit`, `canDelete`).
+- `will`: future action (`willSubmit`, `willNavigate`).
+
+## Exceptions
+
+- Test files may use descriptive names even if longer than usual.
+- Configuration objects may use `camelCase` even if they represent constants.
+- Third-party library adapters may follow library conventions.

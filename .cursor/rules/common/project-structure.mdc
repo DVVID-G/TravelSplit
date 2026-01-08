@@ -1,0 +1,263 @@
+---
+description: Enforces project structure and folder organization for TravelSplit Backend and Frontend.
+globs:
+  - Backend/src/**/*
+  - Frontend/src/**/*
+alwaysApply: true
+---
+
+# Project Structure Standards
+
+## Rules
+
+- Follow strict folder structure for Backend and Frontend.
+- Organize code by feature/module, not by file type.
+- Use consistent naming conventions for folders and files.
+- Place shared code in `common/` directory (Backend) or root level (Frontend).
+- Maintain clear separation between modules.
+
+## Backend Structure
+
+### Root Structure
+```
+Backend/
+├── src/
+│   ├── main.ts
+│   ├── app.module.ts
+│   ├── app.controller.ts
+│   ├── app.service.ts
+│   ├── common/
+│   │   ├── decorators/
+│   │   ├── entities/
+│   │   ├── filters/
+│   │   ├── guards/
+│   │   ├── interceptors/
+│   │   ├── interfaces/
+│   │   ├── mappers/
+│   │   └── strategies/
+│   ├── config/
+│   │   ├── app.config.ts
+│   │   ├── database.config.ts
+│   │   └── jwt.config.ts
+│   └── modules/
+│       ├── auth/
+│       ├── users/
+│       ├── trips/
+│       ├── expenses/
+│       └── health/
+├── test/
+└── dist/
+```
+
+### Module Structure (CSED Pattern)
+```
+modules/{resource}/
+├── controllers/
+│   └── {resource}.controller.ts
+├── services/
+│   └── {resource}.service.ts
+├── entities/
+│   └── {resource}.entity.ts
+├── dto/
+│   ├── create-{resource}.dto.ts
+│   ├── update-{resource}.dto.ts
+│   └── {resource}-response.dto.ts
+└── {resource}.module.ts
+```
+
+### Common Directory Structure
+```
+common/
+├── decorators/        # Custom decorators
+├── entities/          # Base entities (BaseEntity)
+├── filters/           # Exception filters
+├── guards/            # Auth guards (JwtAuthGuard)
+├── interceptors/     # HTTP interceptors
+├── interfaces/        # Shared interfaces
+├── mappers/           # Entity-DTO mappers
+└── strategies/        # Passport strategies
+```
+
+## Frontend Structure
+
+### Root Structure
+```
+Frontend/
+├── src/
+│   ├── main.tsx
+│   ├── App.tsx
+│   ├── index.css
+│   ├── components/
+│   │   ├── atoms/
+│   │   ├── molecules/
+│   │   ├── organisms/
+│   │   └── index.ts
+│   ├── contexts/
+│   ├── hooks/
+│   ├── pages/
+│   ├── routes/
+│   ├── schemas/
+│   ├── services/
+│   ├── types/
+│   └── utils/
+├── public/
+└── dist/
+```
+
+### Component Structure (Atomic Design)
+```
+components/
+├── atoms/              # Basic building blocks (Button, Input)
+├── molecules/          # Simple combinations (FormField, Card)
+├── organisms/          # Complex components (Header, Footer)
+└── index.ts            # Barrel export
+```
+
+### Feature-Based Organization
+```
+pages/                  # Page components (HomePage, LoginPage)
+hooks/                  # Custom hooks (useAuth, useUser)
+services/               # API services (auth.service.ts)
+types/                  # TypeScript types/interfaces
+schemas/                # Zod validation schemas
+utils/                  # Pure utility functions
+contexts/               # React Context providers
+routes/                 # Route configuration
+```
+
+## File Naming Conventions
+
+### Backend Files
+- Controllers: `{resource}.controller.ts`
+- Services: `{resource}.service.ts`
+- Entities: `{resource}.entity.ts`
+- DTOs: `{action}-{resource}.dto.ts` (e.g., `create-user.dto.ts`)
+- Modules: `{resource}.module.ts`
+- Configs: `{purpose}.config.ts`
+
+### Frontend Files
+- Components: `{ComponentName}.tsx` (PascalCase)
+- Hooks: `use{Name}.ts` (camelCase)
+- Services: `{resource}.service.ts` (kebab-case)
+- Types: `{resource}.types.ts` (kebab-case)
+- Schemas: `{resource}.schema.ts` (kebab-case)
+- Utils: `{purpose}.ts` (kebab-case)
+
+## DO
+
+```typescript
+// Backend: Correct module structure
+// modules/users/users.module.ts
+@Module({
+  imports: [TypeOrmModule.forFeature([User])],
+  controllers: [UsersController],
+  providers: [UsersService],
+  exports: [UsersService],
+})
+export class UsersModule {}
+
+// Backend: Correct file locations
+// modules/users/controllers/users.controller.ts
+// modules/users/services/users.service.ts
+// modules/users/entities/user.entity.ts
+// modules/users/dto/create-user.dto.ts
+```
+
+```typescript
+// Frontend: Correct component organization
+// components/atoms/Button.tsx
+export function Button({ children, onClick }: ButtonProps) {
+  return <button onClick={onClick}>{children}</button>;
+}
+
+// components/molecules/Card.tsx
+export function Card({ title, children }: CardProps) {
+  return (
+    <div>
+      <h2>{title}</h2>
+      {children}
+    </div>
+  );
+}
+
+// Frontend: Correct hook organization
+// hooks/useAuth.ts
+export function useAuth() {
+  // Implementation
+}
+
+// Frontend: Correct service organization
+// services/auth.service.ts
+export async function loginUser(credentials: LoginRequest) {
+  // Implementation
+}
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: Flat structure (no organization)
+// src/users-controller.ts
+// src/users-service.ts
+// src/user-entity.ts
+```
+
+```typescript
+// VIOLATION: Wrong file location
+// modules/users/user.controller.ts (should be in controllers/)
+// modules/users/user.service.ts (should be in services/)
+```
+
+```typescript
+// VIOLATION: Mixed concerns in one file
+// components/ButtonAndInput.tsx (should be separate files)
+```
+
+```typescript
+// VIOLATION: Wrong naming convention
+// components/button.tsx (should be Button.tsx)
+// hooks/UseAuth.ts (should be useAuth.ts)
+```
+
+```typescript
+// VIOLATION: Business logic in wrong layer
+// components/HomePage.tsx
+export function HomePage() {
+  // VIOLATION: API call directly in component
+  useEffect(() => {
+    fetch('/api/trips').then(r => r.json());
+  }, []);
+}
+```
+
+## Barrel Exports
+
+- Use `index.ts` for barrel exports in component directories.
+- Export all public components from `components/index.ts`.
+- Do not use barrel exports for services or hooks (import directly).
+
+## Shared Code
+
+### Backend Shared Code
+- Place in `common/` directory.
+- Organize by concern (decorators, guards, filters).
+- Use clear naming: `{purpose}.{type}.ts`.
+
+### Frontend Shared Code
+- Place utilities in `utils/`.
+- Place types in `types/`.
+- Place schemas in `schemas/`.
+- Do not create deep nested structures.
+
+## Module Boundaries
+
+- Each module is self-contained.
+- Modules communicate through exported services.
+- Do not import from other modules' internal files (controllers, entities).
+- Import only from module's public API (services, DTOs).
+
+## Exceptions
+
+- Test files may be co-located with source files using `.spec.ts` suffix.
+- Configuration files may be at root level if framework requires it.
+- Migration files follow framework conventions (TypeORM migrations).

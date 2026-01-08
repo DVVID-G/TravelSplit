@@ -1,0 +1,289 @@
+---
+description: Enforces unit testing standards using Jest for TravelSplit backend and frontend.
+globs:
+  - Backend/src/**/*.spec.ts
+  - Backend/test/**/*.spec.ts
+  - Frontend/src/**/*.test.ts
+  - Frontend/src/**/*.test.tsx
+alwaysApply: false
+---
+
+# Unit Testing Standards (Jest)
+
+## Rules
+
+- Write unit tests for all services and business logic.
+- Use Jest as testing framework.
+- Place test files next to source files: `*.spec.ts` or `*.test.ts`.
+- Use descriptive test names: `describe` blocks for grouping, `it` or `test` for test cases.
+- Mock external dependencies (database, APIs, services).
+- Test edge cases: null values, empty arrays, invalid inputs.
+- Maintain test coverage above 80% for critical business logic.
+- Use `beforeEach` and `afterEach` for test setup and cleanup.
+
+## Test File Organization
+
+- Backend: `*.spec.ts` files next to source files or in `test/` directory.
+- Frontend: `*.test.ts` or `*.test.tsx` files next to source files.
+- Group related tests in `describe` blocks.
+- Use nested `describe` blocks for organizing test suites.
+
+## Test Naming
+
+- Use descriptive test names that explain what is being tested.
+- Use format: `describe('ComponentName', () => { ... })`.
+- Use format: `it('should do something when condition', () => { ... })`.
+- Use `test` or `it` consistently throughout project.
+- Write test names in English.
+
+## Test Structure
+
+- Arrange: Set up test data and mocks.
+- Act: Execute the function or component being tested.
+- Assert: Verify the expected outcome.
+- Use clear comments to separate sections if needed.
+
+## Mocking
+
+- Mock external dependencies: repositories, services, APIs.
+- Use Jest mocks: `jest.fn()`, `jest.mock()`, `jest.spyOn()`.
+- Mock return values appropriately.
+- Verify mock calls with `expect(mockFn).toHaveBeenCalled()`.
+- Reset mocks in `beforeEach` when needed.
+
+## Backend Testing
+
+- Test services with mocked repositories.
+- Test business logic independently of database.
+- Test error handling and exception throwing.
+- Test validation logic in services.
+- Use `@nestjs/testing` for NestJS components.
+
+## Frontend Testing
+
+- Test components with React Testing Library.
+- Test hooks with `@testing-library/react-hooks`.
+- Test user interactions: clicks, form submissions.
+- Test conditional rendering based on props/state.
+- Test error boundaries and error states.
+
+## Test Coverage
+
+- Aim for 80%+ coverage for business logic.
+- Focus on critical paths and edge cases.
+- Don't aim for 100% coverage (not cost-effective).
+- Use coverage reports to identify gaps.
+- Test happy paths and error paths.
+
+## DO
+
+```typescript
+// Backend service test
+describe('UsersService', () => {
+  let service: UsersService;
+  let repository: Repository<User>;
+  
+  beforeEach(async () => {
+    const module = await Test.createTestingModule({
+      providers: [
+        UsersService,
+        {
+          provide: getRepositoryToken(User),
+          useValue: {
+            findOne: jest.fn(),
+            save: jest.fn(),
+            create: jest.fn(),
+          },
+        },
+      ],
+    }).compile();
+    
+    service = module.get<UsersService>(UsersService);
+    repository = module.get<Repository<User>>(getRepositoryToken(User));
+  });
+  
+  describe('findOne', () => {
+    it('should return user when found', async () => {
+      const userId = '123';
+      const mockUser = { id: userId, email: 'test@example.com' };
+      
+      jest.spyOn(repository, 'findOne').mockResolvedValue(mockUser as User);
+      
+      const result = await service.findOne(userId);
+      
+      expect(result).toEqual(mockUser);
+      expect(repository.findOne).toHaveBeenCalledWith({
+        where: { id: userId, deletedAt: IsNull() },
+      });
+    });
+    
+    it('should throw NotFoundException when user not found', async () => {
+      jest.spyOn(repository, 'findOne').mockResolvedValue(null);
+      
+      await expect(service.findOne('invalid-id')).rejects.toThrow(NotFoundException);
+    });
+  });
+  
+  describe('create', () => {
+    it('should create user with hashed password', async () => {
+      const createDto = {
+        email: 'test@example.com',
+        nombre: 'Test User',
+        contraseña: 'password123',
+      };
+      const mockUser = { id: '123', ...createDto, passwordHash: 'hashed' };
+      
+      jest.spyOn(repository, 'findOne').mockResolvedValue(null);
+      jest.spyOn(repository, 'create').mockReturnValue(mockUser as User);
+      jest.spyOn(repository, 'save').mockResolvedValue(mockUser as User);
+      
+      const result = await service.create(createDto);
+      
+      expect(result.passwordHash).not.toBe(createDto.contraseña);
+      expect(repository.save).toHaveBeenCalled();
+    });
+    
+    it('should throw ConflictException when email exists', async () => {
+      const createDto = { email: 'existing@example.com', nombre: 'Test', contraseña: 'pass' };
+      const existingUser = { id: '123', email: createDto.email };
+      
+      jest.spyOn(repository, 'findOne').mockResolvedValue(existingUser as User);
+      
+      await expect(service.create(createDto)).rejects.toThrow(ConflictException);
+    });
+  });
+});
+```
+
+```typescript
+// Frontend component test
+import { render, screen, fireEvent } from '@testing-library/react';
+import { Button } from './Button';
+
+describe('Button', () => {
+  it('should render button with children', () => {
+    render(<Button>Click me</Button>);
+    expect(screen.getByRole('button', { name: /click me/i })).toBeInTheDocument();
+  });
+  
+  it('should call onClick when clicked', () => {
+    const handleClick = jest.fn();
+    render(<Button onClick={handleClick}>Click</Button>);
+    
+    fireEvent.click(screen.getByRole('button'));
+    
+    expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+  
+  it('should be disabled when disabled prop is true', () => {
+    render(<Button disabled>Click</Button>);
+    expect(screen.getByRole('button')).toBeDisabled();
+  });
+  
+  it('should apply variant classes correctly', () => {
+    const { rerender } = render(<Button variant="primary">Click</Button>);
+    expect(screen.getByRole('button')).toHaveClass('bg-violet-600');
+    
+    rerender(<Button variant="secondary">Click</Button>);
+    expect(screen.getByRole('button')).toHaveClass('bg-slate-200');
+  });
+});
+```
+
+```typescript
+// Hook test
+import { renderHook, waitFor } from '@testing-library/react';
+import { useTripParticipants } from './useTripParticipants';
+
+describe('useTripParticipants', () => {
+  it('should fetch participants when tripId is provided', async () => {
+    const { result } = renderHook(() => useTripParticipants('trip-123'));
+    
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+    
+    expect(result.current.participants).toBeDefined();
+  });
+  
+  it('should not fetch when tripId is undefined', () => {
+    const { result } = renderHook(() => useTripParticipants(undefined));
+    
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.participants).toEqual([]);
+  });
+});
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: No test structure
+test('test', () => { // VIOLATION: Not descriptive
+  expect(true).toBe(true);
+});
+```
+
+```typescript
+// VIOLATION: Not mocking dependencies
+describe('UsersService', () => {
+  it('should find user', async () => {
+    const service = new UsersService(repository); // VIOLATION: Real repository
+    const result = await service.findOne('123');
+    expect(result).toBeDefined();
+  });
+});
+```
+
+```typescript
+// VIOLATION: Testing implementation details
+it('should call repository.findOne', () => { // VIOLATION: Test behavior, not implementation
+  // Test should verify outcome, not internal calls
+});
+```
+
+```typescript
+// VIOLATION: No edge case testing
+it('should create user', async () => { // VIOLATION: Missing tests for duplicate email, invalid input
+  // Only tests happy path
+});
+```
+
+```typescript
+// VIOLATION: Not cleaning up mocks
+beforeEach(() => {
+  jest.spyOn(repository, 'findOne').mockResolvedValue(mockUser);
+  // VIOLATION: Should reset mocks or use afterEach
+});
+```
+
+## Test Best Practices
+
+- Write tests before or alongside code (TDD when possible).
+- Keep tests simple and focused on single behavior.
+- Use descriptive test names that explain the scenario.
+- Test edge cases: null, undefined, empty arrays, invalid inputs.
+- Mock external dependencies to isolate unit under test.
+- Verify both success and error scenarios.
+
+## Mocking Guidelines
+
+- Mock external services and APIs.
+- Mock database repositories.
+- Mock file system operations.
+- Mock time-dependent functions.
+- Use `jest.fn()` for function mocks.
+- Use `jest.spyOn()` for partial mocks.
+
+## Assertions
+
+- Use appropriate matchers: `toBe()`, `toEqual()`, `toContain()`, `toThrow()`.
+- Verify both return values and side effects.
+- Check error messages when testing error cases.
+- Use `toHaveBeenCalledWith()` to verify function calls.
+
+## Exceptions
+
+- Integration tests may use real dependencies.
+- E2E tests may skip unit-level mocking.
+- Test utilities may have relaxed testing standards.

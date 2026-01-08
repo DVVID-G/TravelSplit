@@ -1,0 +1,261 @@
+---
+description: Enforces NestJS v11 standards including modules, dependency injection, decorators, and best practices for TravelSplit backend.
+globs:
+  - Backend/src/**/*.ts
+alwaysApply: false
+---
+
+# NestJS v11 Core Standards
+
+## Rules
+
+- Use NestJS module system for all feature organization.
+- Apply dependency injection via constructor injection only.
+- Use decorators correctly: `@Injectable()`, `@Controller()`, `@Module()`.
+- Export services from modules that need to be used by other modules.
+- Use `@InjectRepository()` for TypeORM repositories.
+- Configure modules using `ConfigModule` for environment variables.
+- Use async module configuration with `registerAsync()` when needed.
+- Apply guards, interceptors, and filters at appropriate levels.
+
+## Module Definition
+
+- Every feature must have its own module.
+- Modules import dependencies they need.
+- Modules export services used by other modules.
+- Use `@Module()` decorator with explicit imports, controllers, providers, exports.
+
+## Dependency Injection
+
+- Use constructor injection for all dependencies.
+- Mark services with `@Injectable()` decorator.
+- Use `@InjectRepository()` for TypeORM repositories.
+- Never use `new` keyword for services or repositories.
+- Inject dependencies in constructor parameters.
+
+## Controller Standards
+
+- Use `@Controller()` decorator with route prefix.
+- Use HTTP method decorators: `@Get()`, `@Post()`, `@Put()`, `@Delete()`.
+- Use parameter decorators: `@Param()`, `@Body()`, `@Query()`, `@Request()`.
+- Apply validation pipes: `ParseUUIDPipe`, `ValidationPipe`.
+- Use `@UseGuards()` for authentication/authorization.
+- Return DTOs, not entities.
+
+## Service Standards
+
+- Mark all services with `@Injectable()` decorator.
+- Services contain business logic only.
+- Services access data through injected repositories.
+- Services throw NestJS exceptions: `NotFoundException`, `ConflictException`, `BadRequestException`.
+- Services return entities or DTOs, never HTTP responses.
+
+## Module Configuration
+
+- Use `ConfigModule.forRoot()` for global configuration.
+- Use `ConfigModule.forFeature()` for feature-specific configuration.
+- Use `registerAsync()` for async module configuration.
+- Validate required environment variables in module configuration.
+- Throw errors if required configuration is missing.
+
+## Guards and Strategies
+
+- Create guards in `common/guards/` directory.
+- Use `@UseGuards()` decorator at controller or route level.
+- Implement Passport strategies in `common/strategies/`.
+- Guards validate authentication/authorization.
+- Guards throw `UnauthorizedException` or `ForbiddenException` when needed.
+
+## Exception Handling
+
+- Use NestJS built-in exceptions: `BadRequestException`, `UnauthorizedException`, `ForbiddenException`, `NotFoundException`, `ConflictException`.
+- Create custom exceptions extending `HttpException` if needed.
+- Use exception filters for global error handling.
+- Place filters in `common/filters/` directory.
+
+## DO
+
+```typescript
+// Module definition
+@Module({
+  imports: [
+    TypeOrmModule.forFeature([User]),
+    ConfigModule.forFeature(jwtConfig),
+  ],
+  controllers: [UsersController],
+  providers: [UsersService],
+  exports: [UsersService],
+})
+export class UsersModule {}
+
+// Service with dependency injection
+@Injectable()
+export class UsersService {
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private readonly configService: ConfigService,
+  ) {}
+  
+  async findOne(id: string): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return user;
+  }
+}
+
+// Controller with guards and validation
+@Controller('users')
+@UseGuards(JwtAuthGuard)
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+  
+  @Get(':id')
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<UserResponseDto> {
+    return this.usersService.findOne(id);
+  }
+}
+
+// Async module configuration
+JwtModule.registerAsync({
+  imports: [ConfigModule.forFeature(jwtConfig)],
+  inject: [ConfigService],
+  useFactory: (configService: ConfigService) => {
+    const secret = configService.get<string>('jwt.secret');
+    if (!secret) {
+      throw new Error('JWT_SECRET is required');
+    }
+    return {
+      secret,
+      signOptions: { expiresIn: '3600s' },
+    };
+  },
+})
+```
+
+```typescript
+// Guard implementation
+@Injectable()
+export class JwtAuthGuard extends AuthGuard('jwt') {
+  canActivate(context: ExecutionContext): boolean {
+    return super.canActivate(context) as boolean;
+  }
+}
+
+// Strategy implementation
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly usersService: UsersService,
+  ) {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      secretOrKey: configService.get<string>('jwt.secret'),
+    });
+  }
+  
+  async validate(payload: JwtPayload): Promise<User> {
+    return this.usersService.findOne(payload.sub);
+  }
+}
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: Service without @Injectable()
+export class UsersService { // VIOLATION: Missing @Injectable()
+  constructor(private readonly userRepository: Repository<User>) {}
+}
+```
+
+```typescript
+// VIOLATION: Using new keyword for services
+@Controller('users')
+export class UsersController {
+  @Get()
+  findAll() {
+    const service = new UsersService(); // VIOLATION: Use DI
+    return service.findAll();
+  }
+}
+```
+
+```typescript
+// VIOLATION: Controller returning entity directly
+@Get(':id')
+async findOne(@Param('id') id: string): Promise<User> { // VIOLATION: Should return DTO
+  return this.usersService.findOne(id);
+}
+```
+
+```typescript
+// VIOLATION: Service accessing HTTP request
+@Injectable()
+export class UsersService {
+  async findOne(@Request() req: Request) { // VIOLATION: Services don't access HTTP
+    // Implementation
+  }
+}
+```
+
+```typescript
+// VIOLATION: Missing validation in async config
+JwtModule.registerAsync({
+  useFactory: (configService: ConfigService) => {
+    return {
+      secret: configService.get<string>('jwt.secret'), // VIOLATION: No validation
+    };
+  },
+})
+```
+
+```typescript
+// VIOLATION: Module not exporting service used elsewhere
+@Module({
+  providers: [UsersService],
+  // VIOLATION: Missing exports: [UsersService]
+})
+export class UsersModule {}
+```
+
+## Module Imports and Exports
+
+- Import modules that provide services you need.
+- Export services that other modules need.
+- Do not export controllers (controllers are not shared).
+- Do not export entities (use DTOs for data transfer).
+
+## Configuration Management
+
+- Use `@nestjs/config` for environment variables.
+- Create configuration files in `config/` directory.
+- Use `ConfigService` to access configuration values.
+- Validate required configuration at application startup.
+- Use `ConfigModule.forFeature()` for feature-specific configs.
+
+## Decorator Usage
+
+- `@Injectable()`: All services, guards, interceptors, filters.
+- `@Controller()`: All controllers with route prefix.
+- `@Module()`: All modules.
+- `@UseGuards()`: Controllers or routes requiring authentication.
+- `@ApiTags()`, `@ApiOperation()`, `@ApiResponse()`: Swagger documentation.
+
+## Exception Best Practices
+
+- Use specific exceptions: `NotFoundException` for 404, `ConflictException` for 409.
+- Include descriptive error messages.
+- Do not expose internal implementation details in error messages.
+- Use exception filters for consistent error response format.
+
+## Exceptions
+
+- Test files may use `Test.createTestingModule()` without full module structure.
+- E2E tests may bypass some guards for testing purposes.
+- Health check endpoints may not require authentication.
