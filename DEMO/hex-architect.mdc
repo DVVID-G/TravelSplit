@@ -1,0 +1,92 @@
+---
+description: Enforces Hexagonal Architecture (Ports and Adapters) pattern with strict separation between domain core and infrastructure adapters for TravelSplit backend modules.
+globs:
+  - Backend/src/**/*.ts
+alwaysApply: true
+---
+
+# Hexagonal Architecture (Ports and Adapters)
+
+## Rules
+
+- Enforce strict Hexagonal Architecture pattern with clear separation of concerns.
+- Domain core (application) must be independent of frameworks and infrastructure.
+- Use Ports (interfaces) to define contracts between domain and adapters.
+- Implement Adapters for external concerns (database, HTTP, messaging, etc.).
+- Domain logic never depends on infrastructure details.
+- All dependencies point inward toward the domain core.
+- Use dependency inversion: domain defines interfaces, adapters implement them.
+
+## Architecture Layers
+
+### Core Domain (Inner Layer)
+- Contains business logic and domain entities.
+- Defines Ports (interfaces) for external operations.
+- No dependencies on frameworks, databases, or external services.
+- Pure TypeScript/JavaScript code.
+- Located in: `src/domain/` or `src/core/`
+
+### Application Layer
+- Orchestrates domain logic and coordinates use cases.
+- Implements application services.
+- Uses Ports to interact with external systems.
+- Located in: `src/application/` or `src/use-cases/`
+
+### Infrastructure/Adapters (Outer Layer)
+- Implements Ports defined by domain.
+- Handles external concerns: HTTP, database, messaging, file system.
+- Depends on domain interfaces, not concrete implementations.
+- Located in: `src/infrastructure/` or `src/adapters/`
+
+## Ports (Interfaces)
+
+### Primary Ports (Driving/Inbound)
+- Define how external actors interact with the application.
+- Examples: Use case interfaces, command handlers, query handlers.
+- Located in: `domain/ports/inbound/` or `domain/ports/primary/`
+
+### Secondary Ports (Driven/Outbound)
+- Define what the application needs from external systems.
+- Examples: Repository interfaces, notification interfaces, external service interfaces.
+- Located in: `domain/ports/outbound/` or `domain/ports/secondary/`
+
+## Adapters
+
+### Primary Adapters (Driving/Inbound)
+- Implement primary ports.
+- Examples: REST controllers, GraphQL resolvers, CLI commands, message consumers.
+- Located in: `infrastructure/adapters/inbound/` or `infrastructure/adapters/primary/`
+
+### Secondary Adapters (Driven/Outbound)
+- Implement secondary ports.
+- Examples: Database repositories, HTTP clients, file system handlers, email services.
+- Located in: `infrastructure/adapters/outbound/` or `infrastructure/adapters/secondary/`
+
+## Directory Structure
+src/
+├── domain/
+│ ├── entities/ # Domain entities (pure business objects)
+│ ├── value-objects/ # Value objects
+│ ├── ports/
+│ │ ├── inbound/ # Primary ports (use cases)
+│ │ └── outbound/ # Secondary ports (repositories, services)
+│ └── exceptions/ # Domain exceptions
+├── application/
+│ ├── use-cases/ # Use case implementations
+│ ├── services/ # Application services
+│ └── mappers/ # Entity-DTO mappers
+└── infrastructure/
+├── adapters/
+│ ├── inbound/ # Primary adapters (controllers)
+│ └── outbound/ # Secondary adapters (repositories, external services)
+├── config/ # Configuration
+└── persistence/ # Database implementations
+
+## Dependency Rules
+
+- Domain → Nothing (no external dependencies).
+- Application → Domain only.
+- Infrastructure → Domain and Application.
+- Never: Domain → Infrastructure (violates Hexagonal Architecture).
+- Never: Application → Infrastructure directly (use Ports).
+
