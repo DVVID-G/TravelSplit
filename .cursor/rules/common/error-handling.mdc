@@ -1,0 +1,282 @@
+---
+description: Enforces consistent error handling patterns including exception types, error responses, and error propagation for TravelSplit backend.
+globs:
+  - Backend/src/**/*.ts
+alwaysApply: false
+---
+
+# Error Handling Standards (Transversal)
+
+## Rules
+
+- Use NestJS built-in exceptions for HTTP errors.
+- Create global exception filter for consistent error responses.
+- Log errors before handling or rethrowing.
+- Provide user-friendly error messages in Spanish.
+- Never expose internal implementation details in error messages.
+- Use appropriate HTTP status codes.
+- Handle errors at appropriate layer (service throws, controller catches, filter formats).
+- Maintain consistent error response format across all endpoints.
+
+## Exception Types
+
+- `BadRequestException` (400): Validation errors, invalid input.
+- `UnauthorizedException` (401): Authentication failures, invalid/missing token.
+- `ForbiddenException` (403): Authorization failures, insufficient permissions.
+- `NotFoundException` (404): Resource not found.
+- `ConflictException` (409): Duplicate resources, conflicts.
+- `InternalServerErrorException` (500): Unexpected server errors.
+- Create custom exceptions extending `HttpException` when needed.
+
+## Error Response Format
+
+- Include `statusCode`, `timestamp`, `path`, `method`, `message`.
+- Use consistent structure across all error responses.
+- Do not expose stack traces in production.
+- Provide actionable error messages.
+
+## Global Exception Filter
+
+- Create exception filter in `common/filters/` directory.
+- Implement `ExceptionFilter` interface.
+- Catch all exceptions and format consistently.
+- Log errors with context (method, URL, stack trace).
+- Return consistent error response format.
+- Register filter globally in `main.ts`.
+
+## Error Propagation
+
+- Services throw NestJS exceptions.
+- Controllers let exceptions bubble up to global filter.
+- Filters format exceptions into consistent responses.
+- Do not catch exceptions unless transforming them.
+
+## DO
+
+```typescript
+// Global exception filter
+@Catch()
+export class AllExceptionsFilter implements ExceptionFilter {
+  private readonly logger = new Logger(AllExceptionsFilter.name);
+  
+  catch(exception: unknown, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
+    
+    const status = exception instanceof HttpException
+      ? exception.getStatus()
+      : HttpStatus.INTERNAL_SERVER_ERROR;
+    
+    const message = exception instanceof HttpException
+      ? exception.getResponse()
+      : 'Error interno del servidor';
+    
+    const errorResponse = {
+      statusCode: status,
+      timestamp: new Date().toISOString(),
+      path: request.url,
+      method: request.method,
+      message: typeof message === 'string'
+        ? message
+        : (message as { message: string }).message || 'Ocurrió un error',
+    };
+    
+    // Log error with context
+    this.logger.error(
+      `${request.method} ${request.url} - Status: ${status}`,
+      exception instanceof Error ? exception.stack : JSON.stringify(exception),
+    );
+    
+    response.status(status).json(errorResponse);
+  }
+}
+
+// Service throwing appropriate exceptions
+@Injectable()
+export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+  
+  async findOne(id: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id, deletedAt: IsNull() },
+    });
+    
+    if (!user) {
+      this.logger.warn(`User not found: ${id}`);
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+    }
+    
+    return user;
+  }
+  
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    const existingUser = await this.userRepository.findOne({
+      where: { email: createUserDto.email, deletedAt: IsNull() },
+    });
+    
+    if (existingUser) {
+      this.logger.warn(`Attempt to create user with existing email: ${createUserDto.email}`);
+      throw new ConflictException('El email ya está registrado');
+    }
+    
+    try {
+      const passwordHash = await bcrypt.hash(createUserDto.contraseña, 10);
+      const user = this.userRepository.create({
+        ...createUserDto,
+        passwordHash,
+      });
+      return await this.userRepository.save(user);
+    } catch (error) {
+      this.logger.error('Failed to create user', error instanceof Error ? error.stack : JSON.stringify(error));
+      throw new InternalServerErrorException('No se pudo crear el usuario');
+    }
+  }
+}
+
+// Controller letting exceptions bubble up
+@Controller('users')
+export class UsersController {
+  @Get(':id')
+  @ApiNotFoundResponse({ description: 'Usuario no encontrado' })
+  async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<UserResponseDto> {
+    // Exception will bubble up to global filter
+    return this.usersService.findOne(id);
+  }
+  
+  @Put(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiForbiddenResponse({ description: 'No tienes permisos para actualizar este usuario' })
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<UserResponseDto> {
+    if (req.user?.id !== id) {
+      throw new ForbiddenException('Solo puedes actualizar tu propio perfil');
+    }
+    
+    return this.usersService.update(id, updateUserDto);
+  }
+}
+
+// Register global filter in main.ts
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  app.useGlobalFilters(new AllExceptionsFilter());
+  await app.listen(3000);
+}
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: Generic error without context
+async findOne(id: string): Promise<User> {
+  const user = await this.repository.findOne({ where: { id } });
+  if (!user) {
+    throw new Error('Not found'); // VIOLATION: Use NotFoundException with message
+  }
+  return user;
+}
+```
+
+```typescript
+// VIOLATION: Exposing internal details
+async create(dto: CreateUserDto): Promise<User> {
+  try {
+    return await this.repository.save(dto);
+  } catch (error) {
+    throw new Error(`Database error: ${error.message}`); // VIOLATION: Exposes DB details
+  }
+}
+```
+
+```typescript
+// VIOLATION: Swallowing errors
+async deleteUser(id: string): Promise<void> {
+  try {
+    await this.repository.softRemove({ id });
+  } catch (error) {
+    // VIOLATION: Error swallowed, no handling
+  }
+}
+```
+
+```typescript
+// VIOLATION: Wrong HTTP status code
+@Get(':id')
+async findOne(@Param('id') id: string) {
+  const user = await this.usersService.findOne(id);
+  if (!user) {
+    throw new BadRequestException('User not found'); // VIOLATION: Should be NotFoundException
+  }
+  return user;
+}
+```
+
+```typescript
+// VIOLATION: Not logging errors
+async create(dto: CreateUserDto): Promise<User> {
+  const existing = await this.repository.findOne({ where: { email: dto.email } });
+  if (existing) {
+    throw new ConflictException('Email exists'); // VIOLATION: No logging
+  }
+}
+```
+
+```typescript
+// VIOLATION: Catching and rethrowing without context
+async findOne(id: string): Promise<User> {
+  try {
+    return await this.repository.findOne({ where: { id } });
+  } catch (error) {
+    throw error; // VIOLATION: No context added
+  }
+}
+```
+
+```typescript
+// VIOLATION: Inconsistent error response format
+catch(exception: unknown, host: ArgumentsHost) {
+  // VIOLATION: Different format than other endpoints
+  response.status(500).json({ error: 'Something went wrong' });
+}
+```
+
+## Error Message Guidelines
+
+- Write error messages in Spanish.
+- Make messages user-friendly and actionable.
+- Do not expose technical details (database errors, stack traces).
+- Provide context about what went wrong.
+- Suggest how to fix the error when possible.
+
+## Exception Filter Registration
+
+- Register global filter in `main.ts` using `app.useGlobalFilters()`.
+- Register specific filters at controller level using `@UseFilters()` when needed.
+- Use global filter for consistent error handling.
+- Use specific filters only for custom error formatting when necessary.
+
+## Error Logging
+
+- Log errors with Logger before handling.
+- Include request context: method, URL, user ID if available.
+- Include error details: message, stack trace.
+- Use appropriate log levels: `error` for exceptions, `warn` for expected failures.
+
+## Status Code Guidelines
+
+- 400 Bad Request: Invalid input, validation errors.
+- 401 Unauthorized: Missing or invalid authentication token.
+- 403 Forbidden: Valid authentication but insufficient permissions.
+- 404 Not Found: Resource does not exist.
+- 409 Conflict: Duplicate resource, conflict state.
+- 500 Internal Server Error: Unexpected server error.
+
+## Exceptions
+
+- Health check endpoints may return simple errors without full error response format.
+- Test files may use generic Error for simplicity.
+- Development mode may include stack traces in error responses.

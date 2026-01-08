@@ -1,0 +1,298 @@
+---
+description: Enforces test naming conventions, file structure, and testing patterns for TravelSplit project.
+globs:
+  - Backend/**/*.spec.ts
+  - Backend/test/**/*.spec.ts
+  - Frontend/**/*.test.ts
+  - Frontend/**/*.test.tsx
+alwaysApply: false
+---
+
+# Test Conventions Standards
+
+## Rules
+
+- Use consistent test file naming: `*.spec.ts` for backend, `*.test.ts` or `*.test.tsx` for frontend.
+- Place test files next to source files or in `test/` directory.
+- Use descriptive test names following pattern: `should [expected behavior] when [condition]`.
+- Group related tests in `describe` blocks.
+- Use nested `describe` blocks for organizing test suites.
+- Write test names in English.
+- Follow Arrange-Act-Assert pattern.
+
+## File Naming
+
+- Backend unit tests: `{filename}.spec.ts` (e.g., `users.service.spec.ts`).
+- Backend integration tests: `{filename}.e2e-spec.ts` (e.g., `users.controller.e2e-spec.ts`).
+- Frontend component tests: `{ComponentName}.test.tsx` (e.g., `Button.test.tsx`).
+- Frontend hook tests: `use{HookName}.test.ts` (e.g., `useAuth.test.ts`).
+- Test utilities: `*.test-utils.ts` or `*.spec-utils.ts`.
+
+## Test Structure
+
+- Use `describe` for grouping tests: `describe('ComponentName', () => { ... })`.
+- Use nested `describe` for organizing: `describe('ComponentName', () => { describe('methodName', () => { ... }) })`.
+- Use `it` or `test` for test cases: `it('should do something', () => { ... })`.
+- Use `beforeEach` for setup: `beforeEach(() => { ... })`.
+- Use `afterEach` for cleanup: `afterEach(() => { ... })`.
+- Use `beforeAll` and `afterAll` for one-time setup/cleanup.
+
+## Test Naming Patterns
+
+- Use format: `should [expected behavior] when [condition]`.
+- Use format: `should [expected behavior] with [input]`.
+- Use format: `should throw [exception] when [condition]`.
+- Be descriptive and specific.
+- Write test names as complete sentences.
+
+## Arrange-Act-Assert Pattern
+
+- Arrange: Set up test data, mocks, and dependencies.
+- Act: Execute the function or component being tested.
+- Assert: Verify the expected outcome.
+- Use clear comments to separate sections if needed.
+
+## DO
+
+```typescript
+// Backend service test structure
+describe('UsersService', () => {
+  let service: UsersService;
+  let repository: Repository<User>;
+  
+  beforeEach(async () => {
+    // Arrange: Setup test module and mocks
+    const module = await Test.createTestingModule({
+      providers: [
+        UsersService,
+        {
+          provide: getRepositoryToken(User),
+          useValue: createMockRepository(),
+        },
+      ],
+    }).compile();
+    
+    service = module.get<UsersService>(UsersService);
+    repository = module.get<Repository<User>>(getRepositoryToken(User));
+  });
+  
+  describe('findOne', () => {
+    it('should return user when user exists', async () => {
+      // Arrange
+      const userId = '123';
+      const mockUser = { id: userId, email: 'test@example.com' };
+      jest.spyOn(repository, 'findOne').mockResolvedValue(mockUser as User);
+      
+      // Act
+      const result = await service.findOne(userId);
+      
+      // Assert
+      expect(result).toEqual(mockUser);
+      expect(repository.findOne).toHaveBeenCalledWith({
+        where: { id: userId, deletedAt: IsNull() },
+      });
+    });
+    
+    it('should throw NotFoundException when user does not exist', async () => {
+      // Arrange
+      jest.spyOn(repository, 'findOne').mockResolvedValue(null);
+      
+      // Act & Assert
+      await expect(service.findOne('invalid-id')).rejects.toThrow(NotFoundException);
+    });
+  });
+  
+  describe('create', () => {
+    it('should create user with hashed password when valid data provided', async () => {
+      // Arrange
+      const createDto = {
+        email: 'test@example.com',
+        nombre: 'Test User',
+        contraseña: 'password123',
+      };
+      
+      // Act
+      const result = await service.create(createDto);
+      
+      // Assert
+      expect(result.passwordHash).not.toBe(createDto.contraseña);
+      expect(result.email).toBe(createDto.email);
+    });
+    
+    it('should throw ConflictException when email already exists', async () => {
+      // Arrange
+      const createDto = { email: 'existing@example.com', nombre: 'Test', contraseña: 'pass' };
+      jest.spyOn(repository, 'findOne').mockResolvedValue({ id: '123', email: createDto.email } as User);
+      
+      // Act & Assert
+      await expect(service.create(createDto)).rejects.toThrow(ConflictException);
+    });
+  });
+});
+```
+
+```typescript
+// Frontend component test structure
+describe('Button', () => {
+  it('should render button with children text', () => {
+    // Arrange & Act
+    render(<Button>Click me</Button>);
+    
+    // Assert
+    expect(screen.getByRole('button', { name: /click me/i })).toBeInTheDocument();
+  });
+  
+  it('should call onClick handler when button is clicked', () => {
+    // Arrange
+    const handleClick = jest.fn();
+    render(<Button onClick={handleClick}>Click</Button>);
+    
+    // Act
+    fireEvent.click(screen.getByRole('button'));
+    
+    // Assert
+    expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+  
+  it('should be disabled when disabled prop is true', () => {
+    // Arrange & Act
+    render(<Button disabled>Click</Button>);
+    
+    // Assert
+    expect(screen.getByRole('button')).toBeDisabled();
+  });
+  
+  describe('variants', () => {
+    it('should apply primary variant styles when variant is primary', () => {
+      render(<Button variant="primary">Click</Button>);
+      expect(screen.getByRole('button')).toHaveClass('bg-violet-600');
+    });
+    
+    it('should apply secondary variant styles when variant is secondary', () => {
+      render(<Button variant="secondary">Click</Button>);
+      expect(screen.getByRole('button')).toHaveClass('bg-slate-200');
+    });
+  });
+});
+```
+
+```typescript
+// Integration test structure
+describe('UsersController (e2e)', () => {
+  let app: INestApplication;
+  
+  beforeEach(async () => {
+    // Arrange: Setup test application
+    const moduleFixture = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+    
+    app = moduleFixture.createNestApplication();
+    await app.init();
+  });
+  
+  afterEach(async () => {
+    // Cleanup
+    await app.close();
+  });
+  
+  describe('GET /api/users/:id', () => {
+    it('should return 200 and user data when user exists and is authenticated', () => {
+      // Arrange: Create user and get token
+      // Act: Make request
+      // Assert: Verify response
+    });
+    
+    it('should return 401 when request is not authenticated', () => {
+      // Arrange: No token
+      // Act: Make request without token
+      // Assert: Verify 401 response
+    });
+  });
+});
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: Non-descriptive test names
+test('test1', () => { // VIOLATION: Not descriptive
+  expect(true).toBe(true);
+});
+
+it('works', () => { // VIOLATION: Not descriptive
+  // Test code
+});
+```
+
+```typescript
+// VIOLATION: Wrong file naming
+// users.service.test.ts (should be users.service.spec.ts for backend)
+// Button.spec.tsx (should be Button.test.tsx for frontend)
+```
+
+```typescript
+// VIOLATION: No describe blocks
+test('should do something', () => { // VIOLATION: Should be in describe block
+  // Test code
+});
+```
+
+```typescript
+// VIOLATION: Not following Arrange-Act-Assert
+it('should create user', async () => {
+  const result = await service.create(dto); // VIOLATION: No clear arrange/act/assert separation
+  expect(result).toBeDefined();
+});
+```
+
+```typescript
+// VIOLATION: Testing implementation details
+it('should call repository.save', () => { // VIOLATION: Test behavior, not implementation
+  // Test should verify outcome, not internal method calls
+});
+```
+
+```typescript
+// VIOLATION: Not cleaning up in afterEach
+beforeEach(() => {
+  // Setup creates test data
+});
+// VIOLATION: Missing afterEach to clean up
+```
+
+## Test Organization
+
+- Group tests by component/service being tested.
+- Use nested `describe` blocks for methods/functions.
+- Use nested `describe` blocks for different scenarios.
+- Keep related tests together.
+- Order tests logically: happy path first, then edge cases, then errors.
+
+## Test Data
+
+- Use descriptive variable names: `mockUser`, `testUserId`, `validCredentials`.
+- Create test data factories when needed.
+- Use consistent test data across related tests.
+- Keep test data minimal and focused.
+
+## Assertions
+
+- Use appropriate Jest matchers: `toBe()`, `toEqual()`, `toContain()`, `toThrow()`.
+- Verify both return values and side effects.
+- Check error messages when testing error cases.
+- Use `toHaveBeenCalledWith()` to verify function calls with specific arguments.
+
+## Mocking Conventions
+
+- Name mocks clearly: `mockRepository`, `mockService`, `mockUser`.
+- Use `jest.fn()` for function mocks.
+- Use `jest.spyOn()` for partial mocks.
+- Use `jest.mock()` for module mocks.
+- Reset mocks in `beforeEach` when needed.
+
+## Exceptions
+
+- Test utilities may have relaxed naming conventions.
+- Legacy tests may not follow all conventions (mark with TODO).
+- Snapshot tests may use different naming patterns.

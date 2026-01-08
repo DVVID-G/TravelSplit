@@ -1,0 +1,187 @@
+---
+description: Enforces TypeScript code style standards including formatting, linting, and type safety for TravelSplit project.
+globs:
+  - Backend/src/**/*.ts
+  - Frontend/src/**/*.ts
+  - Frontend/src/**/*.tsx
+alwaysApply: true
+---
+
+# Code Style Standards
+
+## Rules
+
+- Use TypeScript strict mode in all files.
+- Format code with Prettier before committing.
+- Follow ESLint rules without exceptions.
+- Use explicit type annotations for function parameters and return types.
+- Avoid `any` type. Use `unknown` when type is truly unknown.
+- Use `const` for immutable values, `let` for mutable variables.
+- Never use `var`.
+- Use semicolons at end of statements.
+- Use single quotes for strings unless double quotes are required.
+- Use trailing commas in multi-line objects and arrays.
+- Maximum line length: 100 characters.
+- Use 2 spaces for indentation.
+
+## TypeScript Configuration
+
+- Enable `strict: true` in tsconfig.json.
+- Enable `noImplicitAny: true`.
+- Enable `strictNullChecks: true`.
+- Enable `strictFunctionTypes: true`.
+- Use type inference only when type is obvious from context.
+
+## Type Safety
+
+- Define interfaces for all object shapes.
+- Use type aliases for complex union types.
+- Use enums for fixed sets of constants.
+- Prefer type unions over enums when values are not fixed.
+- Use `as const` for literal type inference.
+
+## Function Declarations
+
+- Use function declarations for exported functions.
+- Use arrow functions for callbacks and inline functions.
+- Always specify return types for exported functions.
+- Use `void` for functions that return nothing.
+
+## Import Organization
+
+- Group imports: external packages, then internal modules.
+- Use absolute imports with `@/` alias for internal modules.
+- Sort imports alphabetically within groups.
+- Remove unused imports.
+
+## Naming Conventions
+
+- Variables and functions: `camelCase`.
+- Classes and interfaces: `PascalCase`.
+- Constants: `UPPER_SNAKE_CASE`.
+- Private class members: prefix with underscore `_privateMethod`.
+- Type parameters: single uppercase letter `T`, `K`, `V`.
+
+## Code Organization
+
+- One class, interface, or function per file when possible.
+- Export at declaration, not separately.
+- Use named exports over default exports for better tree-shaking.
+- Group related code together.
+
+## Comments and Documentation
+
+- Use JSDoc comments for all exported functions, classes, and interfaces.
+- Write JSDoc comments in English.
+- Include `@param` and `@returns` tags.
+- Use inline comments to explain "why", not "what".
+- Remove commented-out code before committing.
+
+## DO
+
+```typescript
+// Explicit types and return type
+export function calculateTotal(expenses: Expense[]): number {
+  return expenses.reduce((sum, expense) => sum + expense.amount, 0);
+}
+
+// Interface definition
+interface UserResponse {
+  id: string;
+  email: string;
+  name: string;
+}
+
+// Proper import organization
+import { Injectable } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { User } from '@/modules/users/entities/user.entity';
+
+// JSDoc documentation
+/**
+ * Creates a new user in the system.
+ *
+ * @param createUserDto - DTO with user data
+ * @returns Created user without password
+ * @throws ConflictException if email already exists
+ */
+async create(createUserDto: CreateUserDto): Promise<User> {
+  // Implementation
+}
+```
+
+```typescript
+// Type inference when obvious
+const users: User[] = [];
+const count = users.length; // number inferred
+
+// Const for immutable
+const API_BASE_URL = 'https://api.example.com';
+const MAX_RETRIES = 3;
+
+// Trailing commas
+const config = {
+  host: 'localhost',
+  port: 3000,
+  timeout: 5000,
+};
+```
+
+## DON'T
+
+```typescript
+// Using any
+function processData(data: any) { // VIOLATION
+  return data.value;
+}
+
+// Missing return type
+function calculateTotal(expenses: Expense[]) { // VIOLATION
+  return expenses.reduce((sum, expense) => sum + expense.amount, 0);
+}
+
+// Using var
+var counter = 0; // VIOLATION
+
+// Missing type annotation
+function getUser(id) { // VIOLATION
+  return repository.findOne(id);
+}
+
+// No semicolons (if project requires them)
+const user = getUser() // VIOLATION
+
+// Mixed quotes
+const message = "Hello 'world'"; // Use single quotes consistently
+```
+
+```typescript
+// Unused imports
+import { Injectable, Logger } from '@nestjs/common'; // Logger unused
+
+// Default export (prefer named)
+export default class UserService {} // VIOLATION
+
+// Commented code
+// const oldCode = 'remove this';
+```
+
+## Formatting Rules
+
+- Prettier configuration must be respected.
+- Run `npm run format` before committing.
+- Use Prettier ignore comments only when necessary.
+- Ensure consistent formatting across team.
+
+## Linting Rules
+
+- Fix all ESLint errors before committing.
+- Do not disable ESLint rules without team approval.
+- Use ESLint disable comments only for legitimate exceptions.
+- Document why a rule is disabled.
+
+## Exceptions
+
+- Test files may use more relaxed type checking for mocks.
+- Configuration files may use `any` if necessary for framework compatibility.
+- Legacy code migration may temporarily allow `any` with TODO comments.

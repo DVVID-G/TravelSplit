@@ -1,0 +1,267 @@
+---
+description: Enforces logging standards including Logger usage, log levels, and log sanitization for TravelSplit backend.
+globs:
+  - Backend/src/**/*.ts
+alwaysApply: false
+---
+
+# Logging Standards
+
+## Rules
+
+- Use NestJS `Logger` instead of `console.log`, `console.error`, `console.warn`.
+- Use appropriate log levels: `error`, `warn`, `log`, `debug`, `verbose`.
+- Include context in log messages: class name, method name, request details.
+- Sanitize sensitive data before logging (passwords, tokens, PII).
+- Log errors with stack traces for debugging.
+- Log important business events: user creation, authentication failures, authorization failures.
+- Use structured logging format when possible.
+- Set log level based on environment (verbose in development, error/warn in production).
+
+## Logger Usage
+
+- Create logger instance: `private readonly logger = new Logger(ClassName.name)`.
+- Use logger methods: `logger.error()`, `logger.warn()`, `logger.log()`, `logger.debug()`.
+- Include context in log messages.
+- Log errors before throwing exceptions.
+- Log warnings for unusual but non-error conditions.
+
+## Log Levels
+
+- `error`: Errors that require immediate attention (exceptions, failures).
+- `warn`: Warnings for unusual conditions (authorization failures, validation issues).
+- `log`: General information (request processing, successful operations).
+- `debug`: Detailed debugging information (development only).
+- `verbose`: Very detailed information (development only).
+
+## Context in Logs
+
+- Include class name in logger: `new Logger(ClassName.name)`.
+- Include request context: method, URL, user ID when available.
+- Include operation context: what operation was being performed.
+- Include error context: error message, stack trace for errors.
+
+## Sensitive Data Sanitization
+
+- Never log passwords or password hashes.
+- Never log JWT tokens or API keys.
+- Never log full credit card numbers or sensitive PII.
+- Sanitize user inputs before logging.
+- Log only necessary information for debugging.
+
+## Error Logging
+
+- Log errors with stack traces: `logger.error(message, stackTrace)`.
+- Log request context with errors: method, URL, user ID.
+- Log error details before throwing exceptions.
+- Use `logger.error()` for all exceptions.
+
+## DO
+
+```typescript
+// Service with proper logging
+@Injectable()
+export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+  
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
+  
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    this.logger.log(`Creating user with email: ${createUserDto.email}`);
+    
+    const existingUser = await this.userRepository.findOne({
+      where: { email: createUserDto.email, deletedAt: IsNull() },
+    });
+    
+    if (existingUser) {
+      this.logger.warn(`Attempt to create user with existing email: ${createUserDto.email}`);
+      throw new ConflictException('El email ya está registrado');
+    }
+    
+    try {
+      const passwordHash = await bcrypt.hash(createUserDto.contraseña, 10);
+      const user = this.userRepository.create({
+        ...createUserDto,
+        passwordHash,
+      });
+      const savedUser = await this.userRepository.save(user);
+      this.logger.log(`User created successfully: ${savedUser.id}`);
+      return savedUser;
+    } catch (error) {
+      this.logger.error(`Failed to create user: ${createUserDto.email}`, error instanceof Error ? error.stack : JSON.stringify(error));
+      throw new InternalServerErrorException('No se pudo crear el usuario');
+    }
+  }
+  
+  async findOne(id: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id, deletedAt: IsNull() },
+    });
+    
+    if (!user) {
+      this.logger.warn(`User not found: ${id}`);
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+    }
+    
+    return user;
+  }
+}
+
+// Exception filter with logging
+@Catch()
+export class AllExceptionsFilter implements ExceptionFilter {
+  private readonly logger = new Logger(AllExceptionsFilter.name);
+  
+  catch(exception: unknown, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
+    
+    const status = exception instanceof HttpException
+      ? exception.getStatus()
+      : HttpStatus.INTERNAL_SERVER_ERROR;
+    
+    // Log error with context
+    this.logger.error(
+      `${request.method} ${request.url} - Status: ${status}`,
+      exception instanceof Error ? exception.stack : JSON.stringify(exception),
+    );
+    
+    // Create error response
+    const errorResponse = {
+      statusCode: status,
+      timestamp: new Date().toISOString(),
+      path: request.url,
+      method: request.method,
+      message: this.extractMessage(exception),
+    };
+    
+    response.status(status).json(errorResponse);
+  }
+}
+
+// Auth service with security logging
+@Injectable()
+export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+  
+  async login(loginDto: LoginDto): Promise<{ user: User; accessToken: string }> {
+    const user = await this.usersService.findByEmail(loginDto.email);
+    
+    if (!user) {
+      this.logger.warn(`Login attempt with non-existent email: ${loginDto.email}`);
+      throw new UnauthorizedException('Credenciales inválidas');
+    }
+    
+    const isPasswordValid = await bcrypt.compare(loginDto.contraseña, user.passwordHash);
+    
+    if (!isPasswordValid) {
+      this.logger.warn(`Failed login attempt for user: ${user.id}`);
+      throw new UnauthorizedException('Credenciales inválidas');
+    }
+    
+    this.logger.log(`User logged in successfully: ${user.id}`);
+    const accessToken = await this.generateToken(user);
+    return { user, accessToken };
+  }
+}
+```
+
+```typescript
+// Bootstrap with Logger instead of console.log
+async function bootstrap() {
+  const logger = new Logger('Bootstrap');
+  
+  try {
+    const app = await NestFactory.create(AppModule);
+    const configService = app.get(ConfigService);
+    const port = configService.get<number>('app.port', 3000);
+    const apiPrefix = configService.get<string>('app.apiPrefix', 'api');
+    
+    // Configuration...
+    
+    await app.listen(port);
+    logger.log(`Application is running on: http://localhost:${port}/${apiPrefix}`);
+    logger.log(`Swagger documentation: http://localhost:${port}/${apiPrefix}/docs`);
+  } catch (error) {
+    logger.error('Failed to start application', error instanceof Error ? error.stack : JSON.stringify(error));
+    process.exit(1);
+  }
+}
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: Using console.log instead of Logger
+console.log('User created'); // VIOLATION: Use Logger instead
+console.error('Error occurred'); // VIOLATION: Use Logger instead
+```
+
+```typescript
+// VIOLATION: Logging sensitive data
+this.logger.log(`User password: ${password}`); // VIOLATION: Never log passwords
+this.logger.log(`JWT token: ${token}`); // VIOLATION: Never log tokens
+```
+
+```typescript
+// VIOLATION: No context in logs
+this.logger.error('Error'); // VIOLATION: Include context (what, where, why)
+```
+
+```typescript
+// VIOLATION: Wrong log level
+this.logger.error('User not found'); // VIOLATION: Should be logger.warn() for expected conditions
+```
+
+```typescript
+// VIOLATION: Not logging errors before throwing
+async findOne(id: string): Promise<User> {
+  const user = await this.repository.findOne({ where: { id } });
+  if (!user) {
+    throw new NotFoundException('User not found'); // VIOLATION: Log before throwing
+  }
+}
+```
+
+```typescript
+// VIOLATION: Logging without sanitization
+this.logger.log(`Request body: ${JSON.stringify(req.body)}`); // VIOLATION: May contain sensitive data
+```
+
+## Log Message Format
+
+- Include operation: "Creating user", "Updating expense", "Deleting trip".
+- Include identifiers: user ID, trip ID, expense ID.
+- Include context: request method, URL, user ID.
+- Use consistent format across application.
+
+## Sensitive Data Guidelines
+
+- Never log: passwords, password hashes, JWT tokens, API keys, credit card numbers.
+- Sanitize before logging: replace sensitive fields with `[REDACTED]`.
+- Log only necessary information: IDs, emails (if not sensitive), operation types.
+- Use structured logging to exclude sensitive fields automatically.
+
+## Environment-Based Logging
+
+- Development: Use `verbose` or `debug` level for detailed logging.
+- Production: Use `error` and `warn` levels primarily.
+- Staging: Use `log`, `warn`, and `error` levels.
+- Configure log level via environment variable: `LOG_LEVEL`.
+
+## Structured Logging
+
+- Use consistent log format across application.
+- Include timestamp, level, context, message.
+- Use JSON format for production when using log aggregation tools.
+- Include request ID for tracing requests across services.
+
+## Exceptions
+
+- Bootstrap function may use `console.log` for initial startup messages.
+- Test files may use `console.log` for debugging tests.
+- Development mode may use more verbose logging.

@@ -1,0 +1,375 @@
+---
+description: Enforces integration testing standards for testing controllers and database interactions in TravelSplit backend.
+globs:
+  - Backend/test/**/*.spec.ts
+  - Backend/src/**/*.e2e-spec.ts
+alwaysApply: false
+---
+
+# Integration Testing Standards
+
+## Rules
+
+- Write integration tests for controllers and database interactions.
+- Use NestJS testing utilities: `Test.createTestingModule()`.
+- Use Supertest for HTTP endpoint testing.
+- Use test database or in-memory database for tests.
+- Clean up test data after each test.
+- Test complete request/response cycles.
+- Test authentication and authorization flows.
+- Use `beforeEach` and `afterEach` for setup and cleanup.
+
+## Test Structure
+
+- Use `describe` blocks to group related tests.
+- Use `beforeEach` to set up test application and database.
+- Use `afterEach` or `afterAll` to clean up test data.
+- Use `it` or `test` for individual test cases.
+- Test both success and error scenarios.
+
+## NestJS Testing Module
+
+- Use `Test.createTestingModule()` to create test module.
+- Import required modules: `AppModule` or specific feature modules.
+- Override providers with test doubles when needed.
+- Use `compile()` to build the testing module.
+- Create NestJS application with `createNestApplication()`.
+
+## Supertest Integration
+
+- Use `supertest` for HTTP endpoint testing.
+- Get HTTP server with `app.getHttpServer()`.
+- Test HTTP methods: `get()`, `post()`, `put()`, `delete()`.
+- Assert status codes: `expect(200)`, `expect(201)`, `expect(404)`.
+- Assert response body: `expect({ ... })`.
+- Test request headers: `set('Authorization', 'Bearer token')`.
+
+## Database Testing
+
+- Use separate test database or in-memory database.
+- Set up database schema before tests.
+- Clean up test data after each test.
+- Use transactions when possible for test isolation.
+- Seed test data in `beforeEach` if needed.
+
+## Authentication Testing
+
+- Test protected endpoints with valid tokens.
+- Test protected endpoints without tokens (401).
+- Test protected endpoints with invalid tokens (401).
+- Create test users and tokens for authenticated requests.
+- Test authorization (403) for unauthorized access.
+
+## DO
+
+```typescript
+// Integration test for controller
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
+import request from 'supertest';
+import { AppModule } from '../src/app.module';
+import { UsersModule } from '../src/modules/users/users.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
+describe('UsersController (e2e)', () => {
+  let app: INestApplication;
+  let authToken: string;
+  let testUserId: string;
+
+  beforeEach(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [
+        AppModule,
+        // Or import specific modules for focused testing
+      ],
+    })
+      .overrideProvider(/* Override if needed */)
+      .useValue(/* Mock value */)
+      .compile();
+
+    app = moduleFixture.createNestApplication();
+    await app.init();
+
+    // Create test user and get auth token
+    const registerResponse = await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send({
+        nombre: 'Test User',
+        email: 'test@example.com',
+        contraseña: 'password123',
+      });
+    
+    authToken = registerResponse.body.token;
+    testUserId = registerResponse.body.user.id;
+  });
+
+  afterEach(async () => {
+    // Clean up test data
+    await app.close();
+  });
+
+  describe('GET /api/users', () => {
+    it('should return 200 and list of users when authenticated', () => {
+      return request(app.getHttpServer())
+        .get('/api/users')
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(Array.isArray(res.body)).toBe(true);
+        });
+    });
+
+    it('should return 401 when not authenticated', () => {
+      return request(app.getHttpServer())
+        .get('/api/users')
+        .expect(401);
+    });
+  });
+
+  describe('GET /api/users/:id', () => {
+    it('should return 200 and user when found', () => {
+      return request(app.getHttpServer())
+        .get(`/api/users/${testUserId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.id).toBe(testUserId);
+          expect(res.body.email).toBe('test@example.com');
+        });
+    });
+
+    it('should return 404 when user not found', () => {
+      return request(app.getHttpServer())
+        .get('/api/users/invalid-id')
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(404);
+    });
+  });
+
+  describe('PUT /api/users/:id', () => {
+    it('should return 200 and update user when authorized', () => {
+      return request(app.getHttpServer())
+        .put(`/api/users/${testUserId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ nombre: 'Updated Name' })
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.nombre).toBe('Updated Name');
+        });
+    });
+
+    it('should return 403 when updating another user', async () => {
+      // Create another user
+      const otherUserResponse = await request(app.getHttpServer())
+        .post('/api/auth/register')
+        .send({
+          nombre: 'Other User',
+          email: 'other@example.com',
+          contraseña: 'password123',
+        });
+      
+      const otherToken = otherUserResponse.body.token;
+      
+      // Try to update first user with second user's token
+      return request(app.getHttpServer())
+        .put(`/api/users/${testUserId}`)
+        .set('Authorization', `Bearer ${otherToken}`)
+        .send({ nombre: 'Hacked Name' })
+        .expect(403);
+    });
+  });
+});
+```
+
+```typescript
+// Auth flow integration test
+describe('AuthController (e2e)', () => {
+  let app: INestApplication;
+
+  beforeEach(async () => {
+    const moduleFixture = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    await app.init();
+  });
+
+  afterEach(async () => {
+    await app.close();
+  });
+
+  describe('POST /api/auth/register', () => {
+    it('should return 201 and create user with token', () => {
+      return request(app.getHttpServer())
+        .post('/api/auth/register')
+        .send({
+          nombre: 'New User',
+          email: 'newuser@example.com',
+          contraseña: 'password123',
+        })
+        .expect(201)
+        .expect((res) => {
+          expect(res.body.user).toBeDefined();
+          expect(res.body.token).toBeDefined();
+          expect(res.body.user.email).toBe('newuser@example.com');
+        });
+    });
+
+    it('should return 409 when email already exists', async () => {
+      // Create first user
+      await request(app.getHttpServer())
+        .post('/api/auth/register')
+        .send({
+          nombre: 'First User',
+          email: 'duplicate@example.com',
+          contraseña: 'password123',
+        });
+
+      // Try to create duplicate
+      return request(app.getHttpServer())
+        .post('/api/auth/register')
+        .send({
+          nombre: 'Second User',
+          email: 'duplicate@example.com',
+          contraseña: 'password123',
+        })
+        .expect(409);
+    });
+  });
+
+  describe('POST /api/auth/login', () => {
+    beforeEach(async () => {
+      // Create test user
+      await request(app.getHttpServer())
+        .post('/api/auth/register')
+        .send({
+          nombre: 'Test User',
+          email: 'test@example.com',
+          contraseña: 'password123',
+        });
+    });
+
+    it('should return 200 and token with valid credentials', () => {
+      return request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({
+          email: 'test@example.com',
+          contraseña: 'password123',
+        })
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.token).toBeDefined();
+          expect(res.body.user).toBeDefined();
+        });
+    });
+
+    it('should return 401 with invalid credentials', () => {
+      return request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({
+          email: 'test@example.com',
+          contraseña: 'wrongpassword',
+        })
+        .expect(401);
+    });
+  });
+});
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: Not cleaning up test data
+describe('UsersController (e2e)', () => {
+  let app: INestApplication;
+  
+  beforeEach(async () => {
+    // Setup
+  });
+  
+  // VIOLATION: Missing afterEach to clean up
+  it('should create user', () => {
+    // Test creates data but never cleans up
+  });
+});
+```
+
+```typescript
+// VIOLATION: Using real database without isolation
+describe('UsersController (e2e)', () => {
+  // VIOLATION: Tests run against production database
+  it('should create user', () => {
+    // This could affect production data
+  });
+});
+```
+
+```typescript
+// VIOLATION: Not testing error cases
+describe('UsersController (e2e)', () => {
+  it('should return user', () => {
+    // VIOLATION: Only tests happy path, missing 404, 401, 403 cases
+  });
+});
+```
+
+```typescript
+// VIOLATION: Not using proper HTTP status assertions
+it('should create user', () => {
+  return request(app.getHttpServer())
+    .post('/api/users')
+    .send({})
+    .expect(200); // VIOLATION: Should expect 201 for creation
+});
+```
+
+```typescript
+// VIOLATION: Not testing authentication
+it('should return users', () => {
+  return request(app.getHttpServer())
+    .get('/api/users')
+    .expect(200); // VIOLATION: Should test both authenticated and unauthenticated
+});
+```
+
+## Test Data Management
+
+- Create test users in `beforeEach` when needed.
+- Use unique emails/timestamps to avoid conflicts.
+- Clean up test data in `afterEach` or `afterAll`.
+- Use database transactions for test isolation when possible.
+- Seed minimal test data required for tests.
+
+## HTTP Testing Best Practices
+
+- Test all HTTP methods used by endpoints.
+- Test all status codes: 200, 201, 400, 401, 403, 404, 409, 500.
+- Test request validation (400 Bad Request).
+- Test authentication (401 Unauthorized).
+- Test authorization (403 Forbidden).
+- Test not found (404 Not Found).
+- Test conflicts (409 Conflict).
+
+## Authentication Testing
+
+- Create helper functions to generate test tokens.
+- Test endpoints with valid tokens.
+- Test endpoints without tokens.
+- Test endpoints with expired tokens.
+- Test endpoints with invalid tokens.
+- Test authorization scenarios.
+
+## Database Setup
+
+- Use test database configuration separate from development.
+- Set up database schema before tests run.
+- Use migrations or schema sync for test database.
+- Clean up or reset database between test suites.
+- Use transactions for test isolation when supported.
+
+## Exceptions
+
+- E2E tests may use real database with cleanup.
+- Performance tests may skip some assertions.
+- Smoke tests may test only critical paths.

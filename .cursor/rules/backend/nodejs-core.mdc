@@ -1,0 +1,212 @@
+---
+description: Enforces Node.js v22 best practices including async/await, error handling, and performance optimizations for TravelSplit backend.
+globs:
+  - Backend/src/**/*.ts
+alwaysApply: false
+---
+
+# Node.js v22 Core Standards
+
+## Rules
+
+- Use async/await instead of callbacks or promises chains.
+- Handle errors explicitly with try-catch blocks.
+- Use proper error handling for async operations.
+- Avoid blocking the event loop with synchronous operations.
+- Use environment variables for configuration.
+- Handle process signals gracefully (SIGTERM, SIGINT).
+- Use proper logging instead of console.log in production.
+- Avoid memory leaks by cleaning up resources.
+
+## Async/Await Patterns
+
+- Always use async/await for asynchronous operations.
+- Use try-catch blocks for error handling in async functions.
+- Do not mix promises chains with async/await.
+- Use Promise.all() for parallel operations when appropriate.
+- Use Promise.allSettled() when you need all results regardless of failures.
+
+## Error Handling
+
+- Catch errors explicitly in async functions.
+- Throw meaningful error messages.
+- Use NestJS exceptions instead of generic Error when possible.
+- Log errors before rethrowing or handling.
+- Do not swallow errors silently.
+
+## Process Management
+
+- Handle process signals for graceful shutdown.
+- Clean up resources (database connections, file handles) on shutdown.
+- Use process.exit() only in error scenarios.
+- Set up proper error handlers for unhandled rejections.
+
+## Environment Variables
+
+- Use environment variables for all configuration.
+- Validate required environment variables at startup.
+- Provide sensible defaults for development.
+- Never commit secrets or sensitive data.
+- Use ConfigService from @nestjs/config for accessing env vars.
+
+## Performance Best Practices
+
+- Avoid blocking operations in request handlers.
+- Use streams for large file operations.
+- Implement proper connection pooling for databases.
+- Use caching when appropriate.
+- Monitor memory usage and prevent leaks.
+
+## DO
+
+```typescript
+// Proper async/await with error handling
+async function createUser(createUserDto: CreateUserDto): Promise<User> {
+  try {
+    const existingUser = await this.userRepository.findOne({
+      where: { email: createUserDto.email },
+    });
+    
+    if (existingUser) {
+      throw new ConflictException('Email already exists');
+    }
+    
+    const passwordHash = await bcrypt.hash(createUserDto.password, 10);
+    const user = this.userRepository.create({
+      email: createUserDto.email,
+      passwordHash,
+    });
+    
+    return await this.userRepository.save(user);
+  } catch (error) {
+    if (error instanceof ConflictException) {
+      throw error;
+    }
+    throw new BadRequestException('Failed to create user');
+  }
+}
+
+// Parallel operations with Promise.all
+async function fetchMultipleResources(ids: string[]): Promise<Resource[]> {
+  const promises = ids.map(id => this.repository.findOne({ where: { id } }));
+  return Promise.all(promises);
+}
+
+// Graceful shutdown handling
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  
+  // Setup graceful shutdown
+  process.on('SIGTERM', async () => {
+    await app.close();
+    process.exit(0);
+  });
+  
+  process.on('SIGINT', async () => {
+    await app.close();
+    process.exit(0);
+  });
+  
+  await app.listen(3000);
+}
+
+// Environment variable validation
+async function validateEnvironment() {
+  const requiredVars = ['DB_HOST', 'DB_NAME', 'JWT_SECRET'];
+  const missing = requiredVars.filter(
+    varName => !process.env[varName]
+  );
+  
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing required environment variables: ${missing.join(', ')}`
+    );
+  }
+}
+```
+
+```typescript
+// Using ConfigService for environment variables
+@Injectable()
+export class DatabaseService {
+  constructor(private readonly configService: ConfigService) {}
+  
+  getConnectionString(): string {
+    return `postgresql://${this.configService.get('DB_USERNAME')}:${this.configService.get('DB_PASSWORD')}@${this.configService.get('DB_HOST')}:${this.configService.get('DB_PORT')}/${this.configService.get('DB_NAME')}`;
+  }
+}
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: Using callbacks instead of async/await
+function getUser(id: string, callback: (err: Error, user: User) => void) { // VIOLATION
+  this.repository.findOne({ where: { id } }, callback);
+}
+
+// VIOLATION: Mixing promises and async/await
+async function getUser(id: string) {
+  return this.repository.findOne({ where: { id } }) // VIOLATION: Missing await
+    .then(user => user)
+    .catch(err => console.log(err));
+}
+
+// VIOLATION: Swallowing errors
+async function createUser(dto: CreateUserDto) {
+  try {
+    await this.repository.save(dto);
+  } catch (error) {
+    // VIOLATION: Error swallowed, no handling
+  }
+}
+
+// VIOLATION: Blocking event loop
+function processLargeFile(filePath: string) {
+  const data = fs.readFileSync(filePath); // VIOLATION: Synchronous blocking operation
+  return processData(data);
+}
+
+// VIOLATION: Using console.log in production code
+async function createUser(dto: CreateUserDto) {
+  console.log('Creating user:', dto); // VIOLATION: Use proper logger
+  await this.repository.save(dto);
+}
+
+// VIOLATION: Hardcoded configuration
+const dbHost = 'localhost'; // VIOLATION: Should use environment variable
+const dbPort = 5432; // VIOLATION: Should use environment variable
+```
+
+```typescript
+// VIOLATION: Unhandled promise rejection
+async function riskyOperation() {
+  await this.repository.save(data); // VIOLATION: No error handling
+}
+
+// VIOLATION: Memory leak - not cleaning up
+setInterval(() => {
+  // Some operation that accumulates memory
+}, 1000); // VIOLATION: Never cleared, causes memory leak
+```
+
+## Error Handling Patterns
+
+- Always wrap async operations in try-catch.
+- Re-throw NestJS exceptions as-is.
+- Transform generic errors to appropriate NestJS exceptions.
+- Log errors with context before handling.
+- Do not expose internal error details to clients.
+
+## Resource Management
+
+- Close database connections on shutdown.
+- Clean up file handles and streams.
+- Clear intervals and timeouts.
+- Release memory references when done.
+
+## Exceptions
+
+- Bootstrap functions may use top-level await (Node.js v22 supports this).
+- Test files may use synchronous operations for simplicity.
+- Utility functions may use synchronous operations if they are truly synchronous.

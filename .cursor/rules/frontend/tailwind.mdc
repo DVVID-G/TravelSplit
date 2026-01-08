@@ -1,0 +1,257 @@
+---
+description: Enforces Tailwind CSS v4 conventions including utility classes, design tokens, and responsive design for TravelSplit frontend.
+globs:
+  - Frontend/src/**/*.tsx
+  - Frontend/src/**/*.css
+  - Frontend/tailwind.config.ts
+alwaysApply: false
+---
+
+# Tailwind CSS v4 Standards
+
+## Rules
+
+- Use Tailwind utility classes instead of custom CSS.
+- Use design tokens from `tailwind.config.ts` for colors and spacing.
+- Follow mobile-first responsive design with breakpoints.
+- Use consistent spacing scale: `p-4`, `p-6`, `gap-4`, `gap-6`.
+- Use semantic color tokens: `primary`, `debt`, `credit`, `neutral`.
+- Avoid magic numbers: use Tailwind classes instead of arbitrary values.
+- Use consistent border radius: `rounded-xl` or `rounded-2xl` for cards.
+- Use consistent typography classes from design system.
+
+## Design Tokens
+
+- Use `primary` color for primary actions (violet-600: `#7C3AED`).
+- Use `debt` color for negative amounts (red-500: `#EF4444`).
+- Use `credit` color for positive amounts (emerald-500: `#10B981`).
+- Use `neutral` color for secondary text (slate-500: `#64748B`).
+- Use `background` for page backgrounds (slate-50: `#F8FAFC`).
+- Use `surface` for card backgrounds (white: `#FFFFFF`).
+
+## Typography
+
+- Use `font-heading` for headings (Plus Jakarta Sans).
+- Use `font-body` for body text (Inter).
+- Use consistent font weights: `font-semibold` (600), `font-bold` (700).
+- Use consistent text sizes: `text-sm`, `text-base`, `text-lg`, `text-xl`, `text-2xl`, `text-3xl`.
+
+## Spacing
+
+- Use consistent spacing scale: `p-4`, `p-6`, `p-8` for padding.
+- Use `gap-4`, `gap-6` for flex/grid gaps.
+- Use `space-y-4`, `space-y-6` for vertical spacing.
+- Use `mb-4`, `mb-6`, `mt-4`, `mt-6` for margins.
+- Avoid arbitrary spacing values like `p-[13px]`.
+
+## Colors
+
+- Use semantic color tokens from config: `bg-primary`, `text-primary`.
+- Use Tailwind color scale: `bg-violet-600`, `text-slate-900`, `bg-slate-50`.
+- Use opacity modifiers: `bg-primary/10`, `text-slate-500/80`.
+- Use hover states: `hover:bg-violet-700`, `hover:text-violet-600`.
+
+## Border Radius
+
+- Use `rounded-xl` (12px) for cards and containers.
+- Use `rounded-2xl` (16px) for modals and prominent cards.
+- Use `rounded-lg` (8px) for buttons and inputs.
+- Use `rounded-full` for pills and avatars.
+
+## Shadows
+
+- Use `shadow-lg` for cards and elevated surfaces.
+- Use `shadow-md` for subtle elevation.
+- Use `shadow-sm` for minimal depth.
+- Avoid custom shadow values unless necessary.
+
+## Responsive Design
+
+- Use mobile-first approach: base styles for mobile, then `sm:`, `md:`, `lg:`.
+- Use breakpoints: `sm:` (640px), `md:` (768px), `lg:` (1024px).
+- Design primarily for mobile (360px - 430px width).
+- Use responsive utilities: `px-4 md:px-8`, `text-base md:text-lg`.
+
+## DO
+
+```typescript
+// Using design tokens and consistent spacing
+export function Card({ children, title }: CardProps) {
+  return (
+    <div className="bg-surface rounded-xl shadow-lg p-6 md:p-8">
+      {title && (
+        <h2 className="font-heading font-bold text-2xl text-slate-900 mb-4">
+          {title}
+        </h2>
+      )}
+      <div className="space-y-4">{children}</div>
+    </div>
+  );
+}
+
+// Using semantic colors
+export function BalanceDisplay({ amount }: { amount: number }) {
+  const isPositive = amount > 0;
+  return (
+    <div
+      className={`font-body font-semibold text-lg ${
+        isPositive ? 'text-credit' : 'text-debt'
+      }`}
+    >
+      {isPositive ? '+' : ''}${amount.toLocaleString()}
+    </div>
+  );
+}
+
+// Using consistent button styles
+export function Button({ variant = 'primary', children }: ButtonProps) {
+  const baseStyles =
+    'font-medium rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+  
+  const variants = {
+    primary: 'bg-violet-600 text-white hover:bg-violet-700 focus:ring-violet-500',
+    secondary: 'bg-slate-200 text-slate-900 hover:bg-slate-300',
+    danger: 'bg-red-500 text-white hover:bg-red-600',
+  };
+  
+  return (
+    <button className={`${baseStyles} ${variants[variant]}`}>
+      {children}
+    </button>
+  );
+}
+
+// Mobile-first responsive design
+export function Container({ children }: ContainerProps) {
+  return (
+    <div className="min-h-screen bg-slate-50 px-4 py-8 md:px-8 md:py-12">
+      <div className="max-w-md mx-auto">{children}</div>
+    </div>
+  );
+}
+```
+
+```typescript
+// Using consistent spacing and typography
+export function FormField({ label, error, children }: FormFieldProps) {
+  return (
+    <div className="space-y-2">
+      <label className="font-body font-medium text-sm text-slate-700">
+        {label}
+      </label>
+      {children}
+      {error && (
+        <p className="font-body text-sm text-red-500">{error}</p>
+      )}
+    </div>
+  );
+}
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: Magic numbers instead of Tailwind classes
+<div className="p-[13px] mt-[7px]"> {/* VIOLATION: Use p-4, mt-2 */}
+  Content
+</div>
+```
+
+```typescript
+// VIOLATION: Custom CSS instead of Tailwind utilities
+<div style={{ padding: '16px', borderRadius: '12px' }}> {/* VIOLATION: Use Tailwind classes */}
+  Content
+</div>
+```
+
+```typescript
+// VIOLATION: Inconsistent color usage
+<div className="bg-purple-600"> {/* VIOLATION: Use bg-primary or bg-violet-600 */}
+  Content
+</div>
+```
+
+```typescript
+// VIOLATION: Not using design tokens
+<button className="bg-[#7C3AED]"> {/* VIOLATION: Use bg-primary or bg-violet-600 */}
+  Button
+</button>
+```
+
+```typescript
+// VIOLATION: Desktop-first responsive design
+<div className="lg:p-8 p-4"> {/* VIOLATION: Should be p-4 lg:p-8 (mobile-first) */}
+  Content
+</div>
+```
+
+```typescript
+// VIOLATION: Inconsistent border radius
+<div className="rounded-md"> {/* VIOLATION: Use rounded-xl or rounded-2xl for cards */}
+  Card
+</div>
+```
+
+```typescript
+// VIOLATION: Not using semantic colors
+<div className="text-green-500"> {/* VIOLATION: Use text-credit for positive amounts */}
+  +$100
+</div>
+```
+
+## Component Styling Patterns
+
+### Cards and Containers
+- Use `bg-surface` or `bg-white` for card backgrounds.
+- Use `rounded-xl` or `rounded-2xl` for card corners.
+- Use `shadow-lg` for card elevation.
+- Use `p-6` or `p-8` for card padding.
+
+### Buttons
+- Use `rounded-xl` for button corners.
+- Use `font-medium` for button text weight.
+- Use `min-h-[44px]` or `h-12` for touch targets (mobile).
+- Use `transition-colors` for hover effects.
+- Use `focus:ring-2 focus:ring-offset-2` for accessibility.
+
+### Forms
+- Use `rounded-lg` for input borders.
+- Use `border-slate-300` for input borders.
+- Use `focus:ring-2 focus:ring-violet-500` for focus states.
+- Use `space-y-4` or `space-y-6` for form field spacing.
+
+### Typography
+- Use `font-heading` for h1, h2, h3.
+- Use `font-body` for paragraphs and body text.
+- Use consistent text sizes: `text-sm`, `text-base`, `text-lg`.
+- Use `text-slate-900` for primary text.
+- Use `text-slate-500` or `text-neutral` for secondary text.
+
+## Responsive Breakpoints
+
+- Mobile (default): 360px - 430px width.
+- `sm:` (640px): Small tablets.
+- `md:` (768px): Tablets.
+- `lg:` (1024px): Desktop.
+
+## Color Usage Guidelines
+
+- Primary actions: `bg-violet-600`, `text-violet-600`.
+- Positive amounts: `text-credit` or `text-emerald-500`.
+- Negative amounts: `text-debt` or `text-red-500`.
+- Secondary text: `text-neutral` or `text-slate-500`.
+- Backgrounds: `bg-slate-50` or `bg-background`.
+- Surfaces: `bg-white` or `bg-surface`.
+
+## Spacing Scale
+
+- Small: `p-2`, `gap-2`, `space-y-2` (8px).
+- Medium: `p-4`, `gap-4`, `space-y-4` (16px).
+- Large: `p-6`, `gap-6`, `space-y-6` (24px).
+- Extra Large: `p-8`, `gap-8`, `space-y-8` (32px).
+
+## Exceptions
+
+- Custom animations may require arbitrary values.
+- Complex layouts may need custom CSS for specific cases.
+- Third-party components may have their own styling.

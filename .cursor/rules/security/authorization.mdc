@@ -1,0 +1,340 @@
+---
+description: Enforces authorization standards including contextual roles, permission checks, and access control for TravelSplit backend.
+globs:
+  - Backend/src/**/*.ts
+alwaysApply: false
+---
+
+# Authorization Standards
+
+## Rules
+
+- Implement contextual roles per trip, not global roles.
+- Use `TripParticipant.role` to determine permissions for trip-specific actions.
+- Verify user ownership for profile updates: `req.user.id === id`.
+- Check trip participant role before allowing trip modifications.
+- Check trip participant role before allowing expense modifications.
+- Throw `ForbiddenException` (403) for unauthorized access attempts.
+- Never trust client-provided role information.
+- Always verify permissions server-side.
+
+## Contextual Roles
+
+- Roles are trip-specific: `CREATOR` or `MEMBER` in `TripParticipant`.
+- No global admin role exists in `User` entity.
+- Same user can be `CREATOR` in one trip and `MEMBER` in another.
+- Roles stored in database, not in JWT token.
+- Query `TripParticipant` table to verify user's role in specific trip.
+
+## Permission Rules
+
+### Profile Management
+- Users can only update their own profile: `req.user.id === id`.
+- Users cannot update other users' profiles.
+- No admin override for profile updates.
+
+### Trip Management
+- Any authenticated user can create trips.
+- Only `CREATOR` role can invite participants to trip.
+- Only `CREATOR` role can edit/delete trip configuration.
+- All participants (`CREATOR` and `MEMBER`) can view trip details.
+
+### Expense Management
+- Any trip participant (`CREATOR` or `MEMBER`) can create expenses.
+- Only `CREATOR` role can edit/delete expenses (including their own).
+- `MEMBER` role cannot edit expenses after creation (even their own).
+- All participants can view expenses.
+
+### Balance/Viewing
+- All trip participants can view balances and expenses.
+- No restrictions on read access for participants.
+
+## Authorization Implementation
+
+- Check permissions in service layer, not only in controller.
+- Create helper methods to verify trip participant roles.
+- Query `TripParticipant` repository to get user's role for trip.
+- Throw `ForbiddenException` when authorization fails.
+- Log authorization failures for security monitoring.
+
+## DO
+
+```typescript
+// Profile authorization check in controller
+@Put(':id')
+@UseGuards(JwtAuthGuard)
+async update(
+  @Param('id', ParseUUIDPipe) id: string,
+  @Body() updateUserDto: UpdateUserDto,
+  @Request() req: AuthenticatedRequest,
+): Promise<UserResponseDto> {
+  // Verify user can only update their own profile
+  if (req.user?.id !== id) {
+    throw new ForbiddenException('Solo puedes actualizar tu propio perfil');
+  }
+  
+  return this.usersService.update(id, updateUserDto);
+}
+
+// Trip participant role verification service method
+@Injectable()
+export class TripsService {
+  constructor(
+    @InjectRepository(TripParticipant)
+    private readonly tripParticipantRepository: Repository<TripParticipant>,
+  ) {}
+  
+  async verifyUserIsCreator(tripId: string, userId: string): Promise<boolean> {
+    const participant = await this.tripParticipantRepository.findOne({
+      where: {
+        tripId,
+        userId,
+        deletedAt: IsNull(),
+      },
+    });
+    
+    return participant?.role === 'CREATOR';
+  }
+  
+  async verifyUserIsParticipant(tripId: string, userId: string): Promise<boolean> {
+    const participant = await this.tripParticipantRepository.findOne({
+      where: {
+        tripId,
+        userId,
+        deletedAt: IsNull(),
+      },
+    });
+    
+    return participant !== null;
+  }
+  
+  async getParticipantRole(tripId: string, userId: string): Promise<'CREATOR' | 'MEMBER' | null> {
+    const participant = await this.tripParticipantRepository.findOne({
+      where: {
+        tripId,
+        userId,
+        deletedAt: IsNull(),
+      },
+    });
+    
+    return participant?.role || null;
+  }
+}
+
+// Expense authorization check
+@Injectable()
+export class ExpensesService {
+  constructor(
+    private readonly tripsService: TripsService,
+  ) {}
+  
+  async create(tripId: string, userId: string, createExpenseDto: CreateExpenseDto): Promise<Expense> {
+    // Verify user is participant of trip
+    const isParticipant = await this.tripsService.verifyUserIsParticipant(tripId, userId);
+    if (!isParticipant) {
+      throw new ForbiddenException('No eres participante de este viaje');
+    }
+    
+    // Any participant can create expenses
+    return this.expenseRepository.save({
+      ...createExpenseDto,
+      tripId,
+      payerId: userId,
+    });
+  }
+  
+  async update(expenseId: string, tripId: string, userId: string, updateExpenseDto: UpdateExpenseDto): Promise<Expense> {
+    // Verify user is CREATOR of trip
+    const isCreator = await this.tripsService.verifyUserIsCreator(tripId, userId);
+    if (!isCreator) {
+      throw new ForbiddenException('Solo el creador del viaje puede editar gastos');
+    }
+    
+    const expense = await this.expenseRepository.findOne({
+      where: { id: expenseId, tripId, deletedAt: IsNull() },
+    });
+    
+    if (!expense) {
+      throw new NotFoundException('Gasto no encontrado');
+    }
+    
+    return this.expenseRepository.save({
+      ...expense,
+      ...updateExpenseDto,
+    });
+  }
+  
+  async delete(expenseId: string, tripId: string, userId: string): Promise<void> {
+    // Verify user is CREATOR of trip
+    const isCreator = await this.tripsService.verifyUserIsCreator(tripId, userId);
+    if (!isCreator) {
+      throw new ForbiddenException('Solo el creador del viaje puede eliminar gastos');
+    }
+    
+    const expense = await this.expenseRepository.findOne({
+      where: { id: expenseId, tripId, deletedAt: IsNull() },
+    });
+    
+    if (!expense) {
+      throw new NotFoundException('Gasto no encontrado');
+    }
+    
+    await this.expenseRepository.softRemove(expense);
+  }
+}
+
+// Controller using authorization
+@Controller('trips/:tripId/expenses')
+@UseGuards(JwtAuthGuard)
+export class ExpensesController {
+  @Post()
+  async create(
+    @Param('tripId', ParseUUIDPipe) tripId: string,
+    @Body() createExpenseDto: CreateExpenseDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<ExpenseResponseDto> {
+    return this.expensesService.create(tripId, req.user!.id, createExpenseDto);
+  }
+  
+  @Put(':expenseId')
+  async update(
+    @Param('tripId', ParseUUIDPipe) tripId: string,
+    @Param('expenseId', ParseUUIDPipe) expenseId: string,
+    @Body() updateExpenseDto: UpdateExpenseDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<ExpenseResponseDto> {
+    return this.expensesService.update(expenseId, tripId, req.user!.id, updateExpenseDto);
+  }
+  
+  @Delete(':expenseId')
+  async delete(
+    @Param('tripId', ParseUUIDPipe) tripId: string,
+    @Param('expenseId', ParseUUIDPipe) expenseId: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<void> {
+    return this.expensesService.delete(expenseId, tripId, req.user!.id);
+  }
+}
+```
+
+```typescript
+// Custom guard for trip creator (optional)
+@Injectable()
+export class TripCreatorGuard implements CanActivate {
+  constructor(
+    private readonly tripsService: TripsService,
+  ) {}
+  
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    const tripId = request.params.tripId;
+    const userId = request.user?.id;
+    
+    if (!userId || !tripId) {
+      return false;
+    }
+    
+    return this.tripsService.verifyUserIsCreator(tripId, userId);
+  }
+}
+
+// Using custom guard
+@Put(':tripId')
+@UseGuards(JwtAuthGuard, TripCreatorGuard)
+async updateTrip(
+  @Param('tripId') tripId: string,
+  @Body() updateTripDto: UpdateTripDto,
+): Promise<TripResponseDto> {
+  return this.tripsService.update(tripId, updateTripDto);
+}
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: Trusting client-provided role
+@Put(':expenseId')
+async update(
+  @Body() dto: { role: 'CREATOR' }, // VIOLATION: Never trust client role
+): Promise<Expense> {
+  if (dto.role === 'CREATOR') { // VIOLATION: Check in database, not from client
+    // Allow update
+  }
+}
+```
+
+```typescript
+// VIOLATION: Not checking authorization
+@Put(':expenseId')
+async update(
+  @Param('expenseId') expenseId: string,
+  @Body() updateDto: UpdateExpenseDto,
+): Promise<Expense> {
+  // VIOLATION: No authorization check
+  return this.expenseRepository.save({ id: expenseId, ...updateDto });
+}
+```
+
+```typescript
+// VIOLATION: Using global admin role
+if (user.isAdmin) { // VIOLATION: No global admin role exists
+  // Allow access
+}
+```
+
+```typescript
+// VIOLATION: Checking role in JWT token
+const role = req.user.role; // VIOLATION: Roles are contextual, not in token
+if (role === 'CREATOR') {
+  // Allow access
+}
+```
+
+```typescript
+// VIOLATION: Allowing MEMBER to edit expenses
+async updateExpense(expenseId: string, userId: string) {
+  const role = await this.getParticipantRole(tripId, userId);
+  if (role === 'MEMBER' || role === 'CREATOR') { // VIOLATION: MEMBER cannot edit
+    // Allow update
+  }
+}
+```
+
+```typescript
+// VIOLATION: Not verifying trip participation
+async createExpense(tripId: string, userId: string, dto: CreateExpenseDto) {
+  // VIOLATION: Should verify user is participant first
+  return this.expenseRepository.save({ tripId, ...dto });
+}
+```
+
+## Authorization Patterns
+
+### Profile Authorization
+- Check: `req.user.id === resourceId`.
+- Action: Throw `ForbiddenException` if mismatch.
+- Message: "Solo puedes actualizar tu propio perfil".
+
+### Trip Creator Authorization
+- Check: Query `TripParticipant` where `tripId` and `userId`, verify `role === 'CREATOR'`.
+- Action: Throw `ForbiddenException` if not creator.
+- Message: "Solo el creador del viaje puede realizar esta acción".
+
+### Trip Participant Authorization
+- Check: Query `TripParticipant` where `tripId` and `userId`, verify exists.
+- Action: Throw `ForbiddenException` if not participant.
+- Message: "No eres participante de este viaje".
+
+## Security Best Practices
+
+- Always verify permissions server-side, never trust client.
+- Query database for current role, don't cache or assume.
+- Log authorization failures for security monitoring.
+- Use consistent error messages for authorization failures.
+- Test authorization scenarios thoroughly.
+
+## Exceptions
+
+- Health check endpoints do not require authorization.
+- Public endpoints (register, login) do not require authorization.
+- Read-only endpoints may have relaxed authorization (viewing).

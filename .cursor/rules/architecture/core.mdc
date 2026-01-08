@@ -1,0 +1,174 @@
+---
+description: Enforces core architectural principles including SOLID, DRY, Separation of Concerns, and strict layer boundaries for TravelSplit project.
+globs:
+  - Backend/src/**/*.ts
+  - Frontend/src/**/*.ts
+  - Frontend/src/**/*.tsx
+alwaysApply: true
+---
+
+# Core Architectural Principles
+
+## Rules
+
+- Apply SOLID principles in all code.
+- Follow DRY (Don't Repeat Yourself) principle.
+- Enforce strict Separation of Concerns (SoC).
+- Maintain clear layer boundaries.
+- Prohibit circular dependencies.
+- Use dependency injection for all service dependencies.
+
+## SOLID Principles
+
+### Single Responsibility Principle (SRP)
+- Each class, function, or module must have one reason to change.
+- Controllers handle HTTP requests only.
+- Services contain business logic only.
+- Entities represent data models only.
+- DTOs handle data transfer and validation only.
+
+### Open/Closed Principle (OCP)
+- Extend functionality through inheritance or composition.
+- Avoid modifying existing code when adding features.
+- Use interfaces and abstract classes for extensibility.
+
+### Liskov Substitution Principle (LSP)
+- Derived classes must be substitutable for their base classes.
+- Override methods maintaining the same contract.
+
+### Interface Segregation Principle (ISP)
+- Create specific interfaces instead of large general-purpose ones.
+- Clients should not depend on methods they don't use.
+
+### Dependency Inversion Principle (DIP)
+- Depend on abstractions, not concrete implementations.
+- Use dependency injection for all dependencies.
+
+## DRY Principle
+
+- Extract repeated code into reusable functions, utilities, or services.
+- Create shared utilities for common operations.
+- Use base classes or mixins for common functionality.
+- Avoid duplicating validation logic.
+
+## Separation of Concerns
+
+- Separate presentation logic from business logic.
+- Separate data access logic from business logic.
+- Keep HTTP concerns separate from domain logic.
+- Isolate error handling from business operations.
+
+## Layer Boundaries
+
+### Backend Boundaries
+- Controllers never access repositories directly.
+- Services never access HTTP request/response objects.
+- Entities never contain business logic.
+- DTOs never contain database queries.
+
+### Frontend Boundaries
+- Components never contain API calls directly.
+- Hooks encapsulate business logic and state management.
+- Services handle all API communication.
+- Pages compose components and hooks, not business logic.
+
+## Dependency Rules
+
+- Backend: Controllers depend on Services, Services depend on Repositories/Entities.
+- Frontend: Components depend on Hooks, Hooks depend on Services.
+- Never create circular dependencies between modules.
+- Use dependency injection for all service dependencies.
+
+## DO
+
+```typescript
+// Backend: Controller delegates to Service
+@Controller('users')
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+  
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return this.usersService.findOne(id);
+  }
+}
+
+// Backend: Service contains business logic
+@Injectable()
+export class UsersService {
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
+  
+  async findOne(id: string): Promise<User> {
+    return this.userRepository.findOne({ where: { id } });
+  }
+}
+```
+
+```typescript
+// Frontend: Component uses Hook
+function UserProfile() {
+  const { user, isLoading } = useUser();
+  
+  if (isLoading) return <LoadingState />;
+  return <div>{user.name}</div>;
+}
+
+// Frontend: Hook uses Service
+export function useUser() {
+  return useQuery({
+    queryKey: ['user'],
+    queryFn: () => userService.getCurrentUser(),
+  });
+}
+```
+
+## DON'T
+
+```typescript
+// Backend: Controller accessing repository directly
+@Controller('users')
+export class UsersController {
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
+  
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return this.userRepository.findOne({ where: { id } }); // VIOLATION
+  }
+}
+```
+
+```typescript
+// Frontend: Component making API call directly
+function UserProfile() {
+  const [user, setUser] = useState(null);
+  
+  useEffect(() => {
+    fetch('/api/users/me').then(r => r.json()).then(setUser); // VIOLATION
+  }, []);
+  
+  return <div>{user?.name}</div>;
+}
+```
+
+```typescript
+// Circular dependency
+// module-a.ts
+import { B } from './module-b';
+export class A { useB() { return new B(); } }
+
+// module-b.ts
+import { A } from './module-a'; // VIOLATION
+export class B { useA() { return new A(); } }
+```
+
+## Exceptions
+
+- Base entities may contain common fields (id, createdAt, deletedAt) but no business logic.
+- Utility functions may be used across layers but must be pure functions without side effects.
+- Shared types/interfaces may be imported across layers but must not create circular dependencies.

@@ -1,0 +1,296 @@
+---
+description: Enforces form handling standards using React Hook Form and Zod validation for TravelSplit frontend.
+globs:
+  - Frontend/src/**/*.tsx
+  - Frontend/src/schemas/**/*.ts
+alwaysApply: false
+---
+
+# Form Handling Standards (React Hook Form + Zod)
+
+## Rules
+
+- Use React Hook Form for all form state management.
+- Use Zod schemas for form validation.
+- Use `zodResolver` to integrate Zod with React Hook Form.
+- Define schemas in `schemas/` directory.
+- Use TypeScript types inferred from Zod schemas.
+- Handle form errors with user-friendly messages in Spanish.
+- Use controlled components with `register()` or `Controller`.
+- Handle loading states during form submission.
+
+## React Hook Form Setup
+
+- Use `useForm()` hook with `resolver: zodResolver(schema)`.
+- Define form data type using `z.infer<typeof schema>`.
+- Use `register()` for simple inputs.
+- Use `Controller` for complex inputs (selects, date pickers).
+- Use `handleSubmit()` for form submission.
+
+## Zod Schema Definition
+
+- Create schemas in `schemas/` directory.
+- Use descriptive schema names: `loginSchema`, `createExpenseSchema`.
+- Export schema and inferred type.
+- Provide user-friendly error messages in Spanish.
+- Use appropriate Zod validators: `z.string()`, `z.number()`, `z.email()`, etc.
+
+## Form Validation
+
+- Validate on submit (default behavior).
+- Use `mode: 'onBlur'` or `mode: 'onChange'` for real-time validation if needed.
+- Display field errors using `errors.fieldName?.message`.
+- Display root-level errors for API errors.
+- Clear errors when user starts typing.
+
+## Error Handling
+
+- Handle validation errors from Zod automatically.
+- Handle API errors in `onError` callback of mutation.
+- Set root-level errors using `setError('root', { message })`.
+- Clean up backend error messages before displaying.
+- Provide actionable error messages.
+
+## Form Submission
+
+- Use `useMutation()` for form submission.
+- Call mutation in `onSubmit` handler.
+- Disable submit button during `isPending`.
+- Show loading indicator during submission.
+- Handle success and error cases appropriately.
+
+## DO
+
+```typescript
+// Zod schema definition
+import { z } from 'zod';
+
+export const loginSchema = z.object({
+  email: z
+    .string()
+    .email('El email debe tener un formato válido')
+    .min(1, 'El email es requerido'),
+  contraseña: z
+    .string()
+    .min(6, 'La contraseña debe tener al menos 6 caracteres'),
+});
+
+export type LoginFormData = z.infer<typeof loginSchema>;
+
+// Form component with React Hook Form
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
+
+export function LoginPage() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+  });
+  
+  const mutation = useMutation({
+    mutationFn: (data: LoginRequest) => loginUser(data),
+    onSuccess: () => {
+      navigate('/');
+    },
+    onError: (error: ApiError) => {
+      if (error.statusCode === 401) {
+        setError('root', {
+          type: 'manual',
+          message: 'Email o contraseña incorrectos',
+        });
+      } else {
+        setError('root', {
+          type: 'manual',
+          message: 'No pudimos conectarnos con el servidor. Verifica tu conexión e intenta de nuevo.',
+        });
+      }
+    },
+  });
+  
+  const onSubmit = (data: LoginFormData) => {
+    mutation.mutate(data);
+  };
+  
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Input
+        {...register('email')}
+        error={errors.email?.message}
+        type="email"
+      />
+      <Input
+        {...register('contraseña')}
+        error={errors.contraseña?.message}
+        type="password"
+      />
+      {errors.root && (
+        <div className="error-message">{errors.root.message}</div>
+      )}
+      <Button type="submit" disabled={mutation.isPending}>
+        {mutation.isPending ? 'Iniciando sesión...' : 'Iniciar sesión'}
+      </Button>
+    </form>
+  );
+}
+```
+
+```typescript
+// Complex schema with nested validation
+export const createExpenseSchema = z.object({
+  title: z.string().min(1, 'El título es requerido'),
+  amount: z
+    .number({
+      required_error: 'El monto es requerido',
+      invalid_type_error: 'El monto debe ser un número',
+    })
+    .positive('El monto debe ser positivo')
+    .int('El monto no debe tener decimales'),
+  category_id: z.number({
+    required_error: 'La categoría es requerida',
+    invalid_type_error: 'Debe seleccionar una categoría',
+  }),
+  payer_id: z.string().uuid('El pagador es requerido'),
+  beneficiary_ids: z
+    .array(z.string().uuid())
+    .min(1, 'Debe seleccionar al menos un beneficiario'),
+  receipt_url: z.string().url('URL inválida').optional().or(z.literal('')),
+});
+
+// Using Controller for complex inputs
+import { Controller } from 'react-hook-form';
+
+function ExpenseForm() {
+  const { control, handleSubmit } = useForm<CreateExpenseFormData>({
+    resolver: zodResolver(createExpenseSchema),
+  });
+  
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Controller
+        name="category_id"
+        control={control}
+        render={({ field, fieldState }) => (
+          <CategorySelector
+            {...field}
+            error={fieldState.error?.message}
+          />
+        )}
+      />
+    </form>
+  );
+}
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: Not using React Hook Form
+function LoginForm() {
+  const [email, setEmail] = useState(''); // VIOLATION: Use useForm()
+  const [password, setPassword] = useState('');
+  
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    // Manual validation and submission
+  };
+}
+```
+
+```typescript
+// VIOLATION: Missing Zod schema
+function LoginForm() {
+  const { register, handleSubmit } = useForm(); // VIOLATION: No schema validation
+  // ...
+}
+```
+
+```typescript
+// VIOLATION: Not handling errors
+function LoginForm() {
+  const { register, handleSubmit } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+  });
+  
+  const onSubmit = (data: LoginFormData) => {
+    loginUser(data); // VIOLATION: No error handling
+  };
+  
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Input {...register('email')} /> {/* VIOLATION: No error display */}
+    </form>
+  );
+}
+```
+
+```typescript
+// VIOLATION: Not disabling submit during loading
+function LoginForm() {
+  const mutation = useMutation({ mutationFn: loginUser });
+  
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Button type="submit"> {/* VIOLATION: Not disabled during mutation */}
+        Iniciar sesión
+      </Button>
+    </form>
+  );
+}
+```
+
+```typescript
+// VIOLATION: English error messages
+export const loginSchema = z.object({
+  email: z.string().email('Invalid email'), // VIOLATION: Should be Spanish
+  password: z.string().min(6, 'Password too short'), // VIOLATION: Should be Spanish
+});
+```
+
+```typescript
+// VIOLATION: Schema not in schemas directory
+// components/LoginForm.tsx
+const loginSchema = z.object({...}); // VIOLATION: Should be in schemas/
+```
+
+## Schema Best Practices
+
+- Keep schemas focused on single form.
+- Reuse common validations with Zod refinements.
+- Export both schema and inferred type.
+- Use descriptive field names matching form fields.
+- Provide clear, actionable error messages.
+
+## Form State Management
+
+- Let React Hook Form manage form state.
+- Do not use `useState()` for form fields.
+- Use `watch()` to observe field values if needed.
+- Use `reset()` to clear form after successful submission.
+- Use `setValue()` to programmatically set values.
+
+## Error Message Guidelines
+
+- Write error messages in Spanish.
+- Make messages user-friendly and actionable.
+- Do not expose technical details.
+- Provide context about what went wrong.
+- Suggest how to fix the error.
+
+## Form Accessibility
+
+- Associate labels with inputs using `htmlFor` and `id`.
+- Use `aria-describedby` for error messages.
+- Use `aria-invalid` for fields with errors.
+- Provide clear error messages near form fields.
+- Ensure keyboard navigation works correctly.
+
+## Exceptions
+
+- Simple forms with single input may use uncontrolled components.
+- Test forms may use simplified validation.
+- Development forms may skip some validations temporarily.

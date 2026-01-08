@@ -1,0 +1,265 @@
+---
+description: Enforces TypeORM v0.3 standards including entities, repositories, queries, relations, and soft delete for TravelSplit backend.
+globs:
+  - Backend/src/**/*.entity.ts
+  - Backend/src/**/*.service.ts
+  - Backend/src/config/database.config.ts
+alwaysApply: false
+---
+
+# TypeORM v0.3 Standards
+
+## Rules
+
+- All entities extend BaseEntity for common fields and soft delete.
+- Use decorators correctly: `@Entity()`, `@Column()`, `@PrimaryGeneratedColumn()`.
+- Use `@InjectRepository()` for repository injection in services.
+- Always filter soft-deleted records using `deletedAt: IsNull()`.
+- Use explicit column names with `name` option in `@Column()`.
+- Use proper TypeScript types for entity properties.
+- Use indexes for frequently queried columns.
+- Use relations correctly with proper cascade options.
+
+## Entity Definition
+
+- Extend `BaseEntity` for all domain entities.
+- Use `@Entity('table_name')` with explicit table name.
+- Use `@Column()` with explicit `name` option matching database column names.
+- Use `!` (definite assignment) for required properties.
+- Use proper TypeScript types: `string`, `number`, `Date`, `boolean`.
+- Add `@Index()` for frequently queried columns.
+
+## BaseEntity Pattern
+
+- All entities must extend `BaseEntity`.
+- BaseEntity provides: `id` (UUID), `createdAt`, `updatedAt`, `deletedAt`.
+- Soft delete enabled automatically via `deletedAt`.
+- Never override BaseEntity fields in child entities.
+
+## Repository Usage
+
+- Inject repositories using `@InjectRepository(Entity)`.
+- Use repository methods: `find()`, `findOne()`, `save()`, `remove()`, `create()`.
+- Always filter soft-deleted records: `where: { deletedAt: IsNull() }`.
+- Use `IsNull()` from TypeORM for null checks.
+- Use proper query options: `where`, `relations`, `select`, `order`.
+
+## Soft Delete
+
+- Always check `deletedAt: IsNull()` in queries.
+- Use `softRemove()` or set `deletedAt` manually for soft delete.
+- Never use `remove()` for permanent deletion (use soft delete).
+- Filter soft-deleted records in all find operations.
+
+## Column Definitions
+
+- Use explicit column names matching database schema.
+- Use proper column types: `varchar`, `integer`, `timestamp`, `uuid`, `boolean`.
+- Use `unique: true` for unique constraints.
+- Use `nullable: true` for optional fields.
+- Specify `length` for varchar columns when needed.
+
+## Relations
+
+- Use proper relation decorators: `@OneToMany()`, `@ManyToOne()`, `@ManyToMany()`, `@OneToOne()`.
+- Specify `cascade` options appropriately.
+- Use `@JoinColumn()` for foreign keys.
+- Load relations explicitly with `relations` option in queries.
+- Avoid circular dependencies in relations.
+
+## Query Optimization
+
+- Use `select` option to fetch only needed columns.
+- Use `relations` option to load related entities when needed.
+- Use indexes for frequently queried columns.
+- Avoid N+1 queries by using `relations` or query builder.
+- Use query builder for complex queries.
+
+## DO
+
+```typescript
+// Entity extending BaseEntity
+@Entity('users')
+export class User extends BaseEntity {
+  @Column({ name: 'nombre', type: 'varchar', length: 255 })
+  nombre!: string;
+  
+  @Column({ name: 'email', type: 'varchar', length: 255, unique: true })
+  @Index()
+  email!: string;
+  
+  @Column({ name: 'password_hash', type: 'varchar', length: 255 })
+  passwordHash!: string;
+}
+
+// Repository injection and usage
+@Injectable()
+export class UsersService {
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
+  
+  async findAll(): Promise<User[]> {
+    return this.userRepository.find({
+      where: { deletedAt: IsNull() },
+    });
+  }
+  
+  async findOne(id: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id, deletedAt: IsNull() },
+    });
+    
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    
+    return user;
+  }
+  
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    const user = this.userRepository.create({
+      nombre: createUserDto.nombre,
+      email: createUserDto.email,
+      passwordHash: await bcrypt.hash(createUserDto.contraseña, 10),
+    });
+    
+    return this.userRepository.save(user);
+  }
+  
+  async softDelete(id: string): Promise<void> {
+    const user = await this.findOne(id);
+    await this.userRepository.softRemove(user);
+  }
+}
+
+// Relations example
+@Entity('trips')
+export class Trip extends BaseEntity {
+  @Column({ name: 'nombre', type: 'varchar', length: 255 })
+  nombre!: string;
+  
+  @OneToMany(() => TripParticipant, participant => participant.trip, {
+    cascade: true,
+  })
+  participants!: TripParticipant[];
+}
+
+@Entity('trip_participants')
+export class TripParticipant extends BaseEntity {
+  @ManyToOne(() => Trip, trip => trip.participants)
+  @JoinColumn({ name: 'trip_id' })
+  trip!: Trip;
+  
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
+  user!: User;
+}
+```
+
+```typescript
+// Query with relations
+async findTripWithParticipants(tripId: string): Promise<Trip> {
+  return this.tripRepository.findOne({
+    where: { id: tripId, deletedAt: IsNull() },
+    relations: ['participants', 'participants.user'],
+  });
+}
+
+// Query with select
+async findUserEmail(id: string): Promise<string | undefined> {
+  const user = await this.userRepository.findOne({
+    where: { id, deletedAt: IsNull() },
+    select: ['email'],
+  });
+  return user?.email;
+}
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: Entity not extending BaseEntity
+@Entity('users')
+export class User { // VIOLATION: Must extend BaseEntity
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
+  
+  @Column()
+  email!: string;
+}
+```
+
+```typescript
+// VIOLATION: Not filtering soft-deleted records
+async findAll(): Promise<User[]> {
+  return this.userRepository.find(); // VIOLATION: Missing deletedAt filter
+}
+```
+
+```typescript
+// VIOLATION: Using remove() instead of softRemove()
+async deleteUser(id: string): Promise<void> {
+  const user = await this.findOne(id);
+  await this.userRepository.remove(user); // VIOLATION: Use softRemove()
+}
+```
+
+```typescript
+// VIOLATION: Column name mismatch
+@Entity('users')
+export class User extends BaseEntity {
+  @Column() // VIOLATION: Should specify name: 'nombre'
+  nombre!: string;
+}
+```
+
+```typescript
+// VIOLATION: Missing repository injection decorator
+@Injectable()
+export class UsersService {
+  constructor(
+    private readonly userRepository: Repository<User>, // VIOLATION: Missing @InjectRepository()
+  ) {}
+}
+```
+
+```typescript
+// VIOLATION: N+1 query problem
+async findTripsWithParticipants(): Promise<Trip[]> {
+  const trips = await this.tripRepository.find({
+    where: { deletedAt: IsNull() },
+  });
+  
+  // VIOLATION: Loading relations in loop causes N+1 queries
+  for (const trip of trips) {
+    trip.participants = await this.participantRepository.find({
+      where: { tripId: trip.id },
+    });
+  }
+  
+  return trips;
+}
+```
+
+## Database Configuration
+
+- Use `TypeOrmModule.forRootAsync()` for async configuration.
+- Load entities using pattern: `[__dirname + '/../**/*.entity{.ts,.js}']`.
+- Set `synchronize: false` in production (use migrations).
+- Enable `logging` only in development.
+- Use connection pooling defaults (managed by TypeORM).
+
+## Migration Best Practices
+
+- Create migrations for schema changes.
+- Never use `synchronize: true` in production.
+- Test migrations in staging before production.
+- Include both `up` and `down` methods in migrations.
+
+## Exceptions
+
+- Health check queries may skip soft delete filter for system checks.
+- Admin operations may need to query soft-deleted records (use `withDeleted()`).
+- Test fixtures may bypass soft delete for test data setup.

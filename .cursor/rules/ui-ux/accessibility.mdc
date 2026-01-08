@@ -1,0 +1,278 @@
+---
+description: Enforces WCAG accessibility standards including ARIA attributes, keyboard navigation, and color contrast for TravelSplit frontend.
+globs:
+  - Frontend/src/**/*.tsx
+alwaysApply: false
+---
+
+# Accessibility Standards (WCAG)
+
+## Rules
+
+- Provide semantic HTML elements (`<button>`, `<nav>`, `<main>`, `<header>`).
+- Use ARIA attributes when semantic HTML is insufficient.
+- Ensure keyboard navigation works for all interactive elements.
+- Maintain color contrast ratio of at least 4.5:1 for text.
+- Provide alternative text for images.
+- Use proper form labels and error associations.
+- Ensure focus indicators are visible.
+- Test with screen readers.
+
+## Semantic HTML
+
+- Use `<button>` for buttons, not `<div>` or `<span>`.
+- Use `<nav>` for navigation elements.
+- Use `<main>` for main content.
+- Use `<header>` and `<footer>` for page structure.
+- Use `<section>` and `<article>` for content sections.
+- Use heading hierarchy correctly (`h1` → `h2` → `h3`).
+
+## ARIA Attributes
+
+- Use `aria-label` for icon-only buttons.
+- Use `aria-describedby` to associate error messages with inputs.
+- Use `aria-invalid` for form fields with errors.
+- Use `aria-live` for dynamic content updates.
+- Use `aria-hidden="true"` for decorative elements.
+- Use `role` attribute when semantic HTML is not available.
+
+## Keyboard Navigation
+
+- Ensure all interactive elements are keyboard accessible.
+- Use `tabIndex={0}` for focusable elements (avoid `-1` unless necessary).
+- Provide visible focus indicators with `focus:ring-2`.
+- Handle `Enter` and `Space` keys for buttons.
+- Support `Escape` key for modals and dropdowns.
+- Maintain logical tab order.
+
+## Color Contrast
+
+- Text on background: minimum 4.5:1 contrast ratio.
+- Large text (18px+): minimum 3:1 contrast ratio.
+- Interactive elements: minimum 3:1 contrast ratio.
+- Use color contrast checker tools.
+- Do not rely solely on color to convey information.
+
+## Form Accessibility
+
+- Associate labels with inputs using `htmlFor` and `id`.
+- Use `aria-describedby` for error messages.
+- Use `aria-invalid` for fields with errors.
+- Provide clear, actionable error messages.
+- Use `aria-required` for required fields.
+
+## Focus Management
+
+- Provide visible focus indicators: `focus:ring-2 focus:ring-violet-500`.
+- Use `focus:outline-none` only with custom focus styles.
+- Manage focus for modals and dropdowns.
+- Return focus to trigger element after closing modals.
+- Use `focus-visible` for keyboard-only focus.
+
+## DO
+
+```typescript
+// Semantic button with proper accessibility
+export const Button = ({ children, onClick, disabled, ...props }: ButtonProps) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
+      aria-disabled={disabled}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
+
+// Form field with proper label and error association
+export const FormField = ({ label, error, id, children }: FormFieldProps) => {
+  return (
+    <div className="space-y-2">
+      <label htmlFor={id} className="font-medium text-sm">
+        {label}
+      </label>
+      {children}
+      {error && (
+        <p
+          id={`${id}-error`}
+          className="text-sm text-red-500"
+          role="alert"
+          aria-live="polite"
+        >
+          {error}
+        </p>
+      )}
+    </div>
+  );
+};
+
+// Input with proper accessibility
+export const Input = ({ id, label, error, ...props }: InputProps) => {
+  return (
+    <FormField label={label} error={error} id={id}>
+      <input
+        id={id}
+        aria-invalid={!!error}
+        aria-describedby={error ? `${id}-error` : undefined}
+        className="focus:ring-2 focus:ring-violet-500"
+        {...props}
+      />
+    </FormField>
+  );
+};
+
+// Icon button with aria-label
+export const IconButton = ({ icon, label, onClick }: IconButtonProps) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className="focus:ring-2 focus:ring-violet-500"
+    >
+      {icon}
+    </button>
+  );
+};
+
+// Navigation with proper semantic HTML
+export const Navigation = () => {
+  return (
+    <nav aria-label="Main navigation">
+      <ul className="flex space-x-4">
+        <li>
+          <a href="/" className="focus:ring-2 focus:ring-violet-500">
+            Inicio
+          </a>
+        </li>
+        <li>
+          <a href="/trips" className="focus:ring-2 focus:ring-violet-500">
+            Viajes
+          </a>
+        </li>
+      </ul>
+    </nav>
+  );
+};
+```
+
+```typescript
+// Modal with focus management
+export const Modal = ({ isOpen, onClose, children }: ModalProps) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    if (isOpen && modalRef.current) {
+      modalRef.current.focus();
+    }
+  }, [isOpen]);
+  
+  if (!isOpen) return null;
+  
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+      ref={modalRef}
+      tabIndex={-1}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          onClose();
+        }
+      }}
+    >
+      {children}
+    </div>
+  );
+};
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: Using div instead of button
+<div onClick={handleClick}> {/* VIOLATION: Use <button> */}
+  Click me
+</div>
+```
+
+```typescript
+// VIOLATION: Missing label association
+<input type="text" /> {/* VIOLATION: No label or aria-label */}
+<label>Name</label> {/* VIOLATION: Not associated with input */}
+```
+
+```typescript
+// VIOLATION: No focus indicator
+<button className="focus:outline-none"> {/* VIOLATION: No custom focus style */}
+  Click
+</button>
+```
+
+```typescript
+// VIOLATION: Insufficient color contrast
+<div className="text-gray-400 bg-gray-300"> {/* VIOLATION: Low contrast */}
+  Text
+</div>
+```
+
+```typescript
+// VIOLATION: Missing alt text
+<img src="logo.png" /> {/* VIOLATION: Missing alt attribute */}
+```
+
+```typescript
+// VIOLATION: Error not associated with input
+<input aria-invalid="true" /> {/* VIOLATION: No aria-describedby */}
+<div className="error">Error message</div> {/* VIOLATION: Not associated */}
+```
+
+```typescript
+// VIOLATION: Decorative element not hidden
+<div aria-label="Decorative icon"> {/* VIOLATION: Should use aria-hidden="true" */}
+  <Icon />
+</div>
+```
+
+## Color Contrast Guidelines
+
+- Primary text (`text-slate-900`): 4.5:1+ on white.
+- Secondary text (`text-slate-500`): 4.5:1+ on white.
+- Buttons: Ensure text contrast meets 4.5:1.
+- Links: Ensure contrast meets 4.5:1.
+- Error messages: Use sufficient contrast (`text-red-500`).
+
+## Keyboard Navigation
+
+- All interactive elements must be keyboard accessible.
+- Tab order should follow visual flow.
+- Focus indicators must be visible.
+- Support standard keyboard shortcuts.
+- Handle keyboard events appropriately.
+
+## Screen Reader Support
+
+- Provide descriptive labels for all interactive elements.
+- Use `aria-live` regions for dynamic content.
+- Announce errors and success messages.
+- Provide skip links for main content.
+- Test with screen readers (NVDA, JAWS, VoiceOver).
+
+## Form Best Practices
+
+- Label all form fields.
+- Associate error messages with inputs.
+- Mark required fields clearly.
+- Provide helpful error messages.
+- Support autocomplete attributes.
+
+## Exceptions
+
+- Decorative images may use empty `alt=""`.
+- Purely decorative elements may use `aria-hidden="true"`.
+- Test components may skip some accessibility features.

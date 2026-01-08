@@ -1,0 +1,285 @@
+---
+description: Enforces state management standards using TanStack Query for server state and Context API/Zustand for client state in TravelSplit frontend.
+globs:
+  - Frontend/src/**/*.tsx
+  - Frontend/src/**/*.ts
+alwaysApply: false
+---
+
+# State Management Standards
+
+## Rules
+
+- Use TanStack Query (React Query) for all server state (API data).
+- Use Context API or Zustand for global client state (UI state, session).
+- Use `useState()` for local component state only.
+- Never mix server state with client state management.
+- Use proper query keys for cache invalidation.
+- Configure QueryClient with appropriate defaults.
+- Handle loading, error, and success states explicitly.
+
+## TanStack Query (Server State)
+
+- Use `useQuery()` for fetching data (GET requests).
+- Use `useMutation()` for modifying data (POST, PUT, DELETE).
+- Use descriptive query keys: `['resource', id]`, `['resource-list', filters]`.
+- Set appropriate `staleTime` based on data freshness requirements.
+- Use `enabled` option to conditionally fetch data.
+- Use `refetch()` for manual data refresh.
+- Invalidate queries after mutations using `queryClient.invalidateQueries()`.
+
+## Query Configuration
+
+- Configure QueryClient in `App.tsx` with default options.
+- Set `retry` count appropriately (default: 1 for most queries).
+- Set `refetchOnWindowFocus: false` for better UX.
+- Set `staleTime` based on data update frequency.
+- Use `placeholderData` for optimistic UI updates when appropriate.
+
+## Query Keys
+
+- Use array format: `['resource', id]` or `['resource-list', filters]`.
+- Include all parameters that affect the query in the key.
+- Use consistent key structure across the application.
+- Group related queries with prefixes: `['user-trips']`, `['trip-expenses']`.
+
+## Mutations
+
+- Use `useMutation()` for all data modifications.
+- Provide `mutationFn` that calls service function.
+- Handle `onSuccess` and `onError` callbacks.
+- Invalidate related queries after successful mutations.
+- Use `isPending` for loading states during mutations.
+
+## Context API (Client State)
+
+- Use Context API for shared state across component tree.
+- Create contexts in `contexts/` directory.
+- Provide context at appropriate level in component tree.
+- Use custom hooks to access context: `useAuthContext()`.
+- Avoid overusing Context (prefer props for 1-2 levels).
+
+## Zustand (Alternative Client State)
+
+- Use Zustand for complex global state management.
+- Create stores in `stores/` directory.
+- Keep stores focused on single domain concern.
+- Use TypeScript for store types.
+- Prefer Zustand over Context for frequently updated state.
+
+## Local State
+
+- Use `useState()` for component-specific state.
+- Use `useReducer()` for complex local state logic.
+- Keep state as close to where it's used as possible.
+- Lift state up only when multiple components need it.
+
+## DO
+
+```typescript
+// TanStack Query configuration
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
+
+// Query for fetching data
+export function useTripParticipants(tripId: string | undefined) {
+  const {
+    data: trip,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['trip', tripId],
+    queryFn: () => {
+      if (!tripId) {
+        throw new Error('Trip ID is required');
+      }
+      return getTripById(tripId);
+    },
+    enabled: !!tripId, // Only fetch if tripId exists
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: false, // Don't retry if tripId is missing
+  });
+  
+  return {
+    participants: trip?.participants || [],
+    trip,
+    isLoading,
+    error,
+    refetch,
+  };
+}
+
+// Mutation for modifying data
+const mutation = useMutation({
+  mutationFn: (data: LoginRequest) => loginUser(data),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['user-trips'] });
+    navigate('/');
+  },
+  onError: (error: ApiError) => {
+    setError('root', {
+      type: 'manual',
+      message: 'Error al iniciar sesión',
+    });
+  },
+});
+
+// Context API for shared state
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const auth = useAuth();
+  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
+}
+
+export function useAuthContext(): AuthContextType {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuthContext must be used within an AuthProvider');
+  }
+  return context;
+}
+
+// Local state for component-specific data
+function ExpenseForm() {
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  // Component logic
+}
+```
+
+```typescript
+// Conditional query
+const { data: trips } = useQuery({
+  queryKey: ['user-trips'],
+  queryFn: getUserTrips,
+  enabled: isAuthenticated, // Only execute if authenticated
+  staleTime: 5 * 60 * 1000,
+});
+
+// Query with placeholder data
+const { data: categories = [] } = useQuery({
+  queryKey: ['expense-categories'],
+  queryFn: getExpenseCategories,
+  staleTime: 10 * 60 * 1000,
+  placeholderData: MOCK_CATEGORIES, // Use mock as placeholder
+});
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: Using useState for server state
+function UserList() {
+  const [users, setUsers] = useState<User[]>([]); // VIOLATION: Use useQuery()
+  
+  useEffect(() => {
+    fetchUsers().then(setUsers);
+  }, []);
+  
+  return <div>{/* Render users */}</div>;
+}
+```
+
+```typescript
+// VIOLATION: Mixing server and client state
+const [trips, setTrips] = useState<Trip[]>([]); // VIOLATION: Server state in useState
+const [isLoading, setIsLoading] = useState(false); // VIOLATION: useQuery handles this
+
+useEffect(() => {
+  setIsLoading(true);
+  fetchTrips().then(data => {
+    setTrips(data);
+    setIsLoading(false);
+  });
+}, []);
+```
+
+```typescript
+// VIOLATION: Inconsistent query keys
+useQuery({
+  queryKey: 'trip', // VIOLATION: Should be array ['trip', id]
+  queryFn: () => getTrip(id),
+});
+```
+
+```typescript
+// VIOLATION: Not invalidating queries after mutation
+const mutation = useMutation({
+  mutationFn: createExpense,
+  onSuccess: () => {
+    // VIOLATION: Should invalidate ['trip-expenses'] query
+    navigate('/');
+  },
+});
+```
+
+```typescript
+// VIOLATION: Using Context for server state
+const TripsContext = createContext<Trip[]>([]); // VIOLATION: Use useQuery() instead
+
+function TripsProvider({ children }: Props) {
+  const [trips, setTrips] = useState<Trip[]>([]);
+  useEffect(() => {
+    fetchTrips().then(setTrips);
+  }, []);
+  return <TripsContext.Provider value={trips}>{children}</TripsContext.Provider>;
+}
+```
+
+```typescript
+// VIOLATION: Not handling loading/error states
+const { data } = useQuery({
+  queryKey: ['trips'],
+  queryFn: getTrips,
+});
+// VIOLATION: No check for isLoading or error
+return <div>{data.map(...)}</div>; // Will crash if data is undefined
+```
+
+## State Management Guidelines
+
+### Server State (TanStack Query)
+- All API calls use `useQuery()` or `useMutation()`.
+- Cache is managed automatically by TanStack Query.
+- Loading and error states are provided by hooks.
+- Data is automatically refetched based on `staleTime`.
+
+### Client State (Context/Zustand)
+- UI state: modals, drawers, theme preferences.
+- Session state: authentication, user preferences.
+- Form state: use React Hook Form (not global state).
+- Temporary state: use local `useState()`.
+
+### Local State (useState)
+- Component-specific UI state.
+- Form field values (handled by React Hook Form).
+- Temporary calculations or derived values.
+- Component visibility toggles.
+
+## Query Invalidation
+
+- Invalidate queries after mutations that affect the data.
+- Use specific query keys for targeted invalidation.
+- Use `queryClient.invalidateQueries({ queryKey: ['resource'] })`.
+- Consider optimistic updates for better UX.
+
+## Error Handling
+
+- Always check `error` state from queries.
+- Display user-friendly error messages.
+- Provide retry functionality with `refetch()`.
+- Handle network errors gracefully.
+
+## Exceptions
+
+- Test files may use mock implementations instead of TanStack Query.
+- Development mode may use mock data with `placeholderData`.
+- Simple components may not need state management.

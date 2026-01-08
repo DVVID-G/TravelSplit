@@ -1,0 +1,258 @@
+---
+description: Enforces DTO validation standards using class-validator and class-transformer with Swagger documentation for TravelSplit backend.
+globs:
+  - Backend/src/**/*.dto.ts
+alwaysApply: false
+---
+
+# DTO Validation Standards
+
+## Rules
+
+- All DTOs use class-validator decorators for validation.
+- All DTOs use @ApiProperty() for Swagger documentation.
+- Use appropriate validation decorators: `@IsString()`, `@IsEmail()`, `@IsNotEmpty()`, `@MinLength()`, etc.
+- Provide clear, user-friendly error messages in Spanish.
+- Use `class-transformer` for data transformation.
+- Separate DTOs for create, update, and response operations.
+- Use DTOs for all API input/output, never expose entities directly.
+
+## Validation Decorators
+
+- Use `@IsString()` for string fields.
+- Use `@IsEmail()` for email fields.
+- Use `@IsNotEmpty()` for required fields.
+- Use `@MinLength()` and `@MaxLength()` for string length validation.
+- Use `@IsNumber()`, `@Min()`, `@Max()` for numeric fields.
+- Use `@IsOptional()` for optional fields.
+- Use `@IsUUID()` for UUID fields.
+- Use `@IsEnum()` for enum fields.
+- Use `@IsDateString()` for date fields.
+
+## Error Messages
+
+- Provide error messages in Spanish.
+- Make messages user-friendly and actionable.
+- Do not expose internal implementation details.
+- Use consistent message format across DTOs.
+
+## Swagger Documentation
+
+- Use `@ApiProperty()` for all DTO properties.
+- Provide `description`, `example`, and `type` in `@ApiProperty()`.
+- Use appropriate Swagger decorators: `@ApiTags()`, `@ApiOperation()`, `@ApiResponse()`.
+- Document all possible response codes.
+- Include examples in documentation.
+
+## DTO Naming Conventions
+
+- Create DTOs: `Create{Resource}Dto` (e.g., `CreateUserDto`).
+- Update DTOs: `Update{Resource}Dto` (e.g., `UpdateUserDto`).
+- Response DTOs: `{Resource}ResponseDto` (e.g., `UserResponseDto`).
+- Use `PartialType()` from `@nestjs/mapped-types` for update DTOs when appropriate.
+
+## Validation Pipe Configuration
+
+- Use global `ValidationPipe` with `whitelist: true`.
+- Use `forbidNonWhitelisted: true` to reject unknown properties.
+- Use `transform: true` to transform payloads to DTO instances.
+- Enable implicit type conversion with `enableImplicitConversion: true`.
+
+## DO
+
+```typescript
+// Create DTO with validation and Swagger
+export class CreateUserDto {
+  @ApiProperty({
+    description: 'Nombre del usuario',
+    example: 'Juan Pérez',
+    type: String,
+  })
+  @IsString()
+  @IsNotEmpty({ message: 'El nombre es requerido' })
+  nombre!: string;
+  
+  @ApiProperty({
+    description: 'Email del usuario (debe ser un formato válido)',
+    example: 'juan.perez@example.com',
+    type: String,
+  })
+  @IsEmail({}, { message: 'El email debe tener un formato válido' })
+  @IsNotEmpty({ message: 'El email es requerido' })
+  email!: string;
+  
+  @ApiProperty({
+    description: 'Contraseña del usuario (mínimo 8 caracteres)',
+    example: 'miPassword123',
+    type: String,
+    minLength: 8,
+  })
+  @IsString()
+  @IsNotEmpty({ message: 'La contraseña es requerida' })
+  @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres' })
+  contraseña!: string;
+}
+
+// Update DTO using PartialType
+export class UpdateUserDto extends PartialType(CreateUserDto) {
+  @ApiProperty({
+    description: 'Nombre del usuario',
+    example: 'Juan Pérez',
+    type: String,
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  nombre?: string;
+}
+
+// Response DTO (no validation needed, only documentation)
+export class UserResponseDto {
+  @ApiProperty({
+    description: 'ID único del usuario',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  id!: string;
+  
+  @ApiProperty({
+    description: 'Nombre del usuario',
+    example: 'Juan Pérez',
+  })
+  nombre!: string;
+  
+  @ApiProperty({
+    description: 'Email del usuario',
+    example: 'juan.perez@example.com',
+  })
+  email!: string;
+  
+  @ApiProperty({
+    description: 'Fecha de creación',
+    example: '2024-01-01T00:00:00.000Z',
+  })
+  createdAt!: Date;
+}
+```
+
+```typescript
+// Controller using DTOs
+@Controller('users')
+export class UsersController {
+  @Post()
+  @ApiOperation({ summary: 'Crear un nuevo usuario' })
+  @ApiResponse({ status: 201, description: 'Usuario creado exitosamente', type: UserResponseDto })
+  @ApiBadRequestResponse({ description: 'Datos de entrada inválidos' })
+  async create(@Body() createUserDto: CreateUserDto): Promise<UserResponseDto> {
+    return this.usersService.create(createUserDto);
+  }
+  
+  @Put(':id')
+  @ApiParam({ name: 'id', description: 'ID del usuario' })
+  @ApiOperation({ summary: 'Actualizar un usuario' })
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ): Promise<UserResponseDto> {
+    return this.usersService.update(id, updateUserDto);
+  }
+}
+```
+
+```typescript
+// Validation pipe configuration in main.ts
+app.useGlobalPipes(
+  new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+    transformOptions: {
+      enableImplicitConversion: true,
+    },
+  }),
+);
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: Missing validation decorators
+export class CreateUserDto {
+  @ApiProperty()
+  nombre!: string; // VIOLATION: Missing @IsString() and @IsNotEmpty()
+  
+  @ApiProperty()
+  email!: string; // VIOLATION: Missing @IsEmail()
+}
+```
+
+```typescript
+// VIOLATION: Missing Swagger documentation
+export class CreateUserDto {
+  @IsString()
+  @IsNotEmpty()
+  nombre!: string; // VIOLATION: Missing @ApiProperty()
+}
+```
+
+```typescript
+// VIOLATION: Technical error messages
+export class CreateUserDto {
+  @IsEmail({}, { message: 'Invalid email format' }) // VIOLATION: English, technical
+  email!: string;
+  
+  @MinLength(8, { message: 'Password must be at least 8 characters' }) // VIOLATION: English
+  password!: string;
+}
+```
+
+```typescript
+// VIOLATION: Exposing entity directly
+@Get(':id')
+async findOne(@Param('id') id: string): Promise<User> { // VIOLATION: Should return DTO
+  return this.usersService.findOne(id);
+}
+```
+
+```typescript
+// VIOLATION: Missing error messages
+export class CreateUserDto {
+  @IsString() // VIOLATION: No custom message
+  nombre!: string;
+  
+  @IsEmail() // VIOLATION: No custom message
+  email!: string;
+}
+```
+
+```typescript
+// VIOLATION: Using any type
+export class CreateUserDto {
+  @ApiProperty()
+  data!: any; // VIOLATION: Should use specific type
+}
+```
+
+## Validation Groups
+
+- Use validation groups for conditional validation when needed.
+- Use `@ValidateIf()` for conditional validation rules.
+- Group validations for create vs update scenarios.
+
+## Custom Validators
+
+- Create custom validators when standard decorators are insufficient.
+- Use `registerDecorator()` from class-validator for custom validators.
+- Place custom validators in `common/validators/` directory.
+
+## Transformation
+
+- Use `@Transform()` from class-transformer for data transformation.
+- Transform dates, numbers, and enums appropriately.
+- Use `@Exclude()` to exclude properties from serialization.
+- Use `@Expose()` to explicitly include properties.
+
+## Exceptions
+
+- Response DTOs may not need validation decorators (only Swagger).
+- Internal DTOs used between services may skip Swagger decorators.
+- Test DTOs may use relaxed validation for testing purposes.
