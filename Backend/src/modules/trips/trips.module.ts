@@ -2,23 +2,30 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Trip } from './entities/trip.entity';
 import { TripParticipant } from './entities/trip-participant.entity';
+import { User } from '../users/entities/user.entity';
+import { TripsController } from './controllers/trips.controller';
+import { TripsService } from './services/trips.service';
 
 /**
  * Módulo de Trips.
  *
- * Este módulo gestiona las entidades relacionadas con viajes y participantes.
- * Por ahora solo registra las entidades para que puedan ser utilizadas por otros módulos.
+ * Este módulo gestiona las operaciones relacionadas con viajes y participantes.
  *
  * Estructura (Patrón CSED):
- * - Controller: (Pendiente - se implementará en TCK-TRIP-002)
- * - Service: (Pendiente - se implementará en TCK-TRIP-002)
- * - Entity: Trip y TripParticipant definidas
- * - DTO: (Pendiente - se implementará en TCK-TRIP-002)
+ * - Controller: Maneja las peticiones HTTP de gestión de viajes
+ * - Service: Contiene la lógica de negocio y acceso a datos mediante TypeORM
+ * - Entity: Define los modelos de datos de Trip y TripParticipant
+ * - DTO: Define los contratos de validación y respuesta de la API
+ *
+ * Endpoints:
+ * - POST /trips - Crear un nuevo viaje (requiere autenticación)
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([Trip, TripParticipant])],
-  controllers: [],
-  providers: [],
-  exports: [TypeOrmModule],
+  imports: [
+    TypeOrmModule.forFeature([Trip, TripParticipant, User]),
+  ],
+  controllers: [TripsController],
+  providers: [TripsService],
+  exports: [TripsService],
 })
 export class TripsModule {}
