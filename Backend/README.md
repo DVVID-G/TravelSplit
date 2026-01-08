@@ -25,6 +25,7 @@ Backend/
 │   │       ├── services/
 │   │       ├── repositories/
 │   │       └── dto/
+│   ├── migrations/        # Migraciones de base de datos (TypeORM)
 │   ├── common/            # Código compartido
 │   │   ├── decorators/
 │   │   ├── filters/      # Exception filters
@@ -110,6 +111,25 @@ Todas las entidades deben extender `BaseEntity` para heredar automáticamente:
 - `deletedAt` (timestamp, nullable) - Soft Delete
 
 TypeORM automáticamente excluye registros con `deleted_at IS NOT NULL` en las consultas.
+
+## Migraciones de Base de Datos
+
+Las migraciones de TypeORM están ubicadas en `src/migrations/`. Para más información sobre cómo ejecutar y crear migraciones, consulta [src/migrations/README.md](src/migrations/README.md).
+
+**Comandos rápidos:**
+```bash
+# Ejecutar migraciones pendientes
+npm run migration:run
+
+# Revertir última migración
+npm run migration:revert
+
+# Ver estado de migraciones
+npm run migration:show
+
+# Generar nueva migración
+npm run migration:generate -- src/migrations/NombreDeLaMigracion
+```
 
 ## Scripts Disponibles
 
