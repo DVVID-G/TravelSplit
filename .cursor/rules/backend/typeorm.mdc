@@ -1,8 +1,10 @@
 ---
-description: Enforces TypeORM v0.3 standards including entities, repositories, queries, relations, and soft delete for TravelSplit backend.
+description: Enforces TypeORM v0.3 standards including entities, repositories, queries, relations, soft delete, and PostgreSQL-specific migration rules for TravelSplit backend.
 globs:
   - Backend/src/**/*.entity.ts
   - Backend/src/**/*.service.ts
+  - Backend/src/**/*.migration.ts
+  - Backend/src/migrations/**/*.ts
   - Backend/src/config/database.config.ts
 alwaysApply: false
 ---
@@ -243,6 +245,28 @@ async findTripsWithParticipants(): Promise<Trip[]> {
 }
 ```
 
+```typescript
+// VIOLATION: Using onUpdate in PostgreSQL migration
+export class CreateTripsTable1234567890 implements MigrationInterface {
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.createTable(
+      new Table({
+        name: 'trips',
+        columns: [
+          {
+            name: 'updated_at',
+            type: 'timestamp',
+            default: 'CURRENT_TIMESTAMP',
+            onUpdate: 'CURRENT_TIMESTAMP', // VIOLATION: PostgreSQL doesn't support this
+            isNullable: false,
+          },
+        ],
+      }),
+    );
+  }
+}
+```
+
 ## Database Configuration
 
 - Use `TypeOrmModule.forRootAsync()` for async configuration.
@@ -257,6 +281,23 @@ async findTripsWithParticipants(): Promise<Trip[]> {
 - Never use `synchronize: true` in production.
 - Test migrations in staging before production.
 - Include both `up` and `down` methods in migrations.
+
+### PostgreSQL-Specific Migration Rules
+
+- **CRITICAL**: Never use `onUpdate: 'CURRENT_TIMESTAMP'` in migration column definitions.
+- PostgreSQL does NOT support the `ON UPDATE` clause in column definitions like MySQL does.
+- The `onUpdate` property will be silently ignored by PostgreSQL, causing confusion.
+- TypeORM handles `updated_at` timestamps automatically via `@UpdateDateColumn` decorator at the application level.
+- For `updated_at` columns in migrations, use only:
+  ```typescript
+  {
+    name: 'updated_at',
+    type: 'timestamp',
+    default: 'CURRENT_TIMESTAMP',
+    isNullable: false,
+  }
+  ```
+- Do NOT include `onUpdate: 'CURRENT_TIMESTAMP'` in any migration column definition.
 
 ## Exceptions
 
