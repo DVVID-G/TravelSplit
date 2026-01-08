@@ -89,10 +89,10 @@
 - Tareas:
   - Controlador y servicio de creación.
   - Generación de código alfanumérico del viaje.
-  - Insert en TripParticipant como CREATOR. [file:1]
+  - Insert en TripParticipant como CREATOR. 
 - Criterios de Aceptación:
   - Solo usuarios autenticados pueden crear.
-  - Moneda siempre COP, sin posibilidad de cambio. [file:1]
+  - Moneda siempre COP, sin posibilidad de cambio. 
 - Story Points: 3
 
 ### TCK-TRIP-003 – Endpoint listado de viajes del usuario (GET /trips)
