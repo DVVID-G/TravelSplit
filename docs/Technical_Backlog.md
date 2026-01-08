@@ -70,21 +70,21 @@
 - Relacionado con: US-TRIP-001, US-PART-001, US-PART-002
 - Tipo: Backend / DB
 - Descripción:
-  Crear entidades y migraciones para viajes y sus participantes, con roles contextuales CREATOR/MEMBER. [file:1]
+  Crear entidades y migraciones para viajes y sus participantes, con roles contextuales CREATOR/MEMBER. 
 - Tareas:
   - Entidad Trip (id, name, currency='COP', status, code, timestamps, deleted_at).
   - Entidad TripParticipant (id, trip_id, user_id, role: CREATOR/MEMBER, timestamps, deleted_at).
   - Llaves foráneas y constraints de integridad.
 - Criterios de Aceptación:
   - Un usuario puede ser CREATOR en un viaje y MEMBER en otro.
-  - No existe campo isAdmin global en User. [file:1]
+  - No existe campo isAdmin global en User. 
 - Story Points: 5
 
 ### TCK-TRIP-002 – Endpoint creación de viaje (POST /trips)
 - Relacionado con: US-TRIP-001
 - Tipo: Backend
 - Descripción:
-  Permitir crear un viaje con nombre, moneda fija COP y asociar automáticamente al usuario como CREATOR. [file:1]
+  Permitir crear un viaje con nombre, moneda fija COP y asociar automáticamente al usuario como CREATOR, se debe poder invitar usuarios por medio de correo electronico (member). 
 - Tareas:
   - Controlador y servicio de creación.
   - Generación de código alfanumérico del viaje.
@@ -94,7 +94,7 @@
   - Moneda siempre COP, sin posibilidad de cambio. [file:1]
 - Story Points: 3
 
-### TCK-TRIP-003 – Endpoint listado de viajes del usuario (GET /trips/mine)
+### TCK-TRIP-003 – Endpoint listado de viajes del usuario (GET /trips)
 - Relacionado con: US-TRIP-002
 - Tipo: Backend
 - Descripción:
