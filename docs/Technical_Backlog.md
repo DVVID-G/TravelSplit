@@ -2,64 +2,63 @@
 
 ## EPIC-1 – Autenticación y Gestión de Cuenta
 
-### TCK-AUTH-001 – Endpoint de registro de usuario (POST /auth/register)
+### TCK-AUTH-001 – Endpoint de registro de usuario (POST /auth/register) ✅ COMPLETADO
 - Relacionado con: US-AUTH-001
 - Tipo: Backend
 - Descripción:
-  Implementar endpoint de registro que cree usuarios con email único, nombre y contraseña hasheada. [file:1]
+  Implementar endpoint de registro que cree usuarios con email único, nombre y contraseña hasheada. 
 - Tareas:
-  - Definir entidad User (id, email, name, password_hash, timestamps, deleted_at).
-  - Implementar DTO de creación y validaciones (email, longitud mínima password).
-  - Implementar servicio de registro con verificación de email único.
-  - Tests unitarios de servicio y controlador. [file:1]
+  - ✅ Definir entidad User (id, email, name, password_hash, timestamps, deleted_at).
+  - ✅ Implementar DTO de creación y validaciones (email, longitud mínima password).
+  - ✅ Implementar servicio de registro con verificación de email único.
+  - ⏳ Tests unitarios de servicio y controlador. 
 - Criterios de Aceptación:
-  - Registro exitoso devuelve usuario sin exponer password.
-  - Email duplicado devuelve error validado.
-  - Se guardan timestamps de creación/actualización. [file:1]
+  - ✅ Registro exitoso devuelve usuario sin exponer password.
+  - ✅ Email duplicado devuelve error validado.
+  - ✅ Se guardan timestamps de creación/actualización.
 - Story Points: 3
 
-### TCK-AUTH-002 – Endpoint de login y emisión de JWT (POST /auth/login)
+### TCK-AUTH-002 – Endpoint de login y emisión de JWT (POST /auth/login) ✅ COMPLETADO
 - Relacionado con: US-AUTH-002
 - Tipo: Backend
 - Descripción:
-  Implementar autenticación con verificación de credenciales y emisión de JWT con payload { sub, email }. [file:1]
+  Implementar autenticación con verificación de credenciales y emisión de JWT con payload { sub, email }. 
 - Tareas:
-  - Implementar estrategia JWT con Passport.
-  - Configurar guardas de autenticación para rutas protegidas.
-  - Implementar firma de token y configuración de expiración. [file:1]
+  - ✅ Implementar estrategia JWT con Passport.
+  - ✅ Configurar guardas de autenticación para rutas protegidas.
+  - ✅ Implementar firma de token y configuración de expiración. 
 - Criterios de Aceptación:
-  - Credenciales correctas retornan token válido.
-  - Credenciales incorrectas retornan error genérico.
-  - Token usable en endpoints protegidos con Authorization: Bearer. [file:1]
+  - ✅ Credenciales correctas retornan token válido.
+  - ✅ Credenciales incorrectas retornan error genérico.
+  - ✅ Token usable en endpoints protegidos con Authorization: Bearer. 
 - Story Points: 3
 
-### TCK-AUTH-003 – Middleware/Guard para proteger rutas privadas
+### TCK-AUTH-003 – Middleware/Guard para proteger rutas privadas ✅ COMPLETADO
 - Relacionado con: US-AUTH-003
 - Tipo: Backend
 - Descripción:
-  Crear guard global o por módulo que valide el JWT en cada petición protegida y propague req.user. [file:1]
+  Crear guard global o por módulo que valide el JWT en cada petición protegida y propague req.user. 
 - Tareas:
-  - Implementar guard que decodifique y valide el token.
-  - Integrar con NestJS en módulo común.
-  - Añadir pruebas sencillas de acceso autorizado/no autorizado. [file:1]
+  - ✅ Implementar guard que decodifique y valide el token.
+  - ✅ Integrar con NestJS en módulo común.
+  - ⏳ Añadir pruebas sencillas de acceso autorizado/no autorizado. 
 - Criterios de Aceptación:
-  - Rutas sin token devuelven 401.
-  - Rutas con token inválido devuelven 401.
-  - Rutas con token válido acceden al usuario autenticado. [file:1]
+  - ✅ Rutas sin token devuelven 401.
+  - ✅ Rutas con token inválido devuelven 401.
+  - ✅ Rutas con token válido acceden al usuario autenticado. 
 - Story Points: 2
 
-### TCK-PROFILE-001 – Endpoint actualización de perfil (PUT /users/:id)
+### TCK-PROFILE-001 – Endpoint actualización de perfil (PUT /users/:id) ✅ COMPLETADO
 - Relacionado con: US-PROFILE-001
 - Tipo: Backend
 - Descripción:
-  Permitir que un usuario actualice únicamente su propio perfil (nombre, password). [file:1]
-- Tareas:
-  - Implementar controlador y servicio de actualización.
-  - Verificar req.user.id === id del path.
-  - Hashear nueva contraseña si se actualiza. [file:1]
+  Permitir que un usuario actualice únicamente su propio perfil (nombre, password). 
+  - ✅ Implementar controlador y servicio de actualización.
+  - ✅ Verificar req.user.id === id del path.
+  - ✅ Hashear nueva contraseña si se actualiza. 
 - Criterios de Aceptación:
-  - No se puede actualizar un perfil ajeno.
-  - Validaciones de formato se aplican correctamente. [file:1]
+  - ✅ No se puede actualizar un perfil ajeno.
+  - ✅ Validaciones de formato se aplican correctamente. 
 - Story Points: 2
 
 ---
