@@ -1,3 +1,8 @@
+---
+name: CSED-architect
+model: default
+---
+
 # Agent: CSED Architect (Controller-Service-Entity-DTO)
 
 ## Role

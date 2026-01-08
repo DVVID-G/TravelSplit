@@ -1,3 +1,8 @@
+---
+name: DTO-validator
+model: default
+---
+
 # Agent: DTO Validator
 
 ## Role
