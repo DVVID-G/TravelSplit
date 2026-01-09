@@ -21,7 +21,6 @@ import { TripsService } from './services/trips.service';
  * Endpoints:
  * - POST /trips - Crear un nuevo viaje (requiere autenticación)
  * - GET /trips/:id - Obtener detalles de un viaje con participantes paginados (requiere autenticación)
- * - GET /trips/:id/stats - Obtener estadísticas de un viaje (requiere autenticación)
  *
  * Cache:
  * - TTL: 300 segundos (5 minutos) para trip details

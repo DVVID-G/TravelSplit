@@ -20,7 +20,6 @@ import { TripResponseDto } from '../dto/trip-response.dto';
 import { TripListQueryDto } from '../dto/trip-list-query.dto';
 import { TripListItemDto } from '../dto/trip-list-item.dto';
 import { ParticipantsPaginationMeta } from '../dto/trip-detail-response.dto';
-import { TripStatsResponseDto } from '../dto/trip-stats-response.dto';
 import { TripStatus } from '../enums/trip-status.enum';
 import { ParticipantRole } from '../enums/participant-role.enum';
 import { TripMapper } from '../../../common/mappers/trip.mapper';
@@ -449,89 +448,6 @@ export class TripsService {
     );
 
     return result;
-  }
-
-  /**
-   * Obtiene las estadísticas de un viaje.
-   * Solo los participantes del viaje pueden acceder a sus estadísticas.
-   * Usa caché con TTL más corto (60s) porque las stats cambian frecuentemente.
-   *
-   * @param tripId - ID del viaje
-   * @param userId - ID del usuario autenticado
-   * @returns Estadísticas del viaje
-   * @throws BadRequestException si el tripId no es un UUID válido
-   * @throws ForbiddenException si el usuario no es participante del viaje
-   * @throws NotFoundException si el viaje no existe
-   */
-  async getTripStats(
-    tripId: string,
-    userId: string,
-  ): Promise<TripStatsResponseDto> {
-    // Validar formato UUID
-    if (!isUUID(tripId)) {
-      throw new BadRequestException('ID de viaje inválido');
-    }
-
-    // Verificar caché (TTL: 60 segundos)
-    const cacheKey = `trip-stats:${tripId}:${userId}`;
-    const cached =
-      await this.cacheManager.get<TripStatsResponseDto>(cacheKey);
-
-    if (cached) {
-      this.logger.debug(`Cache hit for trip stats ${tripId}`);
-      return cached;
-    }
-
-    // Verificar que el usuario es participante del viaje
-    const userParticipation =
-      await this.tripParticipantRepository.findOne({
-        where: {
-          tripId,
-          userId,
-          deletedAt: IsNull(),
-        },
-      });
-
-    if (!userParticipation) {
-      throw new ForbiddenException('No tienes acceso a este viaje');
-    }
-
-    // Verificar que el viaje existe
-    const trip = await this.tripRepository.findOne({
-      where: { id: tripId, deletedAt: IsNull() },
-    });
-
-    if (!trip) {
-      throw new NotFoundException('Viaje no encontrado');
-    }
-
-    // Obtener total de participantes
-    const totalParticipants = await this.tripParticipantRepository.count({
-      where: {
-        tripId,
-        deletedAt: IsNull(),
-      },
-    });
-
-    // TODO: Cuando se implemente el módulo de expenses, agregar consultas para:
-    // - totalExpenses: COUNT de expenses WHERE tripId = :tripId AND deletedAt IS NULL
-    // - totalAmount: SUM de expenses.amount WHERE tripId = :tripId AND deletedAt IS NULL
-    // - userBalance: Cálculo complejo basado en expense_beneficiaries y payments
-
-    // Por ahora, retornar valores en 0
-    const stats = TripMapper.toStatsDto({
-      totalExpenses: 0, // TODO: Implementar cuando exista módulo de expenses
-      totalAmount: 0, // TODO: Implementar cuando exista módulo de expenses
-      totalParticipants,
-      userBalance: 0, // TODO: Implementar cálculo de balances
-    });
-
-    // Guardar en caché por 60 segundos (stats cambian más frecuentemente)
-    await this.cacheManager.set(cacheKey, stats, 60);
-
-    this.logger.log(`Usuario ${userId} obtuvo estadísticas del viaje ${tripId}`);
-
-    return stats;
   }
 
   /**

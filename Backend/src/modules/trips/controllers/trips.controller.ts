@@ -30,7 +30,6 @@ import { TripResponseDto } from '../dto/trip-response.dto';
 import { TripListQueryDto } from '../dto/trip-list-query.dto';
 import { TripListItemDto } from '../dto/trip-list-item.dto';
 import { TripDetailResponseDto } from '../dto/trip-detail-response.dto';
-import { TripStatsResponseDto } from '../dto/trip-stats-response.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../../../common/interfaces/authenticated-request.interface';
 import { TripMapper } from '../../../common/mappers/trip.mapper';
@@ -255,41 +254,4 @@ export class TripsController {
     return TripMapper.toDetailDto(trip, req.user!.id, paginationMeta);
   }
 
-  /**
-   * Obtiene las estadísticas de un viaje.
-   * Solo los participantes del viaje pueden acceder a sus estadísticas.
-   *
-   * @param id - ID del viaje
-   * @param req - Request con usuario autenticado
-   * @returns Estadísticas del viaje
-   */
-  @Get(':id/stats')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({
-    summary: 'Obtener estadísticas de un viaje',
-    description:
-      'Retorna estadísticas agregadas del viaje incluyendo totales de gastos, montos y balance del usuario. Solo accesible para participantes del viaje.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'ID único del viaje (UUID)',
-    type: String,
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
-  @ApiOkResponse({
-    description: 'Estadísticas del viaje',
-    type: TripStatsResponseDto,
-  })
-  @ApiNotFoundResponse({ description: 'Viaje no encontrado' })
-  @ApiForbiddenResponse({ description: 'No tienes acceso a este viaje' })
-  @ApiBadRequestResponse({ description: 'ID de viaje inválido' })
-  @ApiUnauthorizedResponse({
-    description: 'No autorizado. Se requiere autenticación.',
-  })
-  async getTripStats(
-    @Param('id') id: string,
-    @Request() req: AuthenticatedRequest,
-  ): Promise<TripStatsResponseDto> {
-    return this.tripsService.getTripStats(id, req.user!.id);
-  }
 }

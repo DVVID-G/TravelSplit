@@ -3,7 +3,6 @@ import { TripResponseDto } from '../../modules/trips/dto/trip-response.dto';
 import { TripListItemDto } from '../../modules/trips/dto/trip-list-item.dto';
 import { TripDetailResponseDto, ParticipantsPaginationMeta } from '../../modules/trips/dto/trip-detail-response.dto';
 import { TripParticipantDto } from '../../modules/trips/dto/trip-participant.dto';
-import { TripStatsResponseDto } from '../../modules/trips/dto/trip-stats-response.dto';
 import { UserSummaryDto } from '../../modules/trips/dto/user-summary.dto';
 import { ParticipantRole } from '../../modules/trips/enums/participant-role.enum';
 import { TripParticipant } from '../../modules/trips/entities/trip-participant.entity';
@@ -118,23 +117,4 @@ export class TripMapper {
     };
   }
 
-  /**
-   * Creates a TripStatsResponseDto from aggregated data.
-   *
-   * @param stats - Object containing aggregated statistics
-   * @returns TripStatsResponseDto with trip statistics
-   */
-  static toStatsDto(stats: {
-    totalExpenses: number;
-    totalAmount: number;
-    totalParticipants: number;
-    userBalance: number;
-  }): TripStatsResponseDto {
-    return {
-      totalExpenses: stats.totalExpenses || 0,
-      totalAmount: stats.totalAmount || 0,
-      totalParticipants: stats.totalParticipants || 0,
-      userBalance: stats.userBalance || 0,
-    };
-  }
 }

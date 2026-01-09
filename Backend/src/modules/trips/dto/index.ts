@@ -10,5 +10,4 @@ export * from './trip-list-item.dto';
 export * from './trip-list-query.dto';
 export * from './trip-participant.dto';
 export * from './trip-response.dto';
-export * from './trip-stats-response.dto';
 export * from './user-summary.dto';
