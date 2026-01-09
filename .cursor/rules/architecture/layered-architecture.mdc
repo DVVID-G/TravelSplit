@@ -239,13 +239,13 @@ async findOne(@Param('id') id: string): Promise<User> { // VIOLATION
 
 - Health check modules may not require entities or DTOs.
 - Common utilities may be shared across layers but must be pure functions.
-- Mappers can transform between entities and DTOs (placed in `common/mappers/`).
-- UserMapper lives in `Backend/src/common/mappers/user.mapper.ts` and exposes static helpers only (no state).
+- Mappers can transform between entities and DTOs; place them within the owning module to avoid reverse deps.
+- UserMapper lives in `Backend/src/modules/users/mappers/user.mapper.ts` (same module as its DTO/entity) and exposes static helpers only (no state).
 
 ```typescript
-// Backend/src/common/mappers/user.mapper.ts
+// Backend/src/modules/users/mappers/user.mapper.ts
 import { User } from '../entities/user.entity';
-import { UserResponseDto } from '../../modules/users/dto/user-response.dto';
+import { UserResponseDto } from '../dto/user-response.dto';
 
 export class UserMapper {
   static toResponseDto(user: User): UserResponseDto {
