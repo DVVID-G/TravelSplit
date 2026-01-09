@@ -391,6 +391,10 @@ Home (no auth) → Login/Register → Home (auth) → Viajes → [Crear Viaje] �
 │  Mis Viajes          [+ Crear Viaje] │ ← Header sticky, botón derecha
 ├─────────────────────────────────────┤
 │                                     │
+│  ┌─────────────────────────────┐   │
+│  │ [Key] Unirse con código     │   │ ← NUEVO: Botón secundario (h-12, full-width)
+│  └─────────────────────────────┘   │    bg-slate-200, text-slate-900, rounded-xl, font-medium, mb-6
+│                                     │    Icono: Key (lucide-react, 20px)
 │  ┌─────────────────────────────┐   │ ← TripCard (bg-white, rounded-xl, p-6)
 │  │ [Map Icon] Viaje a Cartagena│   │ ← Icono + Título (font-semibold)
 │  │                             │   │
@@ -416,6 +420,79 @@ Home (no auth) → Login/Register → Home (auth) → Viajes → [Crear Viaje] �
 **Acciones**:
 - Click en TripCard → `/trips/:tripId`
 - Click en "+ Crear Viaje" → `/trips/new`
+- Click en "Unirse con código" → Abre Modal (Pantalla 3a)
+
+---
+
+#### Pantalla 3a: Modal "Unirse a un viaje" (NUEVO)
+```
+┌─────────────────────────────────────┐
+│  [Overlay oscuro bg-black/50]       │ ← Overlay para destacar modal
+│         ┌─────────────────────┐    │
+│         │ [Key] Unirse a un   │    │ ← Icono Key (24px, violet-600) + Título 
+│         │       viaje         │    │    (font-heading, font-bold, text-xl)
+│         │                     │    │
+│         │  Ingresa el código  │    │ ← Descripción (text-slate-600, text-sm, mb-4)
+│         │  de 8 caracteres que│    │
+│         │  compartió el       │    │
+│         │  creador del viaje  │    │
+│         │                     │    │
+│         │  Código del viaje   │    │ ← Label (text-sm font-medium text-slate-700)
+│         │  ┌───────────────┐  │    │
+│         │  │  ABC12345     │  │    │ ← Input (h-12, rounded-xl, text-center)
+│         │  └───────────────┘  │    │    uppercase, tracking-wider, text-lg, font-semibold
+│         │                     │    │    placeholder: "Ej: ABC12345"
+│         │  ℹ️ Código de 8     │    │ ← Info text (text-slate-500, text-xs)
+│         │     caracteres      │    │
+│         │                     │    │
+│         │  [❌ Mensaje error]  │    │ ← Si hay error: bg-red-50, border-red-200
+│         │                     │    │    text-red-600, rounded-xl, p-3, text-sm
+│         │                     │    │    Ejemplos:
+│         │                     │    │    - "Código inválido o viaje no encontrado"
+│         │                     │    │    - "Ya eres participante de este viaje"
+│         │                     │    │    - "Este viaje está cerrado"
+│         │                     │    │
+│         │  ┌───────────────┐  │    │
+│         │  │  Unirse       │  │    │ ← Botón primario (h-12, full-width, bg-violet-600)
+│         │  └───────────────┘  │    │    Loading: spinner + "Uniéndose..."
+│         │                     │    │    Disabled si código < 8 caracteres
+│         │  [Cancelar]         │    │ ← Botón text/ghost (text-slate-600, hover:text-slate-900)
+│         │                     │    │
+│         └─────────────────────┘    │ ← Modal (bg-white, rounded-2xl, p-6, max-w-sm, shadow-2xl)
+│                                     │
+└─────────────────────────────────────┘
+```
+
+**Acciones**:
+- Click en "Unirse" → POST `/trips/join` con código
+  - Éxito (201): Toast verde "Te uniste al viaje '{nombre}'" + Cierra modal + Navega a `/trips/:tripId`
+  - Error 400: Muestra "El código debe tener 8 caracteres"
+  - Error 404: Muestra "Código inválido o viaje no encontrado"
+  - Error 409: Muestra "Ya eres participante de este viaje"
+  - Error 401: Redirect a `/login`
+- Click en "Cancelar" → Cierra modal
+- Click fuera del modal → Cierra modal
+- Input auto-uppercase: Transforma minúsculas a mayúsculas automáticamente
+- Validación en tiempo real: Solo permite A-Z y 0-9
+
+**Estados del Input:**
+- **Default:** `border-slate-300`
+- **Focus:** `border-violet-600 ring-2 ring-violet-100`
+- **Error:** `border-red-500 ring-2 ring-red-100`
+- **Typing:** Si longitud < 8, botón disabled
+- **Valid:** Si longitud === 8, botón enabled
+
+**Toast de Éxito (tras unirse):**
+```
+┌─────────────────────────────────────┐
+│  ┌─────────────────────────────┐   │ ← Toast (fixed top-4 right-4, z-50)
+│  │ ✅ Te uniste al viaje       │   │    bg-emerald-50, border-emerald-200
+│  │    "Viaje a Cartagena"      │   │    text-emerald-700, rounded-xl, p-4
+│  │                             │   │    shadow-lg
+│  └─────────────────────────────┘   │    Auto-dismiss en 3s
+│                                     │
+└─────────────────────────────────────┘
+```
 
 ---
 
