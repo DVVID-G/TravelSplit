@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CacheModule } from '@nestjs/cache-manager';
 import { Trip } from './entities/trip.entity';
 import { TripParticipant } from './entities/trip-participant.entity';
 import { User } from '../users/entities/user.entity';
@@ -19,9 +20,21 @@ import { TripsService } from './services/trips.service';
  *
  * Endpoints:
  * - POST /trips - Crear un nuevo viaje (requiere autenticación)
+ * - GET /trips/:id - Obtener detalles de un viaje con participantes paginados (requiere autenticación)
+ * - GET /trips/:id/stats - Obtener estadísticas de un viaje (requiere autenticación)
+ *
+ * Cache:
+ * - TTL: 300 segundos (5 minutos) para trip details
+ * - Max items: 100 trips en memoria
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([Trip, TripParticipant, User])],
+  imports: [
+    TypeOrmModule.forFeature([Trip, TripParticipant, User]),
+    CacheModule.register({
+      ttl: 300, // 5 minutos en segundos
+      max: 100, // máximo 100 trips en caché
+    }),
+  ],
   controllers: [TripsController],
   providers: [TripsService],
   exports: [TripsService],

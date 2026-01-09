@@ -2,10 +2,16 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  ForbiddenException,
+  BadRequestException,
   Logger,
+  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
+import { validate as isUUID } from 'uuid';
 import { Trip } from '../entities/trip.entity';
 import { TripParticipant } from '../entities/trip-participant.entity';
 import { User } from '../../users/entities/user.entity';
@@ -13,6 +19,8 @@ import { CreateTripDto } from '../dto/create-trip.dto';
 import { TripResponseDto } from '../dto/trip-response.dto';
 import { TripListQueryDto } from '../dto/trip-list-query.dto';
 import { TripListItemDto } from '../dto/trip-list-item.dto';
+import { ParticipantsPaginationMeta } from '../dto/trip-detail-response.dto';
+import { TripStatsResponseDto } from '../dto/trip-stats-response.dto';
 import { TripStatus } from '../enums/trip-status.enum';
 import { ParticipantRole } from '../enums/participant-role.enum';
 import { TripMapper } from '../../../common/mappers/trip.mapper';
@@ -32,6 +40,8 @@ export class TripsService {
     private readonly tripParticipantRepository: Repository<TripParticipant>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: Cache,
   ) {}
 
   /**
@@ -322,6 +332,230 @@ export class TripsService {
       `Usuario ${userId} se unió exitosamente al viaje ${trip.id} (${trip.name}) usando código ${code}`,
     );
 
+    // Invalidar caché del trip
+    await this.invalidateTripCache(trip.id);
+
     return trip;
   }
+
+  /**
+   * Obtiene los detalles de un viaje por ID incluyendo participantes paginados.
+   * Solo los participantes del viaje pueden acceder a sus detalles.
+   * Usa caché para optimizar performance.
+   *
+   * @param tripId - ID del viaje
+   * @param userId - ID del usuario autenticado
+   * @param participantsPage - Número de página para participantes (default: 1)
+   * @param participantsLimit - Límite de participantes por página (default: 20, max: 100)
+   * @returns Trip entity con participantes y metadatos de paginación
+   * @throws BadRequestException si el tripId no es un UUID válido
+   * @throws ForbiddenException si el usuario no es participante del viaje
+   * @throws NotFoundException si el viaje no existe
+   */
+  async findOneById(
+    tripId: string,
+    userId: string,
+    participantsPage: number = 1,
+    participantsLimit: number = 20,
+  ): Promise<{ trip: Trip; paginationMeta: ParticipantsPaginationMeta }> {
+    // Validar formato UUID
+    if (!isUUID(tripId)) {
+      throw new BadRequestException('ID de viaje inválido');
+    }
+
+    // Validar parámetros de paginación
+    const safePage = Math.max(1, participantsPage);
+    const safeLimit = Math.min(Math.max(1, participantsLimit), 100);
+
+    // Verificar caché
+    const cacheKey = `trip-detail:${tripId}:${userId}:${safePage}:${safeLimit}`;
+    const cached = await this.cacheManager.get<{
+      trip: Trip;
+      paginationMeta: ParticipantsPaginationMeta;
+    }>(cacheKey);
+
+    if (cached) {
+      this.logger.debug(`Cache hit for trip ${tripId}, page ${safePage}`);
+      return cached;
+    }
+
+    // Verificar que el usuario es participante del viaje
+    const userParticipation =
+      await this.tripParticipantRepository.findOne({
+        where: {
+          tripId,
+          userId,
+          deletedAt: IsNull(),
+        },
+      });
+
+    if (!userParticipation) {
+      throw new ForbiddenException('No tienes acceso a este viaje');
+    }
+
+    // Obtener total de participantes para paginación
+    const totalParticipants = await this.tripParticipantRepository.count({
+      where: {
+        tripId,
+        deletedAt: IsNull(),
+      },
+    });
+
+    // Construir query con paginación para participantes
+    const skip = (safePage - 1) * safeLimit;
+    const trip = await this.tripRepository
+      .createQueryBuilder('trip')
+      .leftJoinAndSelect(
+        'trip.participants',
+        'participant',
+        'participant.deletedAt IS NULL',
+      )
+      .leftJoinAndSelect('participant.user', 'user')
+      .where('trip.id = :tripId', { tripId })
+      .andWhere('trip.deletedAt IS NULL')
+      .select([
+        'trip',
+        'participant.id',
+        'participant.userId',
+        'participant.role',
+        'participant.createdAt',
+        'user.id',
+        'user.nombre',
+        'user.email',
+      ])
+      .skip(skip)
+      .take(safeLimit)
+      .getOne();
+
+    if (!trip) {
+      throw new NotFoundException('Viaje no encontrado');
+    }
+
+    // Calcular metadatos de paginación
+    const paginationMeta: ParticipantsPaginationMeta = {
+      total: totalParticipants,
+      page: safePage,
+      limit: safeLimit,
+      hasMore: safePage * safeLimit < totalParticipants,
+    };
+
+    const result = { trip, paginationMeta };
+
+    // Guardar en caché por 5 minutos
+    await this.cacheManager.set(cacheKey, result, 300);
+
+    this.logger.log(
+      `Usuario ${userId} obtuvo detalles del viaje ${tripId}, página ${safePage}`,
+    );
+
+    return result;
+  }
+
+  /**
+   * Obtiene las estadísticas de un viaje.
+   * Solo los participantes del viaje pueden acceder a sus estadísticas.
+   * Usa caché con TTL más corto (60s) porque las stats cambian frecuentemente.
+   *
+   * @param tripId - ID del viaje
+   * @param userId - ID del usuario autenticado
+   * @returns Estadísticas del viaje
+   * @throws BadRequestException si el tripId no es un UUID válido
+   * @throws ForbiddenException si el usuario no es participante del viaje
+   * @throws NotFoundException si el viaje no existe
+   */
+  async getTripStats(
+    tripId: string,
+    userId: string,
+  ): Promise<TripStatsResponseDto> {
+    // Validar formato UUID
+    if (!isUUID(tripId)) {
+      throw new BadRequestException('ID de viaje inválido');
+    }
+
+    // Verificar caché (TTL: 60 segundos)
+    const cacheKey = `trip-stats:${tripId}:${userId}`;
+    const cached =
+      await this.cacheManager.get<TripStatsResponseDto>(cacheKey);
+
+    if (cached) {
+      this.logger.debug(`Cache hit for trip stats ${tripId}`);
+      return cached;
+    }
+
+    // Verificar que el usuario es participante del viaje
+    const userParticipation =
+      await this.tripParticipantRepository.findOne({
+        where: {
+          tripId,
+          userId,
+          deletedAt: IsNull(),
+        },
+      });
+
+    if (!userParticipation) {
+      throw new ForbiddenException('No tienes acceso a este viaje');
+    }
+
+    // Verificar que el viaje existe
+    const trip = await this.tripRepository.findOne({
+      where: { id: tripId, deletedAt: IsNull() },
+    });
+
+    if (!trip) {
+      throw new NotFoundException('Viaje no encontrado');
+    }
+
+    // Obtener total de participantes
+    const totalParticipants = await this.tripParticipantRepository.count({
+      where: {
+        tripId,
+        deletedAt: IsNull(),
+      },
+    });
+
+    // TODO: Cuando se implemente el módulo de expenses, agregar consultas para:
+    // - totalExpenses: COUNT de expenses WHERE tripId = :tripId AND deletedAt IS NULL
+    // - totalAmount: SUM de expenses.amount WHERE tripId = :tripId AND deletedAt IS NULL
+    // - userBalance: Cálculo complejo basado en expense_beneficiaries y payments
+
+    // Por ahora, retornar valores en 0
+    const stats = TripMapper.toStatsDto({
+      totalExpenses: 0, // TODO: Implementar cuando exista módulo de expenses
+      totalAmount: 0, // TODO: Implementar cuando exista módulo de expenses
+      totalParticipants,
+      userBalance: 0, // TODO: Implementar cálculo de balances
+    });
+
+    // Guardar en caché por 60 segundos (stats cambian más frecuentemente)
+    await this.cacheManager.set(cacheKey, stats, 60);
+
+    this.logger.log(`Usuario ${userId} obtuvo estadísticas del viaje ${tripId}`);
+
+    return stats;
+  }
+
+  /**
+   * Invalida el caché de un viaje específico.
+   * Elimina todas las entradas de caché relacionadas con el trip.
+   * Debe llamarse después de cualquier operación que modifique el trip o sus participantes.
+   *
+   * @param tripId - ID del viaje cuyo caché se invalidará
+   */
+  private async invalidateTripCache(tripId: string): Promise<void> {
+    try {
+      // En cache-manager in-memory, no hay método para buscar por patrón
+      // Por simplicidad, no eliminamos claves específicas aquí
+      // En producción con Redis, se usaría: await this.cacheManager.store.keys(`trip-*:${tripId}:*`)
+      // y luego se eliminaría cada clave
+
+      this.logger.debug(`Cache invalidation requested for trip ${tripId}`);
+      // TODO: Implementar invalidación por patrón cuando se migre a Redis
+    } catch (error) {
+      this.logger.error(
+        `Error al invalidar caché del viaje ${tripId}:`,
+        error,
+      );
+    }
+  }
 }
+

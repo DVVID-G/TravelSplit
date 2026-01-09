@@ -4,6 +4,7 @@ import {
   Get,
   Body,
   Query,
+  Param,
   HttpCode,
   HttpStatus,
   Request,
@@ -18,6 +19,9 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
   ApiConflictResponse,
+  ApiForbiddenResponse,
+  ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { TripsService } from '../services/trips.service';
 import { CreateTripDto } from '../dto/create-trip.dto';
@@ -25,6 +29,8 @@ import { JoinTripDto } from '../dto/join-trip.dto';
 import { TripResponseDto } from '../dto/trip-response.dto';
 import { TripListQueryDto } from '../dto/trip-list-query.dto';
 import { TripListItemDto } from '../dto/trip-list-item.dto';
+import { TripDetailResponseDto } from '../dto/trip-detail-response.dto';
+import { TripStatsResponseDto } from '../dto/trip-stats-response.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../../../common/interfaces/authenticated-request.interface';
 import { TripMapper } from '../../../common/mappers/trip.mapper';
@@ -179,5 +185,111 @@ export class TripsController {
       req.user!.id,
     );
     return TripMapper.toResponseDto(trip);
+  }
+
+  /**
+   * Obtiene los detalles de un viaje por ID incluyendo participantes paginados.
+   * Solo los participantes del viaje pueden acceder a sus detalles.
+   *
+   * @param id - ID del viaje
+   * @param participantsPage - Número de página para participantes (default: 1)
+   * @param participantsLimit - Límite de participantes por página (default: 20, max: 100)
+   * @param req - Request con usuario autenticado
+   * @returns Detalles del viaje con participantes paginados
+   */
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Obtener detalles de un viaje por ID con participantes paginados',
+    description:
+      'Retorna los detalles completos de un viaje incluyendo sus participantes de forma paginada. Solo accesible para participantes del viaje.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID único del viaje (UUID)',
+    type: String,
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiQuery({
+    name: 'participantsPage',
+    required: false,
+    type: Number,
+    description: 'Número de página de participantes (default: 1)',
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'participantsLimit',
+    required: false,
+    type: Number,
+    description:
+      'Límite de participantes por página (default: 20, max: 100)',
+    example: 20,
+  })
+  @ApiOkResponse({
+    description: 'Detalles del viaje con participantes paginados',
+    type: TripDetailResponseDto,
+  })
+  @ApiNotFoundResponse({ description: 'Viaje no encontrado' })
+  @ApiForbiddenResponse({ description: 'No tienes acceso a este viaje' })
+  @ApiBadRequestResponse({ description: 'ID de viaje inválido' })
+  @ApiUnauthorizedResponse({
+    description: 'No autorizado. Se requiere autenticación.',
+  })
+  async findOne(
+    @Param('id') id: string,
+    @Query('participantsPage') participantsPage: number = 1,
+    @Query('participantsLimit') participantsLimit: number = 20,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<TripDetailResponseDto> {
+    // Validar y sanitizar parámetros de paginación
+    const safePage = Math.max(1, Number(participantsPage) || 1);
+    const safeLimit = Math.min(Math.max(1, Number(participantsLimit) || 20), 100);
+
+    const { trip, paginationMeta } = await this.tripsService.findOneById(
+      id,
+      req.user!.id,
+      safePage,
+      safeLimit,
+    );
+
+    return TripMapper.toDetailDto(trip, req.user!.id, paginationMeta);
+  }
+
+  /**
+   * Obtiene las estadísticas de un viaje.
+   * Solo los participantes del viaje pueden acceder a sus estadísticas.
+   *
+   * @param id - ID del viaje
+   * @param req - Request con usuario autenticado
+   * @returns Estadísticas del viaje
+   */
+  @Get(':id/stats')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Obtener estadísticas de un viaje',
+    description:
+      'Retorna estadísticas agregadas del viaje incluyendo totales de gastos, montos y balance del usuario. Solo accesible para participantes del viaje.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID único del viaje (UUID)',
+    type: String,
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiOkResponse({
+    description: 'Estadísticas del viaje',
+    type: TripStatsResponseDto,
+  })
+  @ApiNotFoundResponse({ description: 'Viaje no encontrado' })
+  @ApiForbiddenResponse({ description: 'No tienes acceso a este viaje' })
+  @ApiBadRequestResponse({ description: 'ID de viaje inválido' })
+  @ApiUnauthorizedResponse({
+    description: 'No autorizado. Se requiere autenticación.',
+  })
+  async getTripStats(
+    @Param('id') id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<TripStatsResponseDto> {
+    return this.tripsService.getTripStats(id, req.user!.id);
   }
 }
