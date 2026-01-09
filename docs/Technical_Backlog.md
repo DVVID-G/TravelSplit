@@ -6,60 +6,60 @@
 - Relacionado con: US-AUTH-001
 - Tipo: Backend
 - Descripción:
-  Implementar endpoint de registro que cree usuarios con email único, nombre y contraseña hasheada. [file:1]
+  Implementar endpoint de registro que cree usuarios con email único, nombre y contraseña hasheada. 
 - Tareas:
   - Definir entidad User (id, email, name, password_hash, timestamps, deleted_at).
   - Implementar DTO de creación y validaciones (email, longitud mínima password).
   - Implementar servicio de registro con verificación de email único.
-  - Tests unitarios de servicio y controlador. [file:1]
+  - Tests unitarios de servicio y controlador.
 - Criterios de Aceptación:
   - Registro exitoso devuelve usuario sin exponer password.
   - Email duplicado devuelve error validado.
-  - Se guardan timestamps de creación/actualización. [file:1]
+  - Se guardan timestamps de creación/actualización. 
 - Story Points: 3
 
 ### TCK-AUTH-002 – Endpoint de login y emisión de JWT (POST /auth/login)
 - Relacionado con: US-AUTH-002
 - Tipo: Backend
 - Descripción:
-  Implementar autenticación con verificación de credenciales y emisión de JWT con payload { sub, email }. [file:1]
+  Implementar autenticación con verificación de credenciales y emisión de JWT con payload { sub, email }. 
 - Tareas:
   - Implementar estrategia JWT con Passport.
   - Configurar guardas de autenticación para rutas protegidas.
-  - Implementar firma de token y configuración de expiración. [file:1]
+  - Implementar firma de token y configuración de expiración.
 - Criterios de Aceptación:
   - Credenciales correctas retornan token válido.
   - Credenciales incorrectas retornan error genérico.
-  - Token usable en endpoints protegidos con Authorization: Bearer. [file:1]
+  - Token usable en endpoints protegidos con Authorization: Bearer. 
 - Story Points: 3
 
 ### TCK-AUTH-003 – Middleware/Guard para proteger rutas privadas
 - Relacionado con: US-AUTH-003
 - Tipo: Backend
 - Descripción:
-  Crear guard global o por módulo que valide el JWT en cada petición protegida y propague req.user. [file:1]
+  Crear guard global o por módulo que valide el JWT en cada petición protegida y propague req.user. 
 - Tareas:
   - Implementar guard que decodifique y valide el token.
   - Integrar con NestJS en módulo común.
-  - Añadir pruebas sencillas de acceso autorizado/no autorizado. [file:1]
+  - Añadir pruebas sencillas de acceso autorizado/no autorizado. 
 - Criterios de Aceptación:
   - Rutas sin token devuelven 401.
   - Rutas con token inválido devuelven 401.
-  - Rutas con token válido acceden al usuario autenticado. [file:1]
+  - Rutas con token válido acceden al usuario autenticado. 
 - Story Points: 2
 
 ### TCK-PROFILE-001 – Endpoint actualización de perfil (PUT /users/:id)
 - Relacionado con: US-PROFILE-001
 - Tipo: Backend
 - Descripción:
-  Permitir que un usuario actualice únicamente su propio perfil (nombre, password). [file:1]
+  Permitir que un usuario actualice únicamente su propio perfil (nombre, password). 
 - Tareas:
   - Implementar controlador y servicio de actualización.
   - Verificar req.user.id === id del path.
-  - Hashear nueva contraseña si se actualiza. [file:1]
+  - Hashear nueva contraseña si se actualiza. 
 - Criterios de Aceptación:
   - No se puede actualizar un perfil ajeno.
-  - Validaciones de formato se aplican correctamente. [file:1]
+  - Validaciones de formato se aplican correctamente. 
 - Story Points: 2
 
 ---
@@ -85,7 +85,7 @@
 - Relacionado con: US-TRIP-001
 - Tipo: Backend
 - Descripción:
-  Permitir crear un viaje con nombre, moneda fija COP y asociar automáticamente al usuario como CREATOR, se debe poder invitar usuarios por medio de correo electronico (member). 
+  Permitir crear un viaje con nombre, moneda fija COP y asociar automáticamente al usuario como CREATOR, se debe poder agregar usuarios por medio de correo electronico (member). 
 - Tareas:
   - Controlador y servicio de creación.
   - Generación de código alfanumérico del viaje.
@@ -99,51 +99,48 @@
 - Relacionado con: US-TRIP-002
 - Tipo: Backend
 - Descripción:
-  Listar viajes activos e históricos donde el usuario es CREATOR o MEMBER. [file:1]
-- Tareas:
+  Listar viajes activos e históricos donde el usuario es CREATOR o MEMBER. 
   - Consulta con join Trip–TripParticipant.
   - Filtrado por estado (activo/cerrado).
 - Criterios de Aceptación:
   - Devuelve solo viajes en los que el usuario participa.
-  - Muestra estado del viaje. [file:1]
+  - Muestra estado del viaje.
 - Story Points: 2
 
-### TCK-TRIP-004 – Invitar participantes por email (POST /trips/:id/invite)
+### TCK-TRIP-004 – Invitar participantes por email (POST /trips/:id/invite) (DESCARTADA)
 - Relacionado con: US-TRIP-003
 - Tipo: Backend
 - Descripción:
-  Implementar invitación Strict User Policy: solo CREATOR puede invitar y solo a emails ya registrados. [file:1]
+  Implementar invitación Strict User Policy: solo CREATOR puede invitar y solo a emails ya registrados. 
 - Tareas:
   - Verificar que req.user es CREATOR en el viaje.
   - Buscar usuario por email en tabla User.
-  - Si no existe, devolver error indicando que debe registrarse. [file:1]
+  - Si no existe, devolver error indicando que debe registrarse.
 - Criterios de Aceptación:
   - No se crean usuarios “fantasma”.
-  - Se crea TripParticipant con rol MEMBER. [file:1]
-- Story Points: 3
+  - Se crea TripParticipant con rol MEMBER.
 
 ### TCK-TRIP-005 – Unirse a viaje por código (POST /trips/join)
 - Relacionado con: US-TRIP-004
 - Tipo: Backend
 - Descripción:
-  Permitir que un usuario autenticado se asocie a un viaje existente utilizando código. [file:1]
-- Criterios de Aceptación:
+  Permitir que un usuario autenticado se asocie a un viaje existente utilizando código. 
   - Código válido crea TripParticipant MEMBER.
-  - Manejo de errores si el código no existe. [file:1]
+  - Manejo de errores si el código no existe. 
 - Story Points: 3
 
 ### TCK-TRIP-006 – Editar configuración de viaje (PATCH /trips/:id)
 - Relacionado con: US-TRIP-005
 - Tipo: Backend
 - Descripción:
-  Permitir al CREATOR modificar datos básicos del viaje sin afectar gastos. [file:1]
+  Permitir al CREATOR modificar datos básicos del viaje sin afectar gastos. 
 - Story Points: 2
 
 ### TCK-PART-001 – Endpoint listar participantes del viaje (GET /trips/:id/participants)
 - Relacionado con: US-PART-001, US-PART-002
 - Tipo: Backend
 - Descripción:
-  Devolver la lista de participantes con sus roles por viaje. [file:1]
+  Devolver la lista de participantes con sus roles por viaje. 
 - Story Points: 2
 
 ---
@@ -154,41 +151,40 @@
 - Relacionado con: US-EXP-001, US-EXP-004
 - Tipo: Backend / DB
 - Descripción:
-  Definir entidad Expense con soporte de soft delete y referencia a pagador y beneficiarios. [file:1]
-- Tareas:
+  Definir entidad Expense con soporte de soft delete y referencia a pagador y beneficiarios. 
   - Entidad Expense (id, trip_id, payer_id, amount, currency, title, category, receipt_url, timestamps, deleted_at).
-  - Tabla de relación ExpenseBeneficiary (expense_id, user_id, share_amount opcional). [file:1]
+  - Tabla de relación ExpenseBeneficiary (expense_id, user_id, share_amount opcional). 
 - Story Points: 5
 
 ### TCK-EXP-002 – Endpoint crear gasto (POST /trips/:id/expenses)
 - Relacionado con: US-EXP-001, US-EXP-002
 - Tipo: Backend
 - Descripción:
-  Crear gastos asociados a un viaje, con validación de que el usuario sea participante. [file:1]
+  Crear gastos asociados a un viaje, con validación de que el usuario sea participante. 
 - Criterios de Aceptación:
   - Participants CREATOR/MEMBER pueden crear gastos.
-  - Monto en COP y categoría válida (Comida, Transporte, etc.). [file:1]
+  - Monto en COP y categoría válida (Comida, Transporte, etc.). 
 - Story Points: 3
 
 ### TCK-EXP-003 – Subida y almacenamiento de foto de recibo
 - Relacionado con: US-EXP-002
 - Tipo: Backend / Infra
 - Descripción:
-  Implementar endpoint/módulo para subir archivo y almacenar en sistema local o servicio cloud. [file:1]
+  Implementar endpoint/módulo para subir archivo y almacenar en sistema local o servicio cloud. 
 - Story Points: 3
 
 ### TCK-EXP-004 – Feed de gastos del viaje (GET /trips/:id/expenses)
 - Relacionado con: US-EXP-003
 - Tipo: Backend
 - Descripción:
-  Listar gastos ordenados por fecha descendente, visibles para todos los participantes. [file:1]
+  Listar gastos ordenados por fecha descendente, visibles para todos los participantes. 
 - Story Points: 2
 
 ### TCK-EXP-005 – Editar y eliminar gasto (solo Creador)
 - Relacionado con: US-EXP-004
 - Tipo: Backend
 - Descripción:
-  Permitir al CREATOR editar o hacer soft delete de cualquier gasto del viaje. [file:1]
+  Permitir al CREATOR editar o hacer soft delete de cualquier gasto del viaje. 
 - Story Points: 3
 
 ---
@@ -199,7 +195,7 @@
 - Relacionado con: US-BAL-001
 - Tipo: Backend (lógica de dominio)
 - Descripción:
-  Implementar algoritmo que calcule total gastado por usuario, cuota justa y deudas “A debe X a B”. [file:1]
+  Implementar algoritmo que calcule total gastado por usuario, cuota justa y deudas “A debe X a B”.
 - Story Points: 5
 
 ### TCK-BAL-002 – Endpoint resumen personal de saldo (GET /trips/:id/balance/me)
@@ -211,7 +207,7 @@
 - Relacionado con: US-BAL-003
 - Tipo: Backend
 - Descripción:
-  Permitir al CREATOR marcar el viaje como cerrado, bloqueando nuevos gastos. [file:1]
+  Permitir al CREATOR marcar el viaje como cerrado, bloqueando nuevos gastos. 
 - Story Points: 3
 
 ---
@@ -222,14 +218,14 @@
 - Relacionado con: US-NOTIF-001
 - Tipo: Backend / Integración
 - Descripción:
-  Integrar un servicio de correo y disparar email cuando se agrega un TripParticipant. [file:1]
+  Integrar un servicio de correo y disparar email cuando se agrega un TripParticipant. 
 - Story Points: 3
 
 ### TCK-AUD-001 – Implementar soft delete transversal
 - Relacionado con: US-AUD-001
 - Tipo: Backend / DB
 - Descripción:
-  Garantizar borrado lógico en User, Trip, TripParticipant, Expense, con filtros que excluyan registros marcados. [file:1]
+  Garantizar borrado lógico en User, Trip, TripParticipant, Expense, con filtros que excluyan registros marcados. 
 - Story Points: 3
 
 ---
@@ -260,24 +256,24 @@
 ### TCK-FE-006 – Pantalla de perfil de usuario
 - Relacionado con: US-PROFILE-001
 - Descripción:
-  Formulario para ver y actualizar nombre y contraseña, consumiendo el endpoint de actualización de perfil. [file:1]
+  Formulario para ver y actualizar nombre y contraseña, consumiendo el endpoint de actualización de perfil. 
 
 ### TCK-FE-007 – Vista de detalle de viaje
 - Relacionado con: US-TRIP-001, US-TRIP-002, US-PART-001, US-EXP-003, US-BAL-001, US-BAL-002
 - Descripción:
-  Página que muestra información del viaje, participantes, feed de gastos y accesos a registro de gasto y saldos. [file:1]
+  Página que muestra información del viaje, participantes, feed de gastos y accesos a registro de gasto y saldos. 
 
 ### TCK-FE-008 – Control de permisos en UI
 - Relacionado con: reglas CREATOR/MEMBER y US-EXP-004, US-BAL-003
 - Descripción:
-  Lógica en el frontend para mostrar/ocultar acciones sensibles (editar/eliminar gasto, cerrar viaje) según rol del usuario en el viaje. [file:1]
+  Lógica en el frontend para mostrar/ocultar acciones sensibles (editar/eliminar gasto, cerrar viaje) según rol del usuario en el viaje. 
 
 ### TCK-FE-009 – Flujo de invitación y notificación visual
 - Relacionado con: US-TRIP-003, US-NOTIF-001
 - Descripción:
-  Formulario para invitar por email y feedback claro de errores (usuario no registrado) y éxito de invitación. [file:1]
+  Formulario para invitar por email y feedback claro de errores (usuario no registrado) y éxito de invitación. 
 
 ### TCK-FE-010 – Pantalla de balances y “quién debe a quién”
 - Relacionado con: US-BAL-001, US-BAL-002
 - Descripción:
-  Vista dedicada (o sección en el detalle) que muestre lista “X debe a Y” y resumen personal del usuario. [file:1]
+  Vista dedicada (o sección en el detalle) que muestre lista “X debe a Y” y resumen personal del usuario. 
