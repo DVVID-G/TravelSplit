@@ -228,13 +228,13 @@ const HomePageWithTrips = ({ trips, totalAmount }: { trips: TripResponse[]; tota
  * 3. Authenticated with trips - Shows summary and recent trips
  */
 export const HomePage = () => {
-  const { isAuthenticated, isLoading: authLoading } = useAuthContext();
+  const { isAuthenticated, isLoading: authLoading, token } = useAuthContext();
 
-  // Query to get trips (only if authenticated)
+  // Query to get trips (only if authenticated AND token exists)
   const { data: trips, isLoading: tripsLoading, error: tripsError, refetch } = useQuery({
     queryKey: ['user-trips'],
     queryFn: getUserTrips,
-    enabled: isAuthenticated, // Only execute if authenticated
+    enabled: isAuthenticated && !!token, // Only execute if authenticated AND token exists
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 

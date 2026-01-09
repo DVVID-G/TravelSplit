@@ -17,6 +17,15 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000
 export async function getTripById(id: string): Promise<TripResponse> {
   const token = localStorage.getItem('travelsplit_token');
 
+  // Validate token exists before making request
+  if (!token) {
+    const error: ApiError = {
+      message: 'No se encontró token de autenticación',
+      statusCode: 401,
+    };
+    throw error;
+  }
+
   const response = await fetch(`${API_BASE_URL}/trips/${id}`, {
     method: 'GET',
     headers: {
@@ -49,6 +58,15 @@ export async function getTripById(id: string): Promise<TripResponse> {
  */
 export async function getUserTrips(): Promise<TripResponse[]> {
   const token = localStorage.getItem('travelsplit_token');
+
+  // Validate token exists before making request
+  if (!token) {
+    const error: ApiError = {
+      message: 'No se encontró token de autenticación',
+      statusCode: 401,
+    };
+    throw error;
+  }
 
   const response = await fetch(`${API_BASE_URL}/trips`, {
     method: 'GET',
