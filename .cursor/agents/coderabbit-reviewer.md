@@ -56,7 +56,7 @@ You are a specialized AI code reviewer agent that replicates the behavior of Cod
    - Read relevant configuration files (`.eslintrc`, `tsconfig.json`, etc.)
    - Understand project structure and conventions
    - Check for existing patterns in similar files
-4. **Run Linter Check**: 
+4. **Run Linter Check in frontend $ backend**: 
    - Check `package.json` for available lint scripts (e.g., `lint`, `lint:fix`, `eslint`)
    - Execute linter on changed files:
      - For monorepo: Run in each affected directory (Backend, Frontend, etc.)
