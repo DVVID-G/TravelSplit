@@ -29,7 +29,6 @@ export async function getTripById(id: string): Promise<TripResponse> {
   const response = await fetch(`${API_BASE_URL}/trips/${id}`, {
     method: 'GET',
     headers: {
-      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
   });
@@ -71,7 +70,6 @@ export async function getUserTrips(): Promise<TripListItem[]> {
   const response = await fetch(`${API_BASE_URL}/trips`, {
     method: 'GET',
     headers: {
-      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
   });
@@ -128,6 +126,50 @@ export async function createTrip(data: CreateTripRequest): Promise<TripResponse>
 
     const error: ApiError = {
       message: errorData.message || 'Error al crear el viaje',
+      statusCode: response.status,
+    };
+
+    throw error;
+  }
+
+  return response.json();
+}
+
+/**
+ * Join an existing trip by code
+ * @param code - 8-character trip code (uppercase alphanumeric)
+ * @returns Promise with joined trip data
+ * @throws Error with status code and message on failure
+ */
+export async function joinTripByCode(code: string): Promise<TripResponse> {
+  const token = localStorage.getItem('travelsplit_token');
+
+  // Validate token exists before making request
+  if (!token) {
+    const error: ApiError = {
+      message: 'No se encontró token de autenticación',
+      statusCode: 401,
+    };
+    throw error;
+  }
+
+  const response = await fetch(`${API_BASE_URL}/trips/join`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ code }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({
+      message: response.statusText || 'Error desconocido',
+      statusCode: response.status,
+    }));
+
+    const error: ApiError = {
+      message: errorData.message || 'Error al unirse al viaje',
       statusCode: response.status,
     };
 
