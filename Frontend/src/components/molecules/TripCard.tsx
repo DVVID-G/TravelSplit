@@ -1,7 +1,8 @@
-import { Map, Users, Calendar } from 'lucide-react';
+import { Map, Users, Calendar, DollarSign } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { TripResponse } from '@/types/trip.types';
 import { formatRelativeDate } from '@/utils/date';
+import { formatCurrency } from '@/utils/currency';
 
 interface TripCardProps {
   trip: TripResponse;
@@ -15,7 +16,11 @@ interface TripCardProps {
  * Uses semantic Link element for accessibility
  */
 export const TripCard = ({ trip, onClick }: TripCardProps) => {
-  const participantCount = trip.participants?.filter((p) => p.is_active).length || 0;
+  // Use participantCount directly if available (from TripListItem), otherwise default to 1
+  const participantCount: number = 'participantCount' in trip 
+    ? (trip as any).participantCount 
+    : 1;
+  const totalAmount = trip.totalAmount ?? 0;
 
   const cardContent = (
     <div className="bg-white rounded-xl p-6 shadow-md active:scale-[0.98] transition-transform focus-visible:outline-2 focus-visible:outline-violet-600 focus-visible:outline-offset-2">
@@ -30,9 +35,14 @@ export const TripCard = ({ trip, onClick }: TripCardProps) => {
           <span>{participantCount} {participantCount === 1 ? 'participante' : 'participantes'}</span>
         </div>
 
+        <div className="flex items-center gap-2 text-sm">
+          <DollarSign className="w-4 h-4 text-slate-500" aria-hidden="true" />
+          <span className="font-semibold text-slate-900">{formatCurrency(totalAmount)}</span>
+        </div>
+
         <div className="flex items-center gap-2 text-sm text-slate-500">
           <Calendar className="w-4 h-4" aria-hidden="true" />
-          <span>{formatRelativeDate(trip.created_at)}</span>
+          <span>{formatRelativeDate(trip.createdAt)}</span>
         </div>
       </div>
     </div>

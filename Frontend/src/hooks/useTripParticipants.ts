@@ -25,7 +25,7 @@ export function useTripParticipants(tripId: string | undefined) {
     retry: false, // Don't retry if tripId is missing
   });
 
-  const participants: TripParticipant[] = trip?.participants || [];
+  const participants: TripParticipant[] = []; // TODO: Fetch participants from separate endpoint
 
   return {
     participants,

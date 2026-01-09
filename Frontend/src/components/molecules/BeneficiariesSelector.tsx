@@ -8,6 +8,8 @@ interface BeneficiariesSelectorProps {
   onToggle: (userId: string) => void;
   onSelectAll: () => void;
   onDeselectAll: () => void;
+  onAddByEmail: (userId: string) => void;
+  onInviteByEmail: (email: string) => Promise<void>;
   error?: string;
 }
 
@@ -32,11 +34,6 @@ export const BeneficiariesSelector = ({
     ? participants.filter((p) => p.user_id !== selectedPayerId)
     : participants;
 
-  const allSelected =
-    availableBeneficiaries.length > 0 &&
-    selectedBeneficiaryIds.length === availableBeneficiaries.length;
-  const someSelected = selectedBeneficiaryIds.length > 0 && !allSelected;
-
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-2">
@@ -60,7 +57,7 @@ export const BeneficiariesSelector = ({
           </button>
         </div>
       </div>
-      {(onAddByEmail || onInviteByEmail) && (
+      {onAddByEmail && (
         <div className="mb-3">
           <EmailSearchInput
             onAdd={onAddByEmail || (() => {})}

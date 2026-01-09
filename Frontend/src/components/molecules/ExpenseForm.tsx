@@ -28,7 +28,6 @@ interface ExpenseFormProps {
  * Uses react-hook-form + zod for validation
  */
 export const ExpenseForm = ({
-  tripId,
   categories,
   participants,
   currentUserId,

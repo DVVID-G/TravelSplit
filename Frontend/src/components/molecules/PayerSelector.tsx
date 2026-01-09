@@ -1,4 +1,3 @@
-import { Input } from '../atoms/Input';
 import type { TripParticipant } from '@/types/trip.types';
 
 interface PayerSelectorProps {
