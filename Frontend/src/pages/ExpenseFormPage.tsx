@@ -20,24 +20,22 @@ export const ExpenseFormPage = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Use custom hook to manage form data (categories and participants)
-  const {
-    categories,
-    participants,
-    isUsingMockData,
-    isLoading,
-    errors,
-    refetch,
-  } = useExpenseFormData({
-    tripId,
-    user,
-  });
+  const { categories, participants, isUsingMockData, isLoading, errors, refetch } =
+    useExpenseFormData({
+      tripId,
+      user,
+    });
 
-  const { submitExpense, isLoading: isSubmitting, error: expenseError } = useExpenseForm({
+  const {
+    submitExpense,
+    isLoading: isSubmitting,
+    error: expenseError,
+  } = useExpenseForm({
     tripId: tripId || '',
     onSuccess: () => {
       window.history.back();
     },
-    onSuccessMessage: (message) => {
+    onSuccessMessage: message => {
       setSuccessMessage(message);
     },
   });
@@ -46,9 +44,7 @@ export const ExpenseFormPage = () => {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <Card>
-          <p className="text-center text-slate-600">
-            Debes iniciar sesión para crear gastos
-          </p>
+          <p className="text-center text-slate-600">Debes iniciar sesión para crear gastos</p>
         </Card>
       </div>
     );
@@ -96,7 +92,8 @@ export const ExpenseFormPage = () => {
           </p>
           {!tripId && import.meta.env.DEV && (
             <p className="text-center text-sm text-slate-500 mt-2">
-              Nota: Estás en modo desarrollo. El formulario requiere un tripId para funcionar completamente.
+              Nota: Estás en modo desarrollo. El formulario requiere un tripId para funcionar
+              completamente.
             </p>
           )}
         </Card>
@@ -143,9 +140,7 @@ export const ExpenseFormPage = () => {
       <div className="min-h-screen bg-slate-50 pb-24">
         <div className="max-w-md mx-auto px-6 py-8">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-heading font-bold text-slate-900">
-              Nuevo Gasto
-            </h1>
+            <h1 className="text-2xl font-heading font-bold text-slate-900">Nuevo Gasto</h1>
             <DevIndicator isUsingMockData={isUsingMockData} />
           </div>
           <Card>
@@ -164,4 +159,3 @@ export const ExpenseFormPage = () => {
     </>
   );
 };
-

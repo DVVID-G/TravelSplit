@@ -55,7 +55,7 @@ export function useAuth() {
           isLoading: false,
         });
       }
-    } catch (error) {
+    } catch {
       // If there's an error reading from localStorage, clear it
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
@@ -122,15 +122,3 @@ export function useAuth() {
     checkAuth,
   };
 }
-
-
-
-
-
-
-
-
-
-
-
-

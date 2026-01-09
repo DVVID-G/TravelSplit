@@ -35,4 +35,3 @@ export function useTripParticipants(tripId: string | undefined) {
     refetch,
   };
 }
-

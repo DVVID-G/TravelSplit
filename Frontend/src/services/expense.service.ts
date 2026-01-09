@@ -3,7 +3,11 @@
  * Handles expense-related API calls
  */
 
-import type { CreateExpenseRequest, CreateExpenseResponse, ExpenseCategory } from '@/types/expense.types';
+import type {
+  CreateExpenseRequest,
+  CreateExpenseResponse,
+  ExpenseCategory,
+} from '@/types/expense.types';
 import type { ApiError } from '@/types/api.types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
@@ -111,4 +115,3 @@ export async function uploadReceiptImage(file: File): Promise<{ url: string }> {
 
   return response.json();
 }
-

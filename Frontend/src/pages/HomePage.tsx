@@ -127,73 +127,93 @@ const HomePageNotAuthenticated = () => {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="px-6 py-12 md:py-16">
-        <div className="max-w-2xl mx-auto text-center">
-          <div className="flex justify-center mb-6">
-            <div className="bg-violet-100 rounded-full p-4">
-              <MapIcon className="w-12 h-12 text-violet-600" aria-hidden="true" />
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="flex justify-center mb-6">
+              <div className="bg-violet-100 rounded-full p-4">
+                <MapIcon className="w-12 h-12 text-violet-600" aria-hidden="true" />
+              </div>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-heading font-bold text-slate-900 mb-4">
+              Divide gastos de viaje sin complicaciones
+            </h1>
+            <p className="text-lg text-slate-600 mb-8 max-w-2xl mx-auto">
+              TravelSplit te ayuda a gestionar los gastos de tus viajes grupales de forma simple y
+              transparente. Sin hojas de cálculo, sin confusiones.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full sm:w-auto"
+                onClick={() => navigate('/register')}
+              >
+                Empezar ahora
+              </Button>
+              <Button
+                variant="secondary"
+                size="lg"
+                className="w-full sm:w-auto"
+                onClick={() => navigate('/login')}
+              >
+                Iniciar sesión
+              </Button>
             </div>
           </div>
-          <h1 className="text-3xl md:text-4xl font-heading font-bold text-slate-900 mb-4">
-            Divide gastos de viaje sin complicaciones
-          </h1>
-          <p className="text-lg text-slate-600 mb-8 max-w-2xl mx-auto">
-            TravelSplit te ayuda a gestionar los gastos de tus viajes grupales de forma simple y transparente. 
-            Sin hojas de cálculo, sin confusiones.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
-            <Button variant="primary" size="lg" className="w-full sm:w-auto" onClick={() => navigate('/register')}>
-              Empezar ahora
-            </Button>
-            <Button variant="secondary" size="lg" className="w-full sm:w-auto" onClick={() => navigate('/login')}>
-              Iniciar sesión
-            </Button>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Benefits Section */}
-      <section className="px-6 py-12 bg-white">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-heading font-bold text-slate-900 text-center mb-8">
-            Todo lo que necesitas para dividir gastos
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {benefits.map((benefit) => (
-              <div key={benefit.title} className="bg-slate-50 rounded-xl p-6">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 mt-1">{benefit.icon}</div>
-                  <div>
-                    <h3 className="text-xl font-heading font-semibold text-slate-900 mb-2">
-                      {benefit.title}
-                    </h3>
-                    <p className="text-slate-600 text-sm">{benefit.description}</p>
+        {/* Benefits Section */}
+        <section className="px-6 py-12 bg-white">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-heading font-bold text-slate-900 text-center mb-8">
+              Todo lo que necesitas para dividir gastos
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {benefits.map(benefit => (
+                <div key={benefit.title} className="bg-slate-50 rounded-xl p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 mt-1">{benefit.icon}</div>
+                    <div>
+                      <h3 className="text-xl font-heading font-semibold text-slate-900 mb-2">
+                        {benefit.title}
+                      </h3>
+                      <p className="text-slate-600 text-sm">{benefit.description}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* CTA Section */}
-      <section className="px-6 py-12 pb-16">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-2xl font-heading font-bold text-slate-900 mb-4">
-            ¿Listo para tu próximo viaje?
-          </h2>
-          <p className="text-slate-600 mb-6">
-            Únete a TravelSplit y disfruta de dividir gastos sin estrés
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
-            <Button variant="primary" size="lg" className="w-full sm:w-auto" onClick={() => navigate('/register')}>
-              Empezar ahora
-            </Button>
-            <Button variant="secondary" size="lg" className="w-full sm:w-auto" onClick={() => navigate('/login')}>
-              Ya tengo cuenta
-            </Button>
+        {/* CTA Section */}
+        <section className="px-6 py-12 pb-16">
+          <div className="max-w-2xl mx-auto text-center">
+            <h2 className="text-2xl font-heading font-bold text-slate-900 mb-4">
+              ¿Listo para tu próximo viaje?
+            </h2>
+            <p className="text-slate-600 mb-6">
+              Únete a TravelSplit y disfruta de dividir gastos sin estrés
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full sm:w-auto"
+                onClick={() => navigate('/register')}
+              >
+                Empezar ahora
+              </Button>
+              <Button
+                variant="secondary"
+                size="lg"
+                className="w-full sm:w-auto"
+                onClick={() => navigate('/login')}
+              >
+                Ya tengo cuenta
+              </Button>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
       </main>
     </div>
   );
@@ -215,7 +235,12 @@ const HomePageEmptyState = () => {
           title="¿Planeando una escapada?"
           description="Crea tu primer viaje para empezar a dividir gastos fácilmente"
           action={
-            <Button variant="primary" size="lg" className="w-full" onClick={() => navigate('/trips/new')}>
+            <Button
+              variant="primary"
+              size="lg"
+              className="w-full"
+              onClick={() => navigate('/trips/new')}
+            >
               + Crear mi primer viaje
             </Button>
           }
@@ -239,14 +264,12 @@ const HomePageWithTrips = ({ trips }: { trips: TripResponse[] }) => {
       <Header />
       <main className="px-6 py-8">
         <h1 className="sr-only">Resumen general de viajes</h1>
-        
+
         {/* Saldos Section */}
         <section className="mb-8">
-          <h2 className="text-lg font-heading font-semibold text-slate-900 mb-4">
-            Saldos
-          </h2>
+          <h2 className="text-lg font-heading font-semibold text-slate-900 mb-4">Saldos</h2>
           <div className="space-y-3">
-            {MOCK_BALANCES.map((balance) => (
+            {MOCK_BALANCES.map(balance => (
               <BalanceCard key={balance.id} balance={balance} />
             ))}
           </div>
@@ -255,9 +278,7 @@ const HomePageWithTrips = ({ trips }: { trips: TripResponse[] }) => {
         {/* Gastos Recientes Section */}
         <section>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-heading font-semibold text-slate-900">
-              Gastos Recientes
-            </h2>
+            <h2 className="text-lg font-heading font-semibold text-slate-900">Gastos Recientes</h2>
             <Link
               to={`/trips/${activeTrip.id}`}
               className="text-sm text-violet-600 font-medium hover:underline"
@@ -267,7 +288,7 @@ const HomePageWithTrips = ({ trips }: { trips: TripResponse[] }) => {
             </Link>
           </div>
           <div className="space-y-3">
-            {MOCK_RECENT_EXPENSES.map((expense) => (
+            {MOCK_RECENT_EXPENSES.map(expense => (
               <RecentExpenseCard key={expense.id} expense={expense} />
             ))}
           </div>
@@ -288,7 +309,12 @@ export const HomePage = () => {
   const { isAuthenticated, isLoading: authLoading, token } = useAuthContext();
 
   // Query to get trips (only if authenticated AND token exists)
-  const { data: trips, isLoading: tripsLoading, error: tripsError, refetch } = useQuery({
+  const {
+    data: trips,
+    isLoading: tripsLoading,
+    error: tripsError,
+    refetch,
+  } = useQuery({
     queryKey: ['user-trips'],
     queryFn: getUserTrips,
     enabled: isAuthenticated && !!token, // Only execute if authenticated AND token exists

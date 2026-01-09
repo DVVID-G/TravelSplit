@@ -41,5 +41,3 @@ export function formatRelativeDate(dateString: string): string {
   // Fallback for older dates
   return formatDistanceToNow(date, { addSuffix: true, locale: es });
 }
-
-

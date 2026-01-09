@@ -12,21 +12,9 @@ export const createExpenseSchema = z.object({
     .int('El monto no debe tener decimales'),
   category_id: z.number({ message: 'Debe seleccionar una categoría válida' }),
   payer_id: z.string().uuid('El pagador es requerido'),
-  beneficiary_ids: z
-    .array(z.string().uuid())
-    .min(1, 'Debe seleccionar al menos un beneficiario'),
+  beneficiary_ids: z.array(z.string().uuid()).min(1, 'Debe seleccionar al menos un beneficiario'),
   receipt_url: z.string().url('URL inválida').optional().or(z.literal('')),
   expense_date: z.string().optional(),
 });
 
 export type CreateExpenseFormData = z.infer<typeof createExpenseSchema>;
-
-
-
-
-
-
-
-
-
-

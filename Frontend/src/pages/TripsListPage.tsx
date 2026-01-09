@@ -8,7 +8,7 @@ import { TripCard } from '@/components/molecules/TripCard';
 import { ErrorState } from '@/components/molecules/ErrorState';
 import { Toast } from '@/components/molecules/Toast';
 import { Button } from '@/components/atoms/Button';
-import { JoinTripButton } from '@/components/trips/JoinTripButton';
+import { JoinTripButton } from '@/components/molecules/JoinTripButton';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { getUserTrips } from '@/services/trip.service';
 import type { TripResponse } from '@/types/trip.types';
@@ -23,7 +23,7 @@ const LoadingState = () => {
       <Header title="Mis Viajes" />
       <main className="flex-1 px-6 py-8">
         <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
+          {[1, 2, 3].map(i => (
             <div key={i} className="animate-pulse">
               <div className="h-24 bg-slate-200 rounded-xl"></div>
             </div>
@@ -38,7 +38,7 @@ const LoadingState = () => {
  * TripsListPage
  * Displays all trips for the authenticated user
  * Allows creation of new trips via "Crear Viaje" button
- * 
+ *
  * States:
  * - Loading: Shows skeleton
  * - Error: Shows error message with retry button
@@ -52,7 +52,12 @@ export function TripsListPage() {
   const [showToast, setShowToast] = useState(false);
 
   // Query to get all user trips
-  const { data: trips, isLoading, error, refetch } = useQuery({
+  const {
+    data: trips,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ['user-trips'],
     queryFn: getUserTrips,
     enabled: isAuthenticated && !!token,
@@ -64,10 +69,10 @@ export function TripsListPage() {
   const handleJoinSuccess = (trip: TripResponse) => {
     setToastMessage(`Te uniste al viaje "${trip.name}"`);
     setShowToast(true);
-    
+
     // Refetch trips to include the new one
     refetch();
-    
+
     // Navigate to the trip after a short delay
     setTimeout(() => {
       navigate(`/trips/${trip.id}`);
@@ -105,9 +110,9 @@ export function TripsListPage() {
             title="¿Planeando una escapada?"
             description="Crea tu primer viaje para empezar a dividir gastos fácilmente"
             action={
-              <Button 
-                variant="primary" 
-                size="lg" 
+              <Button
+                variant="primary"
+                size="lg"
                 className="w-full"
                 onClick={() => navigate('/trips/new')}
               >
@@ -123,7 +128,7 @@ export function TripsListPage() {
   // Success state - Show trips list
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pb-24">
-      <Header 
+      <Header
         title="Mis Viajes"
         actions={
           <Button
@@ -142,10 +147,10 @@ export function TripsListPage() {
           <div className="space-y-6">
             {/* Join Trip Button */}
             <JoinTripButton onSuccess={handleJoinSuccess} />
-            
+
             {/* Trips List */}
             <div className="space-y-4">
-              {trips.map((trip) => (
+              {trips.map(trip => (
                 <TripCard key={trip.id} trip={trip} />
               ))}
             </div>

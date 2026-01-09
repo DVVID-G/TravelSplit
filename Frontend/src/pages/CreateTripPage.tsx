@@ -27,13 +27,13 @@ interface SearchResult {
  * CreateTripPage
  * Form to create a new trip with name and participants
  * Currency is fixed to COP (Colombian Peso)
- * 
+ *
  * Features:
  * - Search users by email
  * - Add existing users as participants
  * - Invite non-registered users
  * - Creator is automatically added
- * 
+ *
  * On success: Invalidates trip queries and navigates to trips list
  * On error: Displays user-friendly error message
  */
@@ -46,7 +46,7 @@ export function CreateTripPage() {
   const [searchEmail, setSearchEmail] = useState('');
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
   const [isSearching, setIsSearching] = useState(false);
-  
+
   // Participants state - Creator is added by default
   const [participants, setParticipants] = useState<Participant[]>([
     {
@@ -94,7 +94,7 @@ export function CreateTripPage() {
     setTimeout(() => {
       // Mock: Check if email exists (simple validation)
       const emailExists = searchEmail.includes('@') && Math.random() > 0.5;
-      
+
       setSearchResult({
         email: searchEmail,
         name: emailExists ? searchEmail.split('@')[0] : '',
@@ -138,9 +138,7 @@ export function CreateTripPage() {
 
   const onSubmit = (data: CreateTripFormData) => {
     // Add participant emails to the request
-    const memberEmails = participants
-      .filter(p => !p.isCreator)
-      .map(p => p.email);
+    const memberEmails = participants.filter(p => !p.isCreator).map(p => p.email);
 
     mutation.mutate({
       ...data,
@@ -161,9 +159,7 @@ export function CreateTripPage() {
           >
             <ArrowLeft size={24} />
           </button>
-          <h1 className="text-xl font-heading font-semibold text-slate-900">
-            Crear Viaje
-          </h1>
+          <h1 className="text-xl font-heading font-semibold text-slate-900">Crear Viaje</h1>
         </div>
       </header>
 
@@ -187,7 +183,9 @@ export function CreateTripPage() {
               <div className="space-y-2">
                 <p className="text-sm text-slate-500 flex items-center gap-2">
                   <span className="text-base">ℹ️</span>
-                  <span><span className="font-medium">Moneda:</span> COP</span>
+                  <span>
+                    <span className="font-medium">Moneda:</span> COP
+                  </span>
                 </p>
                 <p className="text-sm text-slate-500 flex items-center gap-2">
                   <span className="text-base">ℹ️</span>
@@ -200,21 +198,19 @@ export function CreateTripPage() {
 
               {/* Participants section */}
               <div className="space-y-4">
-                <h3 className="text-sm font-medium text-slate-900">
-                  Participantes
-                </h3>
+                <h3 className="text-sm font-medium text-slate-900">Participantes</h3>
 
                 {/* Search by email */}
                 <div className="space-y-3">
                   <p className="text-sm text-slate-600">Agregar por correo</p>
-                  
+
                   <div className="flex gap-2">
                     <Input
                       type="email"
                       placeholder="maria@example.com"
                       value={searchEmail}
-                      onChange={(e) => setSearchEmail(e.target.value)}
-                      onKeyDown={(e) => {
+                      onChange={e => setSearchEmail(e.target.value)}
+                      onKeyDown={e => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
                           handleSearchUser();
@@ -245,13 +241,9 @@ export function CreateTripPage() {
                         )}
                         <div>
                           <p className="text-sm font-medium text-slate-900">
-                            {searchResult.exists
-                              ? 'Usuario encontrado'
-                              : 'Usuario no registrado'}
+                            {searchResult.exists ? 'Usuario encontrado' : 'Usuario no registrado'}
                           </p>
-                          <p className="text-xs text-slate-500">
-                            {searchResult.email}
-                          </p>
+                          <p className="text-xs text-slate-500">{searchResult.email}</p>
                         </div>
                       </div>
                       <Button
@@ -268,11 +260,9 @@ export function CreateTripPage() {
 
                 {/* Participants list */}
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-slate-700">
-                    Participantes agregados:
-                  </p>
+                  <p className="text-sm font-medium text-slate-700">Participantes agregados:</p>
                   <ul className="space-y-2">
-                    {participants.map((participant) => (
+                    {participants.map(participant => (
                       <li
                         key={participant.email}
                         className="flex items-center justify-between py-2 px-3 bg-slate-50 rounded-lg"
@@ -312,9 +302,7 @@ export function CreateTripPage() {
             {/* Root error message (from API) */}
             {errors.root && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                <p className="text-sm text-red-600 font-medium">
-                  {errors.root.message}
-                </p>
+                <p className="text-sm text-red-600 font-medium">{errors.root.message}</p>
               </div>
             )}
 

@@ -60,17 +60,20 @@ export const LoginPage = () => {
         // Network or server error
         setError('root', {
           type: 'manual',
-          message: 'No pudimos conectarnos con el servidor. Verifica tu conexión e intenta de nuevo.',
+          message:
+            'No pudimos conectarnos con el servidor. Verifica tu conexión e intenta de nuevo.',
         });
       } else {
         // Other errors - clean up the message
         const cleanMessage = error.message
           ? error.message.split('must be')[0].split('should not be')[0].trim()
           : 'Ocurrió un error inesperado. Por favor intenta nuevamente en unos momentos.';
-        
+
         setError('root', {
           type: 'manual',
-          message: cleanMessage || 'Ocurrió un error inesperado. Por favor intenta nuevamente en unos momentos.',
+          message:
+            cleanMessage ||
+            'Ocurrió un error inesperado. Por favor intenta nuevamente en unos momentos.',
         });
       }
     },
@@ -156,10 +159,7 @@ export const LoginPage = () => {
           <div className="mt-6 text-center">
             <p className="text-sm text-slate-600">
               ¿No tienes cuenta?{' '}
-              <Link
-                to="/register"
-                className="text-violet-600 hover:text-violet-700 font-medium"
-              >
+              <Link to="/register" className="text-violet-600 hover:text-violet-700 font-medium">
                 Regístrate
               </Link>
             </p>

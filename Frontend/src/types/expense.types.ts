@@ -61,4 +61,3 @@ export interface CreateExpenseResponse {
   created_at: string;
   updated_at: string;
 }
-

@@ -53,13 +53,16 @@ export const RegisterPage = () => {
         // Backend validation error
         setError('root', {
           type: 'manual',
-          message: error.message || 'Los datos ingresados no son válidos. Por favor revisa la información e intenta nuevamente.',
+          message:
+            error.message ||
+            'Los datos ingresados no son válidos. Por favor revisa la información e intenta nuevamente.',
         });
       } else if (error.statusCode === 0 || error.statusCode >= 500) {
         // Network or server error
         setError('root', {
           type: 'manual',
-          message: 'No pudimos conectarnos con el servidor. Verifica tu conexión e intenta de nuevo.',
+          message:
+            'No pudimos conectarnos con el servidor. Verifica tu conexión e intenta de nuevo.',
         });
       } else {
         // Other errors
@@ -161,10 +164,7 @@ export const RegisterPage = () => {
           <div className="mt-6 text-center">
             <p className="text-sm text-slate-600">
               ¿Ya tienes cuenta?{' '}
-              <Link
-                to="/login"
-                className="text-violet-600 hover:text-violet-700 font-medium"
-              >
+              <Link to="/login" className="text-violet-600 hover:text-violet-700 font-medium">
                 Inicia sesión
               </Link>
             </p>
@@ -174,4 +174,3 @@ export const RegisterPage = () => {
     </div>
   );
 };
-
