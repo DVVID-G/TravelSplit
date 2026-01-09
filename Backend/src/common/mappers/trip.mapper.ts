@@ -45,6 +45,7 @@ export class TripMapper {
       ...this.toResponseDto(trip),
       userRole,
       participantCount,
+      totalAmount: 0, // TODO: Calculate from expenses when expense module is implemented
     };
   }
 }

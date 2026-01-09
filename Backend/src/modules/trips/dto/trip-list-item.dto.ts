@@ -20,4 +20,11 @@ export class TripListItemDto extends TripResponseDto {
     minimum: 1,
   })
   participantCount!: number;
+
+  @ApiProperty({
+    description: 'Monto total de gastos del viaje en COP',
+    example: 1250000,
+    minimum: 0,
+  })
+  totalAmount!: number;
 }
