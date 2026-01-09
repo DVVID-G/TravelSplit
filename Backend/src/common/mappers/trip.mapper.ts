@@ -55,24 +55,18 @@ export class TripMapper {
 
   /**
    * Maps a Trip entity to TripDetailResponseDto with participants and pagination metadata.
-   * Determines the current user's role and includes paginated participant data.
+   * Includes the current user's role and paginated participant data.
    *
    * @param trip - Trip entity with participants relation loaded
-   * @param currentUserId - ID of the authenticated user
+   * @param userRole - Role of the authenticated user in the trip
    * @param paginationMeta - Pagination metadata for participants
    * @returns TripDetailResponseDto with detailed trip information
    */
   static toDetailDto(
     trip: Trip,
-    currentUserId: string,
+    userRole: ParticipantRole,
     paginationMeta: ParticipantsPaginationMeta,
   ): TripDetailResponseDto {
-    // Determine user's role by finding their participation
-    const userParticipation = trip.participants?.find(
-      (p) => p.userId === currentUserId && !p.deletedAt,
-    );
-    const userRole = userParticipation?.role || ParticipantRole.MEMBER;
-
     // Map participants to DTOs, filtering out soft-deleted ones
     const participants = (trip.participants || [])
       .filter((p) => !p.deletedAt)
@@ -94,11 +88,16 @@ export class TripMapper {
    * @returns TripParticipantDto with participant and user data
    */
   static toParticipantDto(participant: TripParticipant): TripParticipantDto {
+    // Participant may come without the user relation loaded; guard before mapping
+    const user = participant.user
+      ? this.toUserSummaryDto(participant.user)
+      : null;
+
     return {
       id: participant.id,
       userId: participant.userId,
       role: participant.role,
-      user: this.toUserSummaryDto(participant.user),
+      user,
     };
   }
 
@@ -109,7 +108,11 @@ export class TripMapper {
    * @param user - User entity
    * @returns UserSummaryDto with basic user data
    */
-  static toUserSummaryDto(user: any): UserSummaryDto {
+  static toUserSummaryDto(user: any): UserSummaryDto | null {
+    if (!user) {
+      return null;
+    }
+
     return {
       id: user.id,
       nombre: user.nombre,

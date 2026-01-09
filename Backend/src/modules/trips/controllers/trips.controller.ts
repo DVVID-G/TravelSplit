@@ -153,13 +153,13 @@ export class TripsController {
    * // Respuesta: { id: "...", name: "...", currency: "COP", status: "ACTIVE", code: "ABC12345", createdAt: "...", updatedAt: "..." }
    */
   @Post('join')
-  @HttpCode(HttpStatus.CREATED)
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Unirse a un viaje por código',
     description:
       'Permite a un usuario autenticado unirse a un viaje existente utilizando su código único de 8 caracteres. El usuario se agrega como participante con rol MEMBER. Solo se puede unir a viajes activos.',
   })
-  @ApiCreatedResponse({
+  @ApiOkResponse({
     description: 'Te has unido al viaje exitosamente',
     type: TripResponseDto,
   })
@@ -197,7 +197,6 @@ export class TripsController {
    * @returns Detalles del viaje con participantes paginados
    */
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: 'Obtener detalles de un viaje por ID con participantes paginados',
     description:
@@ -244,14 +243,14 @@ export class TripsController {
     const safePage = Math.max(1, Number(participantsPage) || 1);
     const safeLimit = Math.min(Math.max(1, Number(participantsLimit) || 20), 100);
 
-    const { trip, paginationMeta } = await this.tripsService.findOneById(
+    const { trip, paginationMeta, userRole } = await this.tripsService.findOneById(
       id,
       req.user!.id,
       safePage,
       safeLimit,
     );
 
-    return TripMapper.toDetailDto(trip, req.user!.id, paginationMeta);
+    return TripMapper.toDetailDto(trip, userRole, paginationMeta);
   }
 
 }

@@ -1,16 +1,16 @@
 import { Utensils, Car, Bed, Film, Package, Users } from 'lucide-react';
 import type { RecentExpense, ExpenseCategory } from '@/types/trip.types';
 import { formatCurrency } from '@/utils/currency';
-import { format } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
 import { es } from 'date-fns/locale';
+
+function assertNever(value: never): never {
+  throw new Error(`Unhandled expense category: ${String(value)}`);
+}
 
 interface RecentExpenseCardProps {
   expense: RecentExpense;
-  // TODO: Add onClick handler for navigation to expense detail
-  // Should navigate to: /trips/:tripId/expenses/:expenseId
-  // Requires backend endpoint: GET /expenses/:expenseId
-  // Prerequisites: ExpenseDetailPage or modal must be implemented first
-  // onClick?: () => void;
+  onClick?: () => void;
 }
 
 /**
@@ -29,8 +29,9 @@ const getCategoryIcon = (category: ExpenseCategory) => {
     case 'entertainment':
       return <Film {...iconProps} />;
     case 'other':
-    default:
       return <Package {...iconProps} />;
+    default:
+      return assertNever(category as never);
   }
 };
 
@@ -39,8 +40,13 @@ const getCategoryIcon = (category: ExpenseCategory) => {
  */
 const formatShortDate = (dateString: string): string => {
   try {
-    const date = new Date(dateString);
-    return format(date, 'd MMM', { locale: es });
+    const parsed = parseISO(dateString);
+
+    if (!isValid(parsed)) {
+      return dateString;
+    }
+
+    return format(parsed, 'd MMM', { locale: es });
   } catch {
     return dateString;
   }
@@ -56,13 +62,23 @@ const formatShortDate = (dateString: string): string => {
  * Used in HomePage to show recent expenses section
  * Follows Design System: bg-white, rounded-xl, p-4, shadow-sm
  */
-export const RecentExpenseCard = ({ expense }: RecentExpenseCardProps) => {
+export const RecentExpenseCard = ({ expense, onClick }: RecentExpenseCardProps) => {
+  const baseClassName =
+    'bg-white rounded-xl p-4 shadow-sm hover:shadow-md hover:bg-slate-50 transition-all duration-200';
+  const cursorClass = onClick ? 'cursor-pointer' : 'cursor-default';
+  const className = `${baseClassName} ${cursorClass}`;
+
+  const Container: 'div' | 'button' = onClick ? 'button' : 'div';
+
   return (
-    <div
-      className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md hover:bg-slate-50 transition-all duration-200 cursor-default"
-      // TODO: Add onClick when navigation is implemented
-      // When implemented, change cursor-default to cursor-pointer and uncomment onClick
-      // onClick={onClick}
+    <Container
+      className={className}
+      {...(onClick
+        ? {
+            onClick,
+            type: 'button' as const,
+          }
+        : {})}
     >
       <div className="flex items-start gap-3">
         {/* Left: Category icon in circular background */}
@@ -89,6 +105,6 @@ export const RecentExpenseCard = ({ expense }: RecentExpenseCardProps) => {
           </div>
         </div>
       </div>
-    </div>
+    </Container>
   );
 };

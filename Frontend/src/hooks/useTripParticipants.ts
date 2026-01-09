@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { getTripById } from '@/services/trip.service';
-import type { TripParticipant } from '@/types/trip.types';
+import type { TripParticipant, TripParticipantDetail } from '@/types/trip.types';
 
 /**
  * Hook to fetch trip participants using React Query
@@ -8,28 +8,38 @@ import type { TripParticipant } from '@/types/trip.types';
  */
 export function useTripParticipants(tripId: string | undefined) {
   const {
-    data: trip,
+    data: participants,
     isLoading,
     error,
     refetch,
   } = useQuery({
-    queryKey: ['trip', tripId],
+    queryKey: ['trip-participants', tripId],
     queryFn: () => {
       if (!tripId) {
         throw new Error('Trip ID is required');
       }
-      return getTripById(tripId);
+      return getTripById(tripId, { participantsLimit: 100 }).then((trip) => {
+        const rawParticipants: TripParticipantDetail[] = trip.participants ?? [];
+
+        // Map backend participant detail into TripParticipant shape expected by consumers
+        return rawParticipants.map<TripParticipant>((participant) => ({
+          id: participant.id,
+          trip_id: tripId,
+          user_id: participant.userId,
+          role: participant.role,
+          joined_at: '',
+          is_active: true,
+          user: participant.user,
+        }));
+      });
     },
     enabled: !!tripId, // Only fetch if tripId exists
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: false, // Don't retry if tripId is missing
   });
 
-  const participants: TripParticipant[] = []; // TODO: Fetch participants from separate endpoint
-
   return {
     participants,
-    trip,
     isLoading,
     error,
     refetch,

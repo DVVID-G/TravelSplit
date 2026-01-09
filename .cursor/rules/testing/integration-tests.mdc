@@ -62,21 +62,11 @@ alwaysApply: false
 
 ## DO
 
-```typescript
-// Integration test for controller
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
-import { AppModule } from '../src/app.module';
-import { UsersModule } from '../src/modules/users/users.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
+- Choose setup hooks based on isolation needs:
+  - Use `beforeAll/afterAll` for expensive, shared, read-only setup (e.g., app init, DB/server startup) when tests don’t mutate shared state.
+  - Use `beforeEach/afterEach` when tests need full isolation or mutate global/shared state.
 
 describe('UsersController (e2e)', () => {
-  let app: INestApplication;
-  let authToken: string;
-  let testUserId: string;
-
-  // Use beforeAll to speed up shared setup; prefer beforeEach only when tests need full isolation
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
@@ -106,10 +96,14 @@ describe('UsersController (e2e)', () => {
 
   afterAll(async () => {
     // Clean up test data and close app; ensure DB state is reset between suites
-    // Example helpers (implement using your ORM/DB client):
-    // await truncateTables(dataSource);
-    // await cleanupTestData(dataSource);
-    // await rollbackTransaction(testQueryRunner);
+    // Concrete cleanup with helpers you implement using your ORM/DB client
+    await truncateTables(dataSource);
+    await cleanupTestData(dataSource);
+    // If wrapping tests in transactions, rollback here
+    // const queryRunner = dataSource.createQueryRunner();
+    // await rollbackTransaction(queryRunner);
+    // Or manually TRUNCATE tables if not using transactions:
+    // await queryRunner.query('TRUNCATE TABLE users, trips RESTART IDENTITY CASCADE');
     await app.close();
   });
 

@@ -16,6 +16,7 @@ interface UseTripDetailResult {
   statsLoading: boolean;
   statsError: unknown;
   refetchStats: () => Promise<unknown>;
+  isLoading: boolean;
 }
 
 /**
@@ -55,6 +56,8 @@ export function useTripDetail(
     retry: 1,
   });
 
+  const isLoading = tripLoading || statsLoading;
+
   return {
     trip,
     tripLoading,
@@ -64,5 +67,6 @@ export function useTripDetail(
     statsLoading,
     statsError,
     refetchStats,
+    isLoading,
   };
 }

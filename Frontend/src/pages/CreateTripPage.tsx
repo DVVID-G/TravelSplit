@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -10,6 +10,8 @@ import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms/Button';
 import { useAuthContext } from '@/contexts/AuthContext';
 import type { ApiError } from '@/types/api.types';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
 interface Participant {
   email: string;
@@ -40,7 +42,7 @@ interface SearchResult {
 export function CreateTripPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user } = useAuthContext();
+  const { user, token } = useAuthContext();
 
   // Search state
   const [searchEmail, setSearchEmail] = useState('');
@@ -48,13 +50,23 @@ export function CreateTripPage() {
   const [isSearching, setIsSearching] = useState(false);
 
   // Participants state - Creator is added by default
-  const [participants, setParticipants] = useState<Participant[]>([
-    {
-      email: user?.email || '',
-      name: user?.nombre || 'Tú',
-      isCreator: true,
-    },
-  ]);
+  const [participants, setParticipants] = useState<Participant[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    setParticipants(prev => {
+      if (prev.some(p => p.isCreator)) return prev;
+
+      const creator: Participant = {
+        email: user.email,
+        name: user.nombre || 'Tú',
+        isCreator: true,
+      };
+
+      return [creator, ...prev];
+    });
+  }, [user]);
 
   const {
     register,
@@ -85,23 +97,55 @@ export function CreateTripPage() {
 
   // Search user by email (mock implementation - should call API)
   const handleSearchUser = async () => {
-    if (!searchEmail.trim()) return;
+    const trimmedEmail = searchEmail.trim().toLowerCase();
+    if (!trimmedEmail) return;
+
+    if (!token) {
+      setError('root', {
+        type: 'manual',
+        message: 'Tu sesión ha expirado. Inicia sesión nuevamente.',
+      });
+      return;
+    }
 
     setIsSearching(true);
     setSearchResult(null);
 
-    // Simulate API call
-    setTimeout(() => {
-      // Mock: Check if email exists (simple validation)
-      const emailExists = searchEmail.includes('@') && Math.random() > 0.5;
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/users/search?email=${encodeURIComponent(trimmedEmail)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
+      if (response.status === 404) {
+        setSearchResult({ email: trimmedEmail, name: '', exists: false });
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('No se pudo buscar el usuario');
+      }
+
+      const data = await response.json();
       setSearchResult({
-        email: searchEmail,
-        name: emailExists ? searchEmail.split('@')[0] : '',
-        exists: emailExists,
+        email: data.email ?? trimmedEmail,
+        name: data.nombre ?? data.name ?? trimmedEmail.split('@')[0],
+        exists: true,
       });
+    } catch (err) {
+      setSearchResult(null);
+      setError('root', {
+        type: 'manual',
+        message:
+          err instanceof Error ? err.message : 'No pudimos buscar el usuario. Intenta nuevamente.',
+      });
+    } finally {
       setIsSearching(false);
-    }, 500);
+    }
   };
 
   // Add participant to list
@@ -137,6 +181,16 @@ export function CreateTripPage() {
   };
 
   const onSubmit = (data: CreateTripFormData) => {
+    const creator = participants.find(p => p.isCreator && p.email);
+
+    if (!creator) {
+      setError('root', {
+        type: 'manual',
+        message: 'Agrega el creador antes de crear el viaje',
+      });
+      return;
+    }
+
     // Add participant emails to the request
     const memberEmails = participants.filter(p => !p.isCreator).map(p => p.email);
 

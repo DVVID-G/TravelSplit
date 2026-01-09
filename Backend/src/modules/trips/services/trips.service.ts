@@ -8,7 +8,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull } from 'typeorm';
+import { Repository, IsNull, In } from 'typeorm';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { validate as isUUID } from 'uuid';
@@ -44,44 +44,21 @@ export class TripsService {
   ) {}
 
   /**
-   * Genera un código alfanumérico único para un viaje.
-   * El código tiene 8 caracteres y se verifica que no exista en la base de datos.
+   * Genera un código alfanumérico para un viaje.
+   * La unicidad se garantiza por la constraint de base de datos más
+   * la lógica de reintentos al guardar el registro.
    *
    * @returns Código alfanumérico único
    */
   private async generateUniqueCode(): Promise<string> {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code: string;
-    let exists = true;
+    let code = '';
 
-    // Intentar generar un código único (máximo 10 intentos)
-    let attempts = 0;
-    while (exists && attempts < 10) {
-      code = '';
-      for (let i = 0; i < 8; i++) {
-        code += characters.charAt(
-          Math.floor(Math.random() * characters.length),
-        );
-      }
-
-      // Verificar si el código ya existe
-      const existingTrip = await this.tripRepository.findOne({
-        where: { code, deletedAt: IsNull() },
-      });
-
-      if (!existingTrip) {
-        exists = false;
-      }
-      attempts++;
+    for (let i = 0; i < 8; i++) {
+      code += characters.charAt(Math.floor(Math.random() * characters.length));
     }
 
-    if (exists) {
-      throw new Error(
-        'No se pudo generar un código único después de varios intentos',
-      );
-    }
-
-    return code!;
+    return code;
   }
 
   /**
@@ -107,18 +84,45 @@ export class TripsService {
       throw new NotFoundException('Usuario no encontrado');
     }
 
-    // Generar código único para el viaje
-    const code = await this.generateUniqueCode();
+    // Crear el viaje con lógica de reintento ante violación de unicidad del código
+    const maxSaveAttempts = 5;
+    let savedTrip: Trip | null = null;
+    let code: string | null = null;
+    let attempt = 0;
 
-    // Crear el viaje con moneda fija COP
-    const trip = this.tripRepository.create({
-      name: createTripDto.name,
-      currency: 'COP', // Siempre COP, sin posibilidad de cambio
-      status: TripStatus.ACTIVE,
-      code,
-    });
+    while (attempt < maxSaveAttempts && !savedTrip) {
+      code = await this.generateUniqueCode();
 
-    const savedTrip = await this.tripRepository.save(trip);
+      const trip = this.tripRepository.create({
+        name: createTripDto.name,
+        currency: 'COP', // Siempre COP, sin posibilidad de cambio
+        status: TripStatus.ACTIVE,
+        code,
+      });
+
+      try {
+        savedTrip = await this.tripRepository.save(trip);
+      } catch (error: any) {
+        const errorCode = error?.code || error?.driverError?.code;
+
+        // 23505 es el código de error de Postgres para violación de unique constraint
+        if (errorCode === '23505') {
+          this.logger.warn(
+            `Código duplicado '${code}' al crear viaje. Reintentando (${attempt + 1}/${maxSaveAttempts}).`,
+          );
+          attempt++;
+          continue;
+        }
+
+        throw error;
+      }
+    }
+
+    if (!savedTrip) {
+      throw new ConflictException(
+        'No se pudo generar un código único para el viaje. Intenta nuevamente.',
+      );
+    }
 
     // Crear TripParticipant para el creador con rol CREATOR
     const creatorParticipant = this.tripParticipantRepository.create({
@@ -133,13 +137,31 @@ export class TripsService {
 
     // Si se proporcionaron emails para invitar, crear participantes MEMBER
     if (createTripDto.memberEmails && createTripDto.memberEmails.length > 0) {
+      const users = await this.userRepository.find({
+        where: {
+          email: In(createTripDto.memberEmails),
+          deletedAt: IsNull(),
+        },
+      });
+
+      const emailToUser = new Map(users.map((u) => [u.email, u]));
       const memberParticipants: TripParticipant[] = [];
 
+      // Pre-cargar participantes existentes para evitar duplicados
+      const candidateUserIds = users.map((u) => u.id).filter((id) => id !== userId);
+      const existingParticipants = candidateUserIds.length
+        ? await this.tripParticipantRepository.find({
+            where: {
+              tripId: savedTrip.id,
+              userId: In(candidateUserIds),
+              deletedAt: IsNull(),
+            },
+          })
+        : [];
+      const existingParticipantIds = new Set(existingParticipants.map((p) => p.userId));
+
       for (const email of createTripDto.memberEmails) {
-        // Buscar usuario por email
-        const user = await this.userRepository.findOne({
-          where: { email, deletedAt: IsNull() },
-        });
+        const user = emailToUser.get(email);
 
         if (!user) {
           throw new NotFoundException(
@@ -147,35 +169,23 @@ export class TripsService {
           );
         }
 
-        // Verificar que el usuario no sea el creador
         if (user.id === userId) {
           continue; // Saltar si es el mismo creador
         }
 
-        // Verificar que no sea ya participante
-        const existingParticipant =
-          await this.tripParticipantRepository.findOne({
-            where: {
-              tripId: savedTrip.id,
-              userId: user.id,
-              deletedAt: IsNull(),
-            },
-          });
-
-        if (existingParticipant) {
+        if (existingParticipantIds.has(user.id)) {
           continue; // Ya es participante, saltar
         }
 
-        // Crear participante MEMBER
-        const memberParticipant = this.tripParticipantRepository.create({
-          trip: savedTrip,
-          tripId: savedTrip.id,
-          user,
-          userId: user.id,
-          role: ParticipantRole.MEMBER,
-        });
-
-        memberParticipants.push(memberParticipant);
+        memberParticipants.push(
+          this.tripParticipantRepository.create({
+            trip: savedTrip,
+            tripId: savedTrip.id,
+            user,
+            userId: user.id,
+            role: ParticipantRole.MEMBER,
+          }),
+        );
       }
 
       // Guardar todos los participantes miembros
@@ -203,6 +213,7 @@ export class TripsService {
   ): Promise<TripListItemDto[]> {
     // Interface for raw query result typing
     interface TripQueryRawResult {
+      trip_id: string;
       participantCount: string; // COUNT returns string in PostgreSQL
       userRole: ParticipantRole; // Role from userParticipant
     }
@@ -248,14 +259,22 @@ export class TripsService {
     // Execute query
     const results = await query.getRawAndEntities();
 
-    // Map results to TripListItemDto
-    return results.entities.map((trip, index) => {
-      const raw = results.raw[index] as TripQueryRawResult;
+    const rawByTripId = new Map<string, TripQueryRawResult>();
+    (results.raw as TripQueryRawResult[]).forEach((raw) => {
+      rawByTripId.set(raw.trip_id, raw);
+    });
+
+    // Map results to TripListItemDto correlating raw rows by trip_id
+    return results.entities.map((trip) => {
+      const raw = rawByTripId.get(trip.id);
+
+      const userRole = raw?.userRole ?? ParticipantRole.MEMBER;
+      const participantCountStr = raw?.participantCount ?? '1';
 
       return TripMapper.toListItemDto(
         trip,
-        raw.userRole,
-        parseInt(raw.participantCount, 10),
+        userRole,
+        parseInt(participantCountStr, 10),
       );
     });
   }
@@ -332,7 +351,7 @@ export class TripsService {
     );
 
     // Invalidar caché del trip
-    await this.invalidateTripCache(trip.id);
+    await this.invalidateTripCache(trip.id, userId);
 
     return trip;
   }
@@ -346,7 +365,7 @@ export class TripsService {
    * @param userId - ID del usuario autenticado
    * @param participantsPage - Número de página para participantes (default: 1)
    * @param participantsLimit - Límite de participantes por página (default: 20, max: 100)
-   * @returns Trip entity con participantes y metadatos de paginación
+  * @returns Trip entity con participantes, metadatos de paginación y rol del usuario
    * @throws BadRequestException si el tripId no es un UUID válido
    * @throws ForbiddenException si el usuario no es participante del viaje
    * @throws NotFoundException si el viaje no existe
@@ -356,7 +375,11 @@ export class TripsService {
     userId: string,
     participantsPage: number = 1,
     participantsLimit: number = 20,
-  ): Promise<{ trip: Trip; paginationMeta: ParticipantsPaginationMeta }> {
+  ): Promise<{
+    trip: Trip;
+    paginationMeta: ParticipantsPaginationMeta;
+    userRole: ParticipantRole;
+  }> {
     // Validar formato UUID
     if (!isUUID(tripId)) {
       throw new BadRequestException('ID de viaje inválido');
@@ -371,6 +394,7 @@ export class TripsService {
     const cached = await this.cacheManager.get<{
       trip: Trip;
       paginationMeta: ParticipantsPaginationMeta;
+      userRole: ParticipantRole;
     }>(cacheKey);
 
     if (cached) {
@@ -400,35 +424,49 @@ export class TripsService {
       },
     });
 
-    // Construir query con paginación para participantes
-    const skip = (safePage - 1) * safeLimit;
-    const trip = await this.tripRepository
-      .createQueryBuilder('trip')
-      .leftJoinAndSelect(
-        'trip.participants',
-        'participant',
-        'participant.deletedAt IS NULL',
-      )
-      .leftJoinAndSelect('participant.user', 'user')
-      .where('trip.id = :tripId', { tripId })
-      .andWhere('trip.deletedAt IS NULL')
-      .select([
-        'trip',
-        'participant.id',
-        'participant.userId',
-        'participant.role',
-        'participant.createdAt',
-        'user.id',
-        'user.nombre',
-        'user.email',
-      ])
-      .skip(skip)
-      .take(safeLimit)
-      .getOne();
+    // Obtener el trip sin paginar participantes
+    const trip = await this.tripRepository.findOne({
+      where: { id: tripId, deletedAt: IsNull() },
+      select: [
+        'id',
+        'name',
+        'currency',
+        'status',
+        'code',
+        'createdAt',
+        'updatedAt',
+      ],
+    });
 
     if (!trip) {
       throw new NotFoundException('Viaje no encontrado');
     }
+
+    // Construir query paginada para participantes
+    const skip = (safePage - 1) * safeLimit;
+    const participants = await this.tripParticipantRepository.find({
+      where: { tripId, deletedAt: IsNull() },
+      relations: ['user'],
+      select: {
+        id: true,
+        userId: true,
+        role: true,
+        createdAt: true,
+        user: {
+          id: true,
+          nombre: true,
+          email: true,
+        },
+      },
+      skip,
+      take: safeLimit,
+      order: { createdAt: 'ASC' },
+    });
+
+    // Adjuntar participantes paginados al trip
+    (trip as Trip).participants = participants;
+
+    const userRole = userParticipation.role;
 
     // Calcular metadatos de paginación
     const paginationMeta: ParticipantsPaginationMeta = {
@@ -438,7 +476,7 @@ export class TripsService {
       hasMore: safePage * safeLimit < totalParticipants,
     };
 
-    const result = { trip, paginationMeta };
+    const result = { trip, paginationMeta, userRole };
 
     // Guardar en caché por 5 minutos
     await this.cacheManager.set(cacheKey, result, 300);
@@ -457,15 +495,16 @@ export class TripsService {
    *
    * @param tripId - ID del viaje cuyo caché se invalidará
    */
-  private async invalidateTripCache(tripId: string): Promise<void> {
+  private async invalidateTripCache(
+    tripId: string,
+    userId?: string,
+    page: number = 1,
+    limit: number = 20,
+  ): Promise<void> {
     try {
-      // En cache-manager in-memory, no hay método para buscar por patrón
-      // Por simplicidad, no eliminamos claves específicas aquí
-      // En producción con Redis, se usaría: await this.cacheManager.store.keys(`trip-*:${tripId}:*`)
-      // y luego se eliminaría cada clave
-
-      this.logger.debug(`Cache invalidation requested for trip ${tripId}`);
-      // TODO: Implementar invalidación por patrón cuando se migre a Redis
+      const key = `trip-detail:${tripId}:${userId ?? 'unknown'}:${page}:${limit}`;
+      await this.cacheManager.del(key);
+      this.logger.debug(`Cache invalidated for key ${key}`);
     } catch (error) {
       this.logger.error(
         `Error al invalidar caché del viaje ${tripId}:`,

@@ -1,6 +1,10 @@
 import { DataSource } from 'typeorm';
 import * as path from 'path';
-import * as fs from 'fs';
+import * as dotenv from 'dotenv';
+
+// Cargar variables de entorno (prioridad: .env.local luego .env)
+dotenv.config({ path: '.env.local' });
+dotenv.config({ path: '.env' });
 
 /**
  * DataSource configuration for TypeORM CLI.
@@ -17,33 +21,6 @@ import * as fs from 'fs';
  *   npx dotenv-cli -e .env.local -- typeorm migration:run -d data-source.ts
  */
 
-// Simple env file loader (fallback if dotenv is not available)
-const loadEnvFile = (filePath: string): void => {
-  if (fs.existsSync(filePath)) {
-    const content = fs.readFileSync(filePath, 'utf-8');
-    content.split('\n').forEach((line) => {
-      const trimmed = line.trim();
-      if (trimmed && !trimmed.startsWith('#')) {
-        const [key, ...valueParts] = trimmed.split('=');
-        if (key && valueParts.length > 0) {
-          const value = valueParts.join('=').trim().replace(/^["']|["']$/g, '');
-          if (!process.env[key.trim()]) {
-            process.env[key.trim()] = value;
-          }
-        }
-      }
-    });
-  }
-};
-
-// Try to load .env files (optional, TypeORM CLI may handle this)
-try {
-  loadEnvFile('.env.local');
-  loadEnvFile('.env');
-} catch (error) {
-  // Ignore errors, environment variables may be set elsewhere
-}
-
 export default new DataSource({
   type: 'postgres',
   host: process.env.DB_HOST || 'localhost',
@@ -52,7 +29,7 @@ export default new DataSource({
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_NAME || 'travelsplit',
   entities: [path.join(__dirname, 'src', '**', '*.entity{.ts,.js}')],
-  migrations: [path.join(__dirname, 'src', 'migrations', '**', '*.{.ts,.js}')],
+  migrations: [path.join(__dirname, 'src', 'migrations', '**', '*.{ts,js}')],
   synchronize: false, // Never use synchronize with migrations
   logging: process.env.DB_LOGGING === 'true',
   migrationsTableName: 'migrations',

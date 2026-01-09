@@ -32,7 +32,6 @@ export class Trip extends BaseEntity {
   status!: TripStatus;
 
   @Column({ name: 'code', type: 'varchar', length: 20, unique: true })
-  @Index()
   code!: string;
 
   /**

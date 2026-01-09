@@ -8,6 +8,20 @@ import type { ApiError } from '@/types/api.types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
+function getAuthToken(): string {
+  const token = localStorage.getItem('travelsplit_token');
+
+  if (!token) {
+    const error: ApiError = {
+      message: 'No se encontró token de autenticación',
+      statusCode: 401,
+    };
+    throw error;
+  }
+
+  return token;
+}
+
 /**
  * Gets a trip by ID
  * @param id - Trip ID
@@ -18,16 +32,7 @@ export async function getTripById(
   id: string,
   options?: { participantsPage?: number; participantsLimit?: number },
 ): Promise<TripResponse> {
-  const token = localStorage.getItem('travelsplit_token');
-
-  // Validate token exists before making request
-  if (!token) {
-    const error: ApiError = {
-      message: 'No se encontró token de autenticación',
-      statusCode: 401,
-    };
-    throw error;
-  }
+  const token = getAuthToken();
 
   const params = new URLSearchParams();
   if (options?.participantsPage)
@@ -78,18 +83,7 @@ export async function getTripById(
  * @returns Promise with array of trips with extended information
  * @throws Error with status code and message on failure
  */
-export async function getUserTrips(): Promise<TripListItem[]> {
-  const token = localStorage.getItem('travelsplit_token');
-
-  // Validate token exists before making request
-  if (!token) {
-    const error: ApiError = {
-      message: 'No se encontró token de autenticación',
-      statusCode: 401,
-    };
-    throw error;
-  }
-
+export async function getUserTrips(token: string): Promise<TripListItem[]> {
   const response = await fetch(`${API_BASE_URL}/trips`, {
     method: 'GET',
     headers: {
@@ -121,16 +115,7 @@ export async function getUserTrips(): Promise<TripListItem[]> {
  * @throws Error with status code and message on failure
  */
 export async function createTrip(data: CreateTripRequest): Promise<TripResponse> {
-  const token = localStorage.getItem('travelsplit_token');
-
-  // Validate token exists before making request
-  if (!token) {
-    const error: ApiError = {
-      message: 'No se encontró token de autenticación',
-      statusCode: 401,
-    };
-    throw error;
-  }
+  const token = getAuthToken();
 
   const response = await fetch(`${API_BASE_URL}/trips`, {
     method: 'POST',
@@ -165,16 +150,7 @@ export async function createTrip(data: CreateTripRequest): Promise<TripResponse>
  * @throws Error with status code and message on failure
  */
 export async function joinTripByCode(code: string): Promise<TripResponse> {
-  const token = localStorage.getItem('travelsplit_token');
-
-  // Validate token exists before making request
-  if (!token) {
-    const error: ApiError = {
-      message: 'No se encontró token de autenticación',
-      statusCode: 401,
-    };
-    throw error;
-  }
+  const token = getAuthToken();
 
   const response = await fetch(`${API_BASE_URL}/trips/join`, {
     method: 'POST',
@@ -191,8 +167,18 @@ export async function joinTripByCode(code: string): Promise<TripResponse> {
       statusCode: response.status,
     }));
 
+    let message = errorData.message || 'Error al unirse al viaje';
+
+    if (response.status === 404) {
+      message = 'Viaje no encontrado o cerrado';
+    } else if (response.status === 409) {
+      message = 'Ya eres participante de este viaje';
+    } else if (response.status === 401) {
+      message = 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.';
+    }
+
     const error: ApiError = {
-      message: errorData.message || 'Error al unirse al viaje',
+      message,
       statusCode: response.status,
     };
 
@@ -208,15 +194,7 @@ export async function joinTripByCode(code: string): Promise<TripResponse> {
  * @returns Trip statistics (totals and user balance)
  */
 export async function getTripStats(id: string): Promise<TripStats> {
-  const token = localStorage.getItem('travelsplit_token');
-
-  if (!token) {
-    const error: ApiError = {
-      message: 'No se encontró token de autenticación',
-      statusCode: 401,
-    };
-    throw error;
-  }
+  const token = getAuthToken();
 
   const response = await fetch(`${API_BASE_URL}/trips/${id}/stats`, {
     method: 'GET',
