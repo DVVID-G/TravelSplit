@@ -179,7 +179,7 @@ JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const jwtSecret = configService.get<string>('jwt.secret');
-        if (!jwtSecret) {
+        if (!jwtSecret || jwtSecret.trim() === '') {
           throw new Error('JWT_SECRET is required');
         }
         return {

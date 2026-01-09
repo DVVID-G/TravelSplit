@@ -179,8 +179,8 @@ export function FormField({ label, error, children }: FormFieldProps) {
 ```
 
 ```typescript
-// VIOLATION: Desktop-first responsive design
-<div className="lg:p-8 p-4"> {/* VIOLATION: Should be p-4 lg:p-8 (mobile-first) */}
+// VIOLATION: Desktop-first mindset; Tailwind class order here renders the same CSS, but think mobile-first
+<div className="lg:p-8 p-4"> {/* Better: write base first (p-4) then breakpoint override (lg:p-8) to follow mobile-first approach */}
   Content
 </div>
 ```

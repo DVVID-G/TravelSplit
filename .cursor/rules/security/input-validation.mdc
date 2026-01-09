@@ -9,6 +9,8 @@ alwaysApply: false
 
 # Input Validation and Sanitization Standards
 
+> This file focuses on security/sanitization. For DTO structure, Swagger/API docs, and the single-source ValidationPipe configuration, see `backend/dto-validation.mdc`. Follow that config; this file only adds security-specific guidance.
+
 ## Rules
 
 - Validate all inputs using DTOs with class-validator decorators.
@@ -30,11 +32,7 @@ alwaysApply: false
 
 ## ValidationPipe Configuration
 
-- Use global `ValidationPipe` with strict options.
-- Set `whitelist: true` to strip unknown properties.
-- Set `forbidNonWhitelisted: true` to reject requests with unknown properties.
-- Set `transform: true` to transform payloads to DTO instances.
-- Enable implicit type conversion: `enableImplicitConversion: true`.
+- Global ValidationPipe settings live in `backend/dto-validation.mdc`; follow those (whitelist, forbidNonWhitelisted, transform, implicit conversion). This file does not duplicate them to keep a single source of truth.
 
 ## Input Sanitization
 
@@ -123,17 +121,8 @@ export class UsersController {
   }
 }
 
-// Global ValidationPipe configuration
-app.useGlobalPipes(
-  new ValidationPipe({
-    whitelist: true, // Strip unknown properties
-    forbidNonWhitelisted: true, // Reject requests with unknown properties
-    transform: true, // Transform payloads to DTO instances
-    transformOptions: {
-      enableImplicitConversion: true, // Enable type conversion
-    },
-  }),
-);
+// Global ValidationPipe configuration is defined in backend/dto-validation.mdc to avoid duplication.
+// Reuse that shared configuration here; do not redefine locally.
 
 // Service with input sanitization
 @Injectable()

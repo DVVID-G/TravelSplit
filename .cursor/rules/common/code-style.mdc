@@ -13,7 +13,7 @@ alwaysApply: true
 
 - Use TypeScript strict mode in all files.
 - Format code with Prettier before committing.
-- Follow ESLint rules without exceptions.
+- Follow ESLint rules; disabling any rule requires explicit team approval and a documented justification.
 - Use explicit type annotations for function parameters and return types.
 - Avoid `any` type. Use `unknown` when type is truly unknown.
 - Use `const` for immutable values, `let` for mutable variables.
@@ -176,12 +176,13 @@ export default class UserService {} // VIOLATION
 ## Linting Rules
 
 - Fix all ESLint errors before committing.
-- Do not disable ESLint rules without team approval.
-- Use ESLint disable comments only for legitimate exceptions.
-- Document why a rule is disabled.
+- Do not disable ESLint rules without explicit team approval and a documented justification (what, why, scope, and duration).
+- Use ESLint disable comments only for legitimate, approved exceptions.
+- Document why a rule is disabled and link to the approval record.
 
 ## Exceptions
 
 - Test files may use more relaxed type checking for mocks.
 - Configuration files may use `any` if necessary for framework compatibility.
 - Legacy code migration may temporarily allow `any` with TODO comments.
+- Any lint-rule disablement must follow the documented approval process (who approved, reason, scope, and duration) before committing.

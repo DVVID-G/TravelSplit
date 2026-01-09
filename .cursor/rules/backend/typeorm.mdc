@@ -68,6 +68,7 @@ alwaysApply: false
 - Use `@JoinColumn()` for foreign keys.
 - Load relations explicitly with `relations` option in queries.
 - Avoid circular dependencies in relations.
+- `relations` in `find()/findOne()` performs eager loading for the specified relations; TypeORM v0.3 does not provide automatic lazy loading, so load explicitly via `relations` or QueryBuilder. Decorators (`@OneToMany`, `@ManyToOne`, `@JoinColumn`) define the relation shape but do not auto-load data.
 
 ## Query Optimization
 

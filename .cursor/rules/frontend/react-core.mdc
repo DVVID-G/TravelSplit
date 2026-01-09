@@ -51,6 +51,7 @@ alwaysApply: false
 - Pass props explicitly, avoid prop drilling.
 - Use Context API for deeply nested prop passing when needed.
 - Prefer composition over inheritance.
+- Context Providers must wrap all consuming components; create routers inside the provider-rendering component (not at module scope) and memoize with `useMemo` to avoid re-instantiation and stale context.
 
 ## State Management
 
@@ -84,6 +85,7 @@ interface ButtonProps {
   variant?: 'primary' | 'secondary';
   onClick?: () => void;
   disabled?: boolean;
+  type?: 'button' | 'submit' | 'reset';
 }
 
 export function Button({
@@ -91,10 +93,11 @@ export function Button({
   variant = 'primary',
   onClick,
   disabled = false,
+  type = 'button',
 }: ButtonProps) {
   return (
     <button
-      type="button"
+      type={type}
       className={`btn btn-${variant}`}
       onClick={onClick}
       disabled={disabled}
@@ -103,6 +106,10 @@ export function Button({
     </button>
   );
 }
+
+// Example usage
+// <Button type="submit">Enviar</Button>
+// <Button type="reset" variant="secondary">Resetear</Button>
 
 // Custom hook for reusable logic
 export function useAuth() {
@@ -203,6 +210,24 @@ export const ExpensiveComponent = React.memo(function ExpensiveComponent({
 ```typescript
 // Component composition
 export function ExpenseForm({ onSubmit }: ExpenseFormProps) {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit();
+  };
+
+  // Proper Context Provider + router creation inside component (no module-scope routers)
+  export function AppProviders({ children }: { children: React.ReactNode }) {
+    const router = useMemo(() => createBrowserRouter(routes), [routes]);
+
+    return (
+      <AuthProvider>
+        <ThemeProvider>
+          <RouterProvider router={router}>{children}</RouterProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit}>
       <FormField label="Título">

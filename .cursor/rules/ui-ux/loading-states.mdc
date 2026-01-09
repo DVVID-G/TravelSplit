@@ -195,6 +195,8 @@ export function TripList({ trips, isLoading }: TripListProps) {
 
 // Form with loading state
 export function ExpenseForm({ onSubmit, isLoading }: ExpenseFormProps) {
+  const { handleSubmit } = useForm<ExpenseFormData>();
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       {/* Form fields */}

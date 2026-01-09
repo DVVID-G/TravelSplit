@@ -207,11 +207,34 @@ const { data } = useQuery({
 ```
 
 ```typescript
-// VIOLATION: Creating object in render
-function Component({ style }: Props) {
-  return <div style={{ padding: '16px' }}> {/* VIOLATION: Creates new object each render */}
-    Content
-  </div>;
+// VIOLATION: Creating new objects each render (same issue as inline style={{ padding: '16px' }})
+const MemoizedChild = React.memo(({ config }: { config: { threshold: number } }) => {
+  return <div>Threshold: {config.threshold}</div>;
+});
+
+function Parent() {
+  // VIOLATION: config object breaks referential equality on every render
+  return <MemoizedChild config={{ threshold: 0.8 }} />;
+}
+```
+
+```typescript
+// FIX: Hoist or memoize the config object
+const stableConfig = { threshold: 0.8 };
+
+const MemoizedChild = React.memo(({ config }: { config: { threshold: number } }) => {
+  return <div>Threshold: {config.threshold}</div>;
+});
+
+function Parent() {
+  // Option 1: hoist constant
+  return <MemoizedChild config={stableConfig} />;
+}
+
+// Option 2: useMemo when value depends on props/state
+function ParentWithState({ threshold }: { threshold: number }) {
+  const memoizedConfig = useMemo(() => ({ threshold }), [threshold]);
+  return <MemoizedChild config={memoizedConfig} />;
 }
 ```
 

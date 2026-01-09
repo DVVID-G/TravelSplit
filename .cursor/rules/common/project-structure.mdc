@@ -234,7 +234,7 @@ export function HomePage() {
 
 - Use `index.ts` for barrel exports in component directories.
 - Export all public components from `components/index.ts`.
-- Do not use barrel exports for services or hooks (import directly).
+- Do not use barrel exports for services or hooks—import directly to avoid circular dependencies, keep ownership/visibility explicit, improve tree-shaking, and prevent accidental exposure of internal APIs.
 
 ## Shared Code
 

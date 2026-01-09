@@ -48,6 +48,7 @@ alwaysApply: false
 - Provide sensible defaults for development.
 - Never commit secrets or sensitive data.
 - Use ConfigService from @nestjs/config for accessing env vars.
+- Prefer schema-based validation with class-validator + ConfigModule (define a DTO with decorators and validate on bootstrap) instead of ad-hoc checks for robust env validation.
 
 ## Performance Best Practices
 
@@ -92,18 +93,42 @@ async function fetchMultipleResources(ids: string[]): Promise<Resource[]> {
   return Promise.all(promises);
 }
 
+// Parallel operations tolerant to partial failures with Promise.allSettled
+async function fetchMultipleResourcesTolerant(ids: string[]): Promise<Resource[]> {
+  const results = await Promise.allSettled(
+    ids.map(id => this.repository.findOne({ where: { id } }))
+  );
+
+  return results.reduce<Resource[]>((acc, result, index) => {
+    if (result.status === 'fulfilled') {
+      acc.push(result.value);
+    } else {
+      // Handle/log the rejected case without aborting all operations
+      this.logger.warn(`fetchMultipleResourcesTolerant: id=${ids[index]} failed: ${result.reason}`);
+    }
+    return acc;
+  }, []);
+}
+
 // Graceful shutdown handling
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  // app.close() will shut down providers registered with Nest (e.g., TypeORM connections),
+  // but you must manually close any custom/unregistered resources (custom DB clients, message buses) before app.close().
+  const shutdown = async () => {
+    // await customDbClient.close();
+    // await messageBus.disconnect();
+    await app.close();
+  };
   
   // Setup graceful shutdown
   process.on('SIGTERM', async () => {
-    await app.close();
+    await shutdown();
     process.exit(0);
   });
   
   process.on('SIGINT', async () => {
-    await app.close();
+    await shutdown();
     process.exit(0);
   });
   
