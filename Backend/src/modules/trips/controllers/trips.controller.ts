@@ -1,7 +1,9 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
+  Query,
   HttpCode,
   HttpStatus,
   Request,
@@ -13,10 +15,13 @@ import {
   ApiBadRequestResponse,
   ApiUnauthorizedResponse,
   ApiCreatedResponse,
+  ApiOkResponse,
 } from '@nestjs/swagger';
 import { TripsService } from '../services/trips.service';
 import { CreateTripDto } from '../dto/create-trip.dto';
 import { TripResponseDto } from '../dto/trip-response.dto';
+import { TripListQueryDto } from '../dto/trip-list-query.dto';
+import { TripListItemDto } from '../dto/trip-list-item.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../../../common/interfaces/authenticated-request.interface';
 
@@ -79,5 +84,46 @@ export class TripsController {
     @Request() req: AuthenticatedRequest,
   ): Promise<TripResponseDto> {
     return this.tripsService.create(createTripDto, req.user!.id);
+  }
+
+  /**
+   * Retrieves all trips where the authenticated user is a participant.
+   * Allows optional filtering by trip status (ACTIVE/CLOSED).
+   *
+   * @method findAll
+   * @param {TripListQueryDto} queryDto - DTO with optional filters
+   * @param {AuthenticatedRequest} req - Request with authenticated user
+   * @returns {TripListItemDto[]} List of trips with user role and participant count
+   * @example
+   * // GET /trips
+   * // Headers: Authorization: Bearer {token}
+   * // Response: [{ id: "...", name: "...", currency: "COP", status: "ACTIVE", code: "...", createdAt: "...", updatedAt: "...", userRole: "CREATOR", participantCount: 3 }]
+   * @example
+   * // GET /trips?status=ACTIVE
+   * // Headers: Authorization: Bearer {token}
+   * // Response: [{ ... active trips only ... }]
+   */
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get user trips',
+    description:
+      'Returns all trips where the authenticated user is a participant (CREATOR or MEMBER). Can be filtered by trip status.',
+  })
+  @ApiOkResponse({
+    description: 'Trip list retrieved successfully',
+    type: [TripListItemDto],
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid query parameters',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized. Authentication required.',
+  })
+  async findAll(
+    @Query() queryDto: TripListQueryDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<TripListItemDto[]> {
+    return this.tripsService.findAllByUser(req.user!.id, queryDto);
   }
 }

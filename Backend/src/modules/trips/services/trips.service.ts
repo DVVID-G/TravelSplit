@@ -6,6 +6,8 @@ import { TripParticipant } from '../entities/trip-participant.entity';
 import { User } from '../../users/entities/user.entity';
 import { CreateTripDto } from '../dto/create-trip.dto';
 import { TripResponseDto } from '../dto/trip-response.dto';
+import { TripListQueryDto } from '../dto/trip-list-query.dto';
+import { TripListItemDto } from '../dto/trip-list-item.dto';
 import { TripStatus } from '../enums/trip-status.enum';
 import { ParticipantRole } from '../enums/participant-role.enum';
 import { TripMapper } from '../../../common/mappers/trip.mapper';
@@ -168,5 +170,77 @@ export class TripsService {
 
     // Retornar el viaje como DTO
     return TripMapper.toResponseDto(savedTrip);
+  }
+
+  /**
+   * Retrieves all trips where the authenticated user is a participant.
+   * Returns only non-deleted trips (soft delete).
+   * Optionally filters by trip status.
+   *
+   * @param userId - ID of the authenticated user
+   * @param queryDto - DTO with optional filters (status)
+   * @returns List of trips with extended information (user role and participant count)
+   */
+  async findAllByUser(
+    userId: string,
+    queryDto: TripListQueryDto,
+  ): Promise<TripListItemDto[]> {
+    // Interface for raw query result typing
+    interface TripQueryRawResult {
+      participantCount: string; // COUNT returns string in PostgreSQL
+      userRole: ParticipantRole; // Role from userParticipant
+    }
+
+    // Build query with Query Builder for JOIN and aggregation
+    let query = this.tripRepository
+      .createQueryBuilder('trip')
+      .innerJoin(
+        'trip.participants',
+        'userParticipant',
+        'userParticipant.userId = :userId AND userParticipant.deletedAt IS NULL',
+        { userId },
+      )
+      .leftJoin(
+        'trip.participants',
+        'allParticipants',
+        'allParticipants.deletedAt IS NULL',
+      )
+      .where('trip.deletedAt IS NULL')
+      .select([
+        'trip.id',
+        'trip.name',
+        'trip.currency',
+        'trip.status',
+        'trip.code',
+        'trip.createdAt',
+        'trip.updatedAt',
+      ])
+      .addSelect('userParticipant.role', 'userRole')
+      .addSelect('COUNT(DISTINCT allParticipants.id)', 'participantCount')
+      .groupBy('trip.id')
+      .addGroupBy('userParticipant.id')
+      .addGroupBy('userParticipant.role')
+      .orderBy('trip.createdAt', 'DESC');
+
+    // Apply status filter if provided
+    if (queryDto.status) {
+      query = query.andWhere('trip.status = :status', {
+        status: queryDto.status,
+      });
+    }
+
+    // Execute query
+    const results = await query.getRawAndEntities();
+
+    // Map results to TripListItemDto
+    return results.entities.map((trip, index) => {
+      const raw = results.raw[index] as TripQueryRawResult;
+
+      return TripMapper.toListItemDto(
+        trip,
+        raw.userRole,
+        parseInt(raw.participantCount, 10),
+      );
+    });
   }
 }

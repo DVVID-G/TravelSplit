@@ -21,9 +21,7 @@ import { TripsService } from './services/trips.service';
  * - POST /trips - Crear un nuevo viaje (requiere autenticación)
  */
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Trip, TripParticipant, User]),
-  ],
+  imports: [TypeOrmModule.forFeature([Trip, TripParticipant, User])],
   controllers: [TripsController],
   providers: [TripsService],
   exports: [TripsService],
