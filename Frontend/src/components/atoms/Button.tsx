@@ -23,7 +23,8 @@ export const Button = ({
     'font-medium rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variants = {
-    primary: 'bg-violet-600 text-white hover:bg-violet-700 focus:ring-violet-500 active:bg-violet-800',
+    primary:
+      'bg-violet-600 text-white hover:bg-violet-700 focus:ring-violet-500 active:bg-violet-800',
     secondary: 'bg-slate-200 text-slate-900 hover:bg-slate-300 focus:ring-slate-500',
     danger: 'bg-red-500 text-white hover:bg-red-600 focus:ring-red-500',
   };

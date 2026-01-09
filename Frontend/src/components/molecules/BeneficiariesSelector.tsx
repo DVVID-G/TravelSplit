@@ -31,15 +31,13 @@ export const BeneficiariesSelector = ({
 }: BeneficiariesSelectorProps) => {
   // Filter out the payer from beneficiaries list
   const availableBeneficiaries = selectedPayerId
-    ? participants.filter((p) => p.user_id !== selectedPayerId)
+    ? participants.filter(p => p.user_id !== selectedPayerId)
     : participants;
 
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-2">
-        <label className="block text-sm font-medium text-slate-700">
-          Beneficiarios
-        </label>
+        <label className="block text-sm font-medium text-slate-700">Beneficiarios</label>
         <div className="flex gap-2">
           <button
             type="button"
@@ -62,7 +60,7 @@ export const BeneficiariesSelector = ({
           <EmailSearchInput
             onAdd={onAddByEmail || (() => {})}
             onInvite={onInviteByEmail}
-            existingEmails={participants.map((p) => p.user?.email || '').filter(Boolean)}
+            existingEmails={participants.map(p => p.user?.email || '').filter(Boolean)}
           />
         </div>
       )}
@@ -72,7 +70,7 @@ export const BeneficiariesSelector = ({
             No hay otros participantes disponibles. El pagador no puede ser beneficiario.
           </p>
         ) : (
-          availableBeneficiaries.map((participant) => {
+          availableBeneficiaries.map(participant => {
             const isSelected = selectedBeneficiaryIds.includes(participant.user_id);
             return (
               <label
@@ -97,4 +95,3 @@ export const BeneficiariesSelector = ({
     </div>
   );
 };
-

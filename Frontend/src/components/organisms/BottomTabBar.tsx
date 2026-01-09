@@ -5,7 +5,7 @@ import { Home, Map, User } from 'lucide-react';
  * BottomTabBar organism component
  * Fixed bottom navigation bar with 3 items (Home, Viajes, Perfil)
  * Follows Design System Guide: fixed bottom-0, z-50, 3 items
- * 
+ *
  * Note: FAB has been removed according to UI_FLOW_DESIGN.md
  * The "Nuevo Gasto" button is now integrated in the TripDetailPage expenses tab
  */
@@ -56,4 +56,3 @@ export const BottomTabBar = () => {
     </nav>
   );
 };
-

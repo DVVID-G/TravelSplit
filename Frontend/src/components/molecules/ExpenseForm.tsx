@@ -45,7 +45,7 @@ export const ExpenseForm = ({
     resolver: zodResolver(createExpenseSchema),
     defaultValues: {
       payer_id: currentUserId,
-      beneficiary_ids: participants.map((p) => p.user_id),
+      beneficiary_ids: participants.map(p => p.user_id),
       amount: 0,
     },
   });
@@ -66,12 +66,12 @@ export const ExpenseForm = ({
   useEffect(() => {
     if (participants.length > 0 && selectedBeneficiaryIds.length === 0) {
       const availableParticipants = selectedPayerId
-        ? participants.filter((p) => p.user_id !== selectedPayerId)
+        ? participants.filter(p => p.user_id !== selectedPayerId)
         : participants;
       if (availableParticipants.length > 0) {
         setValue(
           'beneficiary_ids',
-          availableParticipants.map((p) => p.user_id),
+          availableParticipants.map(p => p.user_id),
         );
       }
     }
@@ -88,14 +88,14 @@ export const ExpenseForm = ({
   const handlePayerSelect = (payerId: string) => {
     setValue('payer_id', payerId, { shouldValidate: true });
     // Remove payer from beneficiaries if they were selected
-    const currentBeneficiaries = selectedBeneficiaryIds.filter((id) => id !== payerId);
+    const currentBeneficiaries = selectedBeneficiaryIds.filter(id => id !== payerId);
     setValue('beneficiary_ids', currentBeneficiaries, { shouldValidate: true });
   };
 
   const handleBeneficiaryToggle = (userId: string) => {
     const current = selectedBeneficiaryIds;
     const newSelection = current.includes(userId)
-      ? current.filter((id) => id !== userId)
+      ? current.filter(id => id !== userId)
       : [...current, userId];
     setValue('beneficiary_ids', newSelection, { shouldValidate: true });
   };
@@ -103,11 +103,11 @@ export const ExpenseForm = ({
   const handleSelectAll = () => {
     // Filter out payer from beneficiaries
     const availableParticipants = selectedPayerId
-      ? participants.filter((p) => p.user_id !== selectedPayerId)
+      ? participants.filter(p => p.user_id !== selectedPayerId)
       : participants;
     setValue(
       'beneficiary_ids',
-      availableParticipants.map((p) => p.user_id),
+      availableParticipants.map(p => p.user_id),
       { shouldValidate: true },
     );
   };
@@ -147,20 +147,16 @@ export const ExpenseForm = ({
       />
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">
-          Monto (COP)
-        </label>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Monto (COP)</label>
         <AmountInput
           value={watch('amount')}
-          onChange={(value) => setValue('amount', value, { shouldValidate: true })}
+          onChange={value => setValue('amount', value, { shouldValidate: true })}
           error={errors.amount?.message}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-2">
-          Categoría
-        </label>
+        <label className="block text-sm font-medium text-slate-700 mb-2">Categoría</label>
         <CategorySelector
           categories={categories}
           selectedCategoryId={selectedCategoryId}
@@ -192,10 +188,7 @@ export const ExpenseForm = ({
         <label className="block text-sm font-medium text-slate-700 mb-2">
           Foto del recibo (Opcional)
         </label>
-        <ImageUpload
-          onChange={handleImageChange}
-          value={receiptFile || undefined}
-        />
+        <ImageUpload onChange={handleImageChange} value={receiptFile || undefined} />
       </div>
 
       {error && (
@@ -210,4 +203,3 @@ export const ExpenseForm = ({
     </form>
   );
 };
-

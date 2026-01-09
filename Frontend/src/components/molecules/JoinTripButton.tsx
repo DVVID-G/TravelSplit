@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Key } from 'lucide-react';
-import { JoinTripModal } from './JoinTripModal';
+import { JoinTripModal } from '@/components/organisms/JoinTripModal';
 import type { TripResponse } from '@/types/trip.types';
 
 interface JoinTripButtonProps {
@@ -8,6 +8,11 @@ interface JoinTripButtonProps {
   className?: string;
 }
 
+/**
+ * JoinTripButton molecule component
+ * Molecule that combines button + icon + modal trigger
+ * Follows Atomic Design: Located in molecules/ as it combines atoms and has simple state
+ */
 export function JoinTripButton({ onSuccess, className = '' }: JoinTripButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 

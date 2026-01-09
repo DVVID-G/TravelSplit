@@ -49,7 +49,7 @@ export const CategorySelector = ({
           {/* When content is smaller than container, it will be left-aligned but scrollable */}
           {/* When content is larger, it will scroll horizontally */}
           <div className="inline-flex gap-3 pb-2 px-8">
-            {categories.map((category) => (
+            {categories.map(category => (
               <CategoryPill
                 key={category.id}
                 icon={getIcon(category)}
@@ -67,4 +67,3 @@ export const CategorySelector = ({
     </div>
   );
 };
-

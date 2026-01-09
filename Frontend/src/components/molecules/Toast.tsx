@@ -9,12 +9,12 @@ interface ToastProps {
   duration?: number;
 }
 
-export function Toast({ 
-  message, 
-  type = 'success', 
-  isVisible, 
+export function Toast({
+  message,
+  type = 'success',
+  isVisible,
   onClose,
-  duration = 3000 
+  duration = 3000,
 }: ToastProps) {
   useEffect(() => {
     if (isVisible && duration > 0) {
@@ -38,12 +38,8 @@ export function Toast({
       <div
         className={`flex items-start gap-3 rounded-xl border ${borderColor} ${bgColor} p-4 shadow-lg`}
       >
-        {type === 'success' && (
-          <CheckCircle2 size={20} className={textColor} />
-        )}
-        <p className={`flex-1 text-sm font-medium ${textColor}`}>
-          {message}
-        </p>
+        {type === 'success' && <CheckCircle2 size={20} className={textColor} />}
+        <p className={`flex-1 text-sm font-medium ${textColor}`}>{message}</p>
         <button
           type="button"
           onClick={onClose}

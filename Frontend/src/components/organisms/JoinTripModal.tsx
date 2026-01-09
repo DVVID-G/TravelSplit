@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Key, Loader2 } from 'lucide-react';
+import { joinTripByCode } from '@/services/trip.service';
 import type { TripResponse } from '@/types/trip.types';
 
 interface JoinTripModalProps {
@@ -8,6 +9,11 @@ interface JoinTripModalProps {
   onSuccess: (trip: TripResponse) => void;
 }
 
+/**
+ * JoinTripModal organism component
+ * Complex organism with form, validation, API integration, and accessibility features
+ * Follows Atomic Design: Located in organisms/ due to high complexity (10+ elements, API calls, multiple states)
+ */
 export function JoinTripModal({ isOpen, onClose, onSuccess }: JoinTripModalProps) {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
@@ -50,23 +56,23 @@ export function JoinTripModal({ isOpen, onClose, onSuccess }: JoinTripModalProps
     setError('');
 
     try {
-      const { joinTripByCode } = await import('@/services/trip.service');
       const trip = await joinTripByCode(code);
-      
+
       // Success!
       onSuccess(trip);
       onClose();
       setCode('');
-    } catch (err: any) {
+    } catch (err) {
+      const error = err as { statusCode?: number; message?: string };
       // Handle specific error codes
-      if (err.statusCode === 404) {
+      if (error.statusCode === 404) {
         setError('No encontramos un viaje con ese código. Verifica que esté correcto.');
-      } else if (err.statusCode === 409) {
+      } else if (error.statusCode === 409) {
         setError('Ya eres participante de este viaje');
-      } else if (err.statusCode === 401) {
+      } else if (error.statusCode === 401) {
         setError('Tu sesión ha expirado. Inicia sesión nuevamente');
       } else {
-        setError(err.message || 'Error al unirse al viaje');
+        setError(error.message || 'Error al unirse al viaje');
       }
     } finally {
       setIsLoading(false);
@@ -111,9 +117,7 @@ export function JoinTripModal({ isOpen, onClose, onSuccess }: JoinTripModalProps
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100">
             <Key size={24} className="text-violet-600" />
           </div>
-          <h2 className="font-heading text-xl font-bold text-slate-900">
-            Unirse a un viaje
-          </h2>
+          <h2 className="font-heading text-xl font-bold text-slate-900">Unirse a un viaje</h2>
         </div>
 
         {/* Description */}
@@ -125,10 +129,7 @@ export function JoinTripModal({ isOpen, onClose, onSuccess }: JoinTripModalProps
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Code Input */}
           <div>
-            <label
-              htmlFor="trip-code"
-              className="mb-2 block text-sm font-medium text-slate-700"
-            >
+            <label htmlFor="trip-code" className="mb-2 block text-sm font-medium text-slate-700">
               Código del viaje
             </label>
             <input
@@ -147,9 +148,11 @@ export function JoinTripModal({ isOpen, onClose, onSuccess }: JoinTripModalProps
               autoFocus
               autoComplete="off"
             />
-            <p className={`mt-2 text-xs ${code.length === 8 ? 'text-violet-600' : 'text-slate-500'}`}>
-              {code.length > 0 
-                ? `${code.length}/8 caracteres` 
+            <p
+              className={`mt-2 text-xs ${code.length === 8 ? 'text-violet-600' : 'text-slate-500'}`}
+            >
+              {code.length > 0
+                ? `${code.length}/8 caracteres`
                 : 'Código de 8 caracteres (letras y números)'}
             </p>
           </div>

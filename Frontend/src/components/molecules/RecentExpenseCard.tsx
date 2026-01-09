@@ -18,7 +18,7 @@ interface RecentExpenseCardProps {
  */
 const getCategoryIcon = (category: ExpenseCategory) => {
   const iconProps = { size: 20, className: 'text-slate-600' };
-  
+
   switch (category) {
     case 'food':
       return <Utensils {...iconProps} />;
@@ -49,16 +49,16 @@ const formatShortDate = (dateString: string): string => {
 /**
  * RecentExpenseCard Component
  * Displays a recent expense with category icon, title, payer info, amount, and participant count
- * 
+ *
  * Layout: [Icon] Title              $ Amount
  *                Pagó X • date      N personas
- * 
+ *
  * Used in HomePage to show recent expenses section
  * Follows Design System: bg-white, rounded-xl, p-4, shadow-sm
  */
 export const RecentExpenseCard = ({ expense }: RecentExpenseCardProps) => {
   return (
-    <div 
+    <div
       className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md hover:bg-slate-50 transition-all duration-200 cursor-default"
       // TODO: Add onClick when navigation is implemented
       // When implemented, change cursor-default to cursor-pointer and uncomment onClick
@@ -72,9 +72,7 @@ export const RecentExpenseCard = ({ expense }: RecentExpenseCardProps) => {
 
         {/* Center: Title and payer info */}
         <div className="flex-1 min-w-0">
-          <h4 className="text-base font-medium text-slate-900 truncate mb-1">
-            {expense.title}
-          </h4>
+          <h4 className="text-base font-medium text-slate-900 truncate mb-1">{expense.title}</h4>
           <p className="text-sm text-slate-500">
             Pagó {expense.paidBy} • {formatShortDate(expense.date)}
           </p>

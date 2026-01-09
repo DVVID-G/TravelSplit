@@ -16,11 +16,11 @@ interface HeaderProps {
  * Header organism component
  * Complex component combining multiple molecules and atoms
  * Follows Design System Guide: pattern [←] Título [Acciones]
- * 
+ *
  * Variants:
  * - Simple: Only title (for HomePage not authenticated)
  * - With actions: Title + navigation actions (default)
- * 
+ *
  * UX/UI: Muestra diferentes acciones según el estado de autenticación:
  * - No autenticado: Botón "Iniciar Sesión"
  * - Autenticado: Nombre del usuario y botón "Cerrar Sesión"
@@ -39,11 +39,7 @@ export const Header = ({ showActions = true, title = 'TravelSplit', actions }: H
       <Link to="/" className="text-slate-700 hover:text-slate-900 transition-colors">
         Inicio
       </Link>
-      {user && (
-        <span className="text-slate-700 text-sm font-medium">
-          {user.nombre}
-        </span>
-      )}
+      {user && <span className="text-slate-700 text-sm font-medium">{user.nombre}</span>}
       <Button variant="secondary" size="sm" onClick={handleLogout}>
         Cerrar Sesión
       </Button>

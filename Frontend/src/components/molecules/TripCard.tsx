@@ -1,6 +1,6 @@
 import { Map, Users, Calendar, DollarSign } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import type { TripResponse } from '@/types/trip.types';
+import type { TripResponse, TripListItem } from '@/types/trip.types';
 import { formatRelativeDate } from '@/utils/date';
 import { formatCurrency } from '@/utils/currency';
 
@@ -10,16 +10,29 @@ interface TripCardProps {
 }
 
 /**
+ * Type guard to check if a trip has the extended TripListItem properties
+ */
+function isTripListItem(trip: TripResponse): trip is TripListItem {
+  return 'participantCount' in trip;
+}
+
+/**
+ * Get participant count from trip data
+ * @param trip - Trip data (may be TripResponse or TripListItem)
+ * @returns Number of participants (defaults to 1 for creator if count not available)
+ */
+function getParticipantCount(trip: TripResponse): number {
+  return isTripListItem(trip) ? trip.participantCount : 1; // Default to 1 (creator)
+}
+
+/**
  * TripCard molecule component
  * Displays trip information in a card format
  * Follows Design System Guide: rounded-xl, shadow-md, microinteraction scale-98
  * Uses semantic Link element for accessibility
  */
 export const TripCard = ({ trip, onClick }: TripCardProps) => {
-  // Use participantCount directly if available (from TripListItem), otherwise default to 1
-  const participantCount: number = 'participantCount' in trip 
-    ? (trip as any).participantCount 
-    : 1;
+  const participantCount = getParticipantCount(trip);
   const totalAmount = trip.totalAmount ?? 0;
 
   const cardContent = (
@@ -32,7 +45,9 @@ export const TripCard = ({ trip, onClick }: TripCardProps) => {
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-sm text-slate-500">
           <Users className="w-4 h-4" aria-hidden="true" />
-          <span>{participantCount} {participantCount === 1 ? 'participante' : 'participantes'}</span>
+          <span>
+            {participantCount} {participantCount === 1 ? 'participante' : 'participantes'}
+          </span>
         </div>
 
         <div className="flex items-center gap-2 text-sm">
@@ -69,4 +84,3 @@ export const TripCard = ({ trip, onClick }: TripCardProps) => {
     </Link>
   );
 };
-

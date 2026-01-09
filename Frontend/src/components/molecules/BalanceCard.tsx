@@ -15,7 +15,7 @@ interface BalanceCardProps {
  * BalanceCard Component
  * Displays a debt/balance between two users in the format "NameA → NameB"
  * with a colored badge showing the amount
- * 
+ *
  * Used in HomePage to show balances section
  * Follows Design System: bg-white, rounded-xl, p-4, shadow-sm
  */
@@ -30,7 +30,7 @@ export const BalanceCard = ({ balance }: BalanceCardProps) => {
   const badgeColorClass = badgeColors[balance.badgeColor];
 
   return (
-    <div 
+    <div
       className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md hover:bg-slate-50 transition-all duration-200 cursor-default"
       // TODO: Add onClick when navigation is implemented
       // When implemented, change cursor-default to cursor-pointer and uncomment onClick
