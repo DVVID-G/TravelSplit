@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsOptional } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { TripStatus } from '../enums/trip-status.enum';
 
 /**
@@ -13,8 +14,11 @@ export class TripListQueryDto {
     example: TripStatus.ACTIVE,
   })
   @IsOptional()
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.toUpperCase() : value,
+  )
   @IsEnum(TripStatus, {
-    message: 'El estado debe ser ACTIVE o CLOSED',
+    message: `El estado debe ser uno de: ${Object.values(TripStatus).join(', ')}`,
   })
   status?: TripStatus;
 }

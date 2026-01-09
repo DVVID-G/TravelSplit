@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ParticipantRole } from '../enums';
 import { UserSummaryDto } from './user-summary.dto';
 
@@ -26,9 +26,10 @@ export class TripParticipantDto {
   })
   role!: ParticipantRole;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Información básica del usuario',
-    type: UserSummaryDto,
+    type: () => UserSummaryDto,
+    nullable: true,
   })
-  user!: UserSummaryDto;
+  user?: UserSummaryDto | null;
 }

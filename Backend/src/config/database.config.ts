@@ -23,9 +23,9 @@ export const getDatabaseConfig = (
     database: configService.get<string>('DB_NAME', 'travelsplit'),
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
     migrations: [__dirname + '/../migrations/**/*{.ts,.js}'],
-    synchronize: configService.get<boolean>('DB_SYNCHRONIZE', true), // Solo en desarrollo
+    synchronize: configService.get<boolean>('DB_SYNCHRONIZE', false), // Solo en desarrollo (activar explícitamente)
     logging: configService.get<boolean>('DB_LOGGING', false),
-    migrationsRun: false, // Set to true to auto-run migrations on startup
+    migrationsRun: false, // Establecer en true para ejecutar migraciones automáticamente al iniciar
     migrationsTableName: 'migrations',
     // TypeORM automáticamente respeta @DeleteDateColumn para Soft Delete
   };
