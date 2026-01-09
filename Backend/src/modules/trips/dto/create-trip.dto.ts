@@ -1,4 +1,11 @@
-import { IsString, IsNotEmpty, IsArray, IsEmail, IsOptional, ArrayMinSize } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsArray,
+  IsEmail,
+  IsOptional,
+  ArrayMinSize,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 /**
@@ -44,7 +51,12 @@ export class CreateTripDto {
   })
   @IsOptional()
   @IsArray({ message: 'Los emails deben ser un array' })
-  @ArrayMinSize(0, { message: 'El array de emails no puede estar vacío si se proporciona' })
-  @IsEmail({}, { each: true, message: 'Cada email debe tener un formato válido' })
+  @ArrayMinSize(0, {
+    message: 'El array de emails no puede estar vacío si se proporciona',
+  })
+  @IsEmail(
+    {},
+    { each: true, message: 'Cada email debe tener un formato válido' },
+  )
   memberEmails?: string[];
 }

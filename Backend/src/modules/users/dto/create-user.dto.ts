@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 /**
  * Data Transfer Object for creating a new user.
  * Contains all necessary validations for user registration input fields.
- * 
+ *
  * @class CreateUserDto
  * @description This DTO is used to validate and structure user registration data
  * before it is processed by the user service. All fields are required and validated
@@ -14,7 +14,7 @@ export class CreateUserDto {
   /**
    * User's full name.
    * Must be a non-empty string.
-   * 
+   *
    * @type {string}
    * @memberof CreateUserDto
    * @example "Juan Pérez"
@@ -31,7 +31,7 @@ export class CreateUserDto {
   /**
    * User's email address.
    * Must be a valid email format and non-empty.
-   * 
+   *
    * @type {string}
    * @memberof CreateUserDto
    * @example "juan.perez@example.com"
@@ -48,7 +48,7 @@ export class CreateUserDto {
   /**
    * User's password.
    * Must be a string with a minimum length of 8 characters.
-   * 
+   *
    * @type {string}
    * @memberof CreateUserDto
    * @example "miPassword123"

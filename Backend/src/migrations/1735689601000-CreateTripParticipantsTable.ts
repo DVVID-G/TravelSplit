@@ -11,9 +11,7 @@ import {
  * Migración para crear la tabla trip_participants.
  * Crea la tabla con relaciones a trips y users, y constraints de integridad.
  */
-export class CreateTripParticipantsTable1735689601000
-  implements MigrationInterface
-{
+export class CreateTripParticipantsTable1735689601000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
       new Table({
