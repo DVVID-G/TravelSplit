@@ -1,0 +1,281 @@
+---
+description: Enforces JWT authentication standards including Passport Strategy, Guards, and token generation for TravelSplit backend.
+globs:
+  - Backend/src/**/*.ts
+alwaysApply: false
+---
+
+# JWT Authentication Standards
+
+## Rules
+
+- Use JWT (JSON Web Tokens) for authentication.
+- Use Passport JWT Strategy for token validation.
+- Use `JwtAuthGuard` to protect endpoints.
+- Generate tokens with user ID (`sub`) and email in payload.
+- Store JWT secret in environment variables, never in code.
+- Validate JWT secret at application startup.
+- Use `Bearer` token format in Authorization header.
+- Set appropriate token expiration time.
+
+## JWT Strategy
+
+- Create JWT Strategy in `common/strategies/jwt.strategy.ts`.
+- Extend `PassportStrategy(Strategy)` from `passport-jwt`.
+- Extract token from `Authorization: Bearer <token>` header.
+- Validate token signature using JWT secret from config.
+- Validate token payload: `sub` (user ID) and `email` must be present.
+- Return `AuthenticatedUser` object with `id` and `email`.
+- Throw `UnauthorizedException` for invalid tokens.
+
+## JWT Guard
+
+- Create `JwtAuthGuard` in `common/guards/jwt-auth.guard.ts`.
+- Extend `AuthGuard('jwt')` from `@nestjs/passport`.
+- Apply guard at controller or route level with `@UseGuards(JwtAuthGuard)`.
+- Guard automatically validates token and sets `req.user`.
+- Guard throws `UnauthorizedException` if token is missing or invalid.
+
+## Token Generation
+
+- Generate tokens in `AuthService` using `JwtService.signAsync()`.
+- Include `sub` (user ID) and `email` in token payload.
+- Set token expiration from configuration (default: 3600 seconds).
+- Return token along with user data in login/register responses.
+- Never include sensitive data (password) in token payload.
+
+## Token Payload Structure
+
+- Use `sub` field for user ID (UUID string).
+- Use `email` field for user email.
+- Follow JWT standard: `{ sub: string, email: string }`.
+- Do not include password or other sensitive data.
+- Keep payload minimal for security.
+
+## Configuration
+
+- Store JWT secret in `JWT_SECRET` environment variable.
+- Validate JWT secret is set at application startup.
+- Throw error if JWT secret is missing or empty.
+- Use `ConfigService` to access JWT configuration.
+- Set token expiration in `JWT_EXPIRES_IN` environment variable.
+
+## DO
+
+```typescript
+// JWT Strategy
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor(configService: ConfigService) {
+    const jwtSecret = configService.get<string>('jwt.secret');
+    
+    if (!jwtSecret || jwtSecret.trim() === '') {
+      throw new Error('JWT_SECRET no está configurado');
+    }
+    
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: jwtSecret,
+    });
+  }
+  
+  validate(payload: JwtPayload): AuthenticatedUser {
+    if (!payload.sub || !payload.email) {
+      throw new UnauthorizedException('Token inválido: campos faltantes');
+    }
+    
+    return {
+      id: String(payload.sub),
+      email: payload.email,
+    };
+  }
+}
+
+// JWT Guard
+@Injectable()
+export class JwtAuthGuard extends AuthGuard('jwt') {}
+
+// Auth Service - Token Generation
+@Injectable()
+export class AuthService {
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+  ) {}
+  
+  async login(loginDto: LoginDto): Promise<{ user: User; accessToken: string }> {
+    const user = await this.usersService.findByEmail(loginDto.email);
+    
+    if (!user) {
+      throw new UnauthorizedException('Credenciales inválidas');
+    }
+    
+    const isPasswordValid = await bcrypt.compare(
+      loginDto.contraseña,
+      user.passwordHash,
+    );
+    
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Credenciales inválidas');
+    }
+    
+    const accessToken = await this.generateToken(user);
+    return { user, accessToken };
+  }
+  
+  private async generateToken(user: User): Promise<string> {
+    const payload: JwtPayload = {
+      sub: user.id,
+      email: user.email,
+    };
+    return await this.jwtService.signAsync(payload);
+  }
+}
+
+// Controller with JWT Guard
+@Controller('users')
+@UseGuards(JwtAuthGuard)
+export class UsersController {
+  @Get(':id')
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<UserResponseDto> {
+    return this.usersService.findOne(id);
+  }
+}
+
+// JWT Module Configuration
+JwtModule.registerAsync({
+  imports: [ConfigModule.forFeature(jwtConfig)],
+  inject: [ConfigService],
+  useFactory: (configService: ConfigService) => {
+    const jwtSecret = configService.get<string>('jwt.secret');
+    
+    if (!jwtSecret || jwtSecret.trim() === '') {
+      throw new Error('JWT_SECRET is required');
+    }
+    
+    return {
+      secret: jwtSecret,
+      signOptions: {
+        expiresIn: configService.get<string>('jwt.expiresIn', '3600s'),
+      },
+    };
+  },
+})
+```
+
+```typescript
+// Auth Module with JWT setup
+@Module({
+  imports: [
+    UsersModule,
+    PassportModule,
+    ConfigModule.forFeature(jwtConfig),
+    JwtModule.registerAsync({
+      imports: [ConfigModule.forFeature(jwtConfig)],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const jwtSecret = configService.get<string>('jwt.secret');
+        if (!jwtSecret) {
+          throw new Error('JWT_SECRET is required');
+        }
+        return {
+          secret: jwtSecret,
+          signOptions: { expiresIn: '3600s' },
+        };
+      },
+    }),
+  ],
+  controllers: [AuthController],
+  providers: [AuthService, JwtStrategy],
+  exports: [AuthService],
+})
+export class AuthModule {}
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: Hardcoded JWT secret
+const jwtSecret = 'my-secret-key'; // VIOLATION: Should use environment variable
+```
+
+```typescript
+// VIOLATION: Not validating JWT secret
+super({
+  secretOrKey: configService.get<string>('jwt.secret'), // VIOLATION: No validation
+});
+```
+
+```typescript
+// VIOLATION: Including sensitive data in token
+const payload = {
+  sub: user.id,
+  email: user.email,
+  password: user.passwordHash, // VIOLATION: Never include password
+};
+```
+
+```typescript
+// VIOLATION: Not using Bearer token format
+// Frontend should send: Authorization: Bearer <token>
+// Not: Authorization: <token> or Authorization: Token <token>
+```
+
+```typescript
+// VIOLATION: Not protecting endpoints
+@Controller('users')
+export class UsersController {
+  @Get(':id') // VIOLATION: Missing @UseGuards(JwtAuthGuard)
+  async findOne(@Param('id') id: string) {
+    return this.usersService.findOne(id);
+  }
+}
+```
+
+```typescript
+// VIOLATION: Not validating token payload
+validate(payload: JwtPayload): AuthenticatedUser {
+  return { id: payload.sub, email: payload.email }; // VIOLATION: No validation
+}
+```
+
+```typescript
+// VIOLATION: Using same secret for all environments
+const jwtSecret = 'development-secret'; // VIOLATION: Should be different per environment
+```
+
+## Password Security
+
+- Hash passwords using `bcrypt` with salt rounds (minimum 10).
+- Never store plain text passwords.
+- Never return password hash in API responses.
+- Compare passwords using `bcrypt.compare()`.
+- Use strong password requirements (minimum 8 characters).
+
+## Token Security
+
+- Use strong, random JWT secrets (minimum 32 characters).
+- Set appropriate token expiration (1 hour default).
+- Use HTTPS in production to protect tokens in transit.
+- Do not store tokens in localStorage for sensitive applications (consider httpOnly cookies).
+- Implement token refresh mechanism for long-lived sessions.
+
+## Authentication Flow
+
+1. User registers/logs in with credentials.
+2. Server validates credentials.
+3. Server generates JWT token with user ID and email.
+4. Server returns token to client.
+5. Client stores token and sends in `Authorization: Bearer <token>` header.
+6. Server validates token on protected endpoints.
+7. Server extracts user from token and sets `req.user`.
+
+## Exceptions
+
+- Health check endpoints may not require authentication.
+- Public endpoints (register, login) do not require authentication.
+- Development mode may use weaker secrets (not recommended).

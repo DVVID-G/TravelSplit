@@ -1,0 +1,247 @@
+---
+description: Enforces performance optimization standards including memoization, lazy loading, and Core Web Vitals for TravelSplit frontend.
+globs:
+  - Frontend/src/**/*.tsx
+  - Frontend/src/**/*.ts
+alwaysApply: false
+---
+
+# Performance Optimization Standards
+
+## Rules
+
+- Use `React.memo()` for components that re-render frequently with same props.
+- Use `useMemo()` for expensive calculations.
+- Use `useCallback()` for functions passed as props to memoized components.
+- Lazy load routes with `React.lazy()` and `Suspense`.
+- Optimize images with proper sizing and lazy loading.
+- Minimize bundle size by code splitting.
+- Use TanStack Query caching effectively.
+- Avoid unnecessary re-renders.
+
+## Memoization
+
+- Use `React.memo()` for pure components that receive stable props.
+- Use `useMemo()` for expensive computations (filtering, sorting, transformations).
+- Use `useCallback()` for event handlers passed to child components.
+- Include all dependencies in dependency arrays.
+- Do not over-memoize (only when there's a performance issue).
+
+## Code Splitting
+
+- Lazy load route components with `React.lazy()`.
+- Use `Suspense` with fallback for lazy-loaded components.
+- Split large components into smaller chunks.
+- Use dynamic imports for heavy libraries.
+
+## Image Optimization
+
+- Use appropriate image formats (WebP, AVIF when supported).
+- Provide proper image dimensions.
+- Use lazy loading for images below the fold.
+- Use `loading="lazy"` attribute for images.
+- Optimize image sizes before uploading.
+
+## Query Optimization
+
+- Set appropriate `staleTime` to reduce unnecessary refetches.
+- Use `enabled` option to prevent unnecessary queries.
+- Use `placeholderData` for optimistic UI updates.
+- Invalidate queries only when necessary.
+- Use `refetchOnWindowFocus: false` for better UX.
+
+## Bundle Size
+
+- Remove unused imports and dependencies.
+- Use tree-shaking friendly imports.
+- Avoid importing entire libraries when only specific functions are needed.
+- Monitor bundle size with build tools.
+- Use code splitting for large features.
+
+## Re-render Optimization
+
+- Avoid creating objects/functions in render.
+- Use stable references for callbacks and values.
+- Extract static values outside components.
+- Use `useMemo()` and `useCallback()` appropriately.
+- Profile components to identify unnecessary re-renders.
+
+## DO
+
+```typescript
+// Memoized component
+export const ExpensiveComponent = React.memo(function ExpensiveComponent({
+  data,
+  onUpdate,
+}: {
+  data: ExpensiveData[];
+  onUpdate: (id: string) => void;
+}) {
+  const processedData = useMemo(() => {
+    return data.filter(item => item.active).sort((a, b) => a.date - b.date);
+  }, [data]);
+  
+  const handleUpdate = useCallback((id: string) => {
+    onUpdate(id);
+  }, [onUpdate]);
+  
+  return <div>{/* Render processedData */}</div>;
+});
+
+// Lazy loading routes
+const ExpenseFormPage = React.lazy(() => import('@/pages/ExpenseFormPage'));
+const TripsListPage = React.lazy(() => import('@/pages/TripsListPage'));
+
+function App() {
+  return (
+    <Router>
+      <Suspense fallback={<LoadingState />}>
+        <Routes>
+          <Route path="/expenses/new" element={<ExpenseFormPage />} />
+          <Route path="/trips" element={<TripsListPage />} />
+        </Routes>
+      </Suspense>
+    </Router>
+  );
+}
+
+// Optimized query with proper caching
+const { data: trips } = useQuery({
+  queryKey: ['user-trips'],
+  queryFn: getUserTrips,
+  enabled: isAuthenticated,
+  staleTime: 5 * 60 * 1000, // 5 minutes - reduces refetches
+  refetchOnWindowFocus: false, // Better UX
+});
+
+// useMemo for expensive calculations
+function TripSummary({ trips }: { trips: Trip[] }) {
+  const totalAmount = useMemo(() => {
+    return trips.reduce((sum, trip) => sum + trip.totalAmount, 0);
+  }, [trips]);
+  
+  const recentTrips = useMemo(() => {
+    return trips
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0, 3);
+  }, [trips]);
+  
+  return <div>{/* Render summary */}</div>;
+}
+
+// useCallback for stable function references
+function ExpenseForm({ onSubmit }: ExpenseFormProps) {
+  const handleSubmit = useCallback((data: ExpenseData) => {
+    onSubmit(data);
+  }, [onSubmit]);
+  
+  return <form onSubmit={handleSubmit}>{/* Form fields */}</form>;
+}
+```
+
+```typescript
+// Optimized image loading
+function ReceiptImage({ src, alt }: { src: string; alt: string }) {
+  return (
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      className="w-full h-auto rounded-lg"
+      decoding="async"
+    />
+  );
+}
+
+// Static values outside component
+const DEFAULT_OPTIONS = {
+  retry: 1,
+  staleTime: 5 * 60 * 1000,
+};
+
+function useTrips() {
+  return useQuery({
+    queryKey: ['trips'],
+    queryFn: getTrips,
+    ...DEFAULT_OPTIONS,
+  });
+}
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: Creating function in render
+function Component({ onClick }: Props) {
+  return (
+    <button onClick={() => onClick('value')}> {/* VIOLATION: Creates new function each render */}
+      Click
+    </button>
+  );
+}
+```
+
+```typescript
+// VIOLATION: Not memoizing expensive calculation
+function TripSummary({ trips }: { trips: Trip[] }) {
+  const totalAmount = trips.reduce((sum, trip) => sum + trip.totalAmount, 0); // VIOLATION: Recalculates on every render
+  return <div>Total: {totalAmount}</div>;
+}
+```
+
+```typescript
+// VIOLATION: Not using React.memo for frequently re-rendered component
+function TripCard({ trip, onSelect }: TripCardProps) { // VIOLATION: Should use React.memo()
+  return <div onClick={() => onSelect(trip.id)}>{trip.name}</div>;
+}
+```
+
+```typescript
+// VIOLATION: Unnecessary query refetches
+const { data } = useQuery({
+  queryKey: ['trips'],
+  queryFn: getTrips,
+  staleTime: 0, // VIOLATION: Refetches immediately
+  refetchOnWindowFocus: true, // VIOLATION: Refetches on window focus
+});
+```
+
+```typescript
+// VIOLATION: Creating object in render
+function Component({ style }: Props) {
+  return <div style={{ padding: '16px' }}> {/* VIOLATION: Creates new object each render */}
+    Content
+  </div>;
+}
+```
+
+```typescript
+// VIOLATION: Not lazy loading heavy components
+import { ExpenseFormPage } from '@/pages/ExpenseFormPage'; // VIOLATION: Loads immediately
+
+function App() {
+  return <Route path="/expenses/new" element={<ExpenseFormPage />} />;
+}
+```
+
+## Core Web Vitals
+
+- Optimize Largest Contentful Paint (LCP): lazy load images, optimize fonts.
+- Minimize First Input Delay (FID): reduce JavaScript execution time.
+- Reduce Cumulative Layout Shift (CLS): set image dimensions, avoid dynamic content insertion.
+- Monitor performance metrics in production.
+- Use performance profiling tools.
+
+## Bundle Optimization
+
+- Analyze bundle with `npm run build -- --analyze`.
+- Remove unused dependencies.
+- Use dynamic imports for heavy libraries.
+- Split vendor chunks appropriately.
+- Use tree-shaking friendly imports.
+
+## Exceptions
+
+- Small components may not need memoization.
+- Development mode may skip some optimizations.
+- Test components may not need performance optimizations.

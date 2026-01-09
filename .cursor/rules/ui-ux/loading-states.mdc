@@ -1,0 +1,301 @@
+---
+description: Enforces loading, error, and empty state standards for TravelSplit frontend components.
+globs:
+  - Frontend/src/**/*.tsx
+alwaysApply: false
+---
+
+# Loading, Error, and Empty States Standards
+
+## Rules
+
+- Always handle three states: loading, error, and empty.
+- Use `Skeleton` component for loading states.
+- Use `ErrorState` component for error states.
+- Use `EmptyState` component for empty states.
+- Show loading indicators during data fetching.
+- Provide retry functionality for error states.
+- Display user-friendly error messages in Spanish.
+- Handle loading states at appropriate component level.
+
+## Loading States
+
+- Use `Skeleton` component for content placeholders.
+- Show loading spinner for full-page loads.
+- Use `isLoading` from TanStack Query hooks.
+- Display loading state immediately, don't delay.
+- Use appropriate loading indicators: spinner, skeleton, or progress bar.
+
+## Error States
+
+- Use `ErrorState` component for error display.
+- Provide clear, actionable error messages in Spanish.
+- Include retry button when appropriate.
+- Handle different error types: network, validation, server errors.
+- Log errors for debugging but don't expose technical details to users.
+
+## Empty States
+
+- Use `EmptyState` component for empty data.
+- Provide helpful messaging explaining why it's empty.
+- Include call-to-action when appropriate (e.g., "Create your first trip").
+- Use appropriate icons (slate-300 color, 64px size).
+- Make empty states informative and actionable.
+
+## State Handling Pattern
+
+- Check loading state first: `if (isLoading) return <LoadingState />`.
+- Check error state second: `if (error) return <ErrorState />`.
+- Check empty state third: `if (!data || data.length === 0) return <EmptyState />`.
+- Render content last: `return <Content data={data} />`.
+
+## Component States
+
+- Page-level: Full-page loading/error/empty states.
+- Component-level: Inline loading/error states within components.
+- Form-level: Loading state during submission, error messages inline.
+- List-level: Skeleton items for lists, empty state for no items.
+
+## DO
+
+```typescript
+// Page with all three states
+export function HomePage() {
+  const { isAuthenticated, isLoading: authLoading } = useAuthContext();
+  const { data: trips, isLoading: tripsLoading, error: tripsError, refetch } = useQuery({
+    queryKey: ['user-trips'],
+    queryFn: getUserTrips,
+    enabled: isAuthenticated,
+  });
+  
+  // Loading state
+  if (authLoading || tripsLoading) {
+    return <LoadingState />;
+  }
+  
+  // Error state
+  if (tripsError) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <ErrorState
+            message="No pudimos cargar tus viajes. Intenta de nuevo."
+            onRetry={() => refetch()}
+          />
+        </main>
+      </div>
+    );
+  }
+  
+  // Empty state
+  if (!trips || trips.length === 0) {
+    return <HomePageEmptyState />;
+  }
+  
+  // Content state
+  return <HomePageWithTrips trips={trips} />;
+}
+
+// Loading state component
+export function LoadingState() {
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="text-center">
+        <svg
+          className="animate-spin h-8 w-8 text-violet-600 mx-auto"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          aria-label="Cargando..."
+        >
+          {/* Spinner SVG */}
+        </svg>
+        <p className="mt-4 text-slate-600">Cargando...</p>
+      </div>
+    </div>
+  );
+}
+
+// Error state component
+export function ErrorState({ message, onRetry }: ErrorStateProps) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 p-6">
+      <div className="flex items-center gap-3 text-red-600">
+        <AlertCircle size={24} aria-hidden="true" />
+        <p className="text-sm font-medium text-center">{message}</p>
+      </div>
+      {onRetry && (
+        <Button variant="primary" onClick={onRetry}>
+          Reintentar
+        </Button>
+      )}
+    </div>
+  );
+}
+
+// Empty state component
+export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
+  return (
+    <div className="flex flex-col items-center justify-center flex-1 px-6 py-8">
+      {icon && <div className="text-slate-300 mb-4" aria-hidden="true">{icon}</div>}
+      <h2 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center">
+        {title}
+      </h2>
+      {description && (
+        <p className="text-slate-600 text-center mb-6 max-w-md">{description}</p>
+      )}
+      {action && <div className="w-full max-w-xs">{action}</div>}
+    </div>
+  );
+}
+
+// Skeleton component
+export function Skeleton({ className = '' }: SkeletonProps) {
+  return (
+    <div
+      className={`animate-pulse bg-slate-200 rounded ${className}`}
+      aria-label="Cargando..."
+      role="status"
+    />
+  );
+}
+
+// List with skeleton loading
+export function TripList({ trips, isLoading }: TripListProps) {
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map(i => (
+          <Skeleton key={i} className="h-24 w-full" />
+        ))}
+      </div>
+    );
+  }
+  
+  if (!trips || trips.length === 0) {
+    return (
+      <EmptyState
+        icon={<MapIcon size={64} />}
+        title="No tienes viajes aún"
+        description="Crea tu primer viaje para empezar a dividir gastos con tus amigos."
+        action={<Button>Crear mi primer viaje</Button>}
+      />
+    );
+  }
+  
+  return (
+    <div className="space-y-4">
+      {trips.map(trip => (
+        <TripCard key={trip.id} trip={trip} />
+      ))}
+    </div>
+  );
+}
+
+// Form with loading state
+export function ExpenseForm({ onSubmit, isLoading }: ExpenseFormProps) {
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      {/* Form fields */}
+      <Button type="submit" disabled={isLoading}>
+        {isLoading ? (
+          <span className="flex items-center gap-2">
+            <Spinner />
+            Guardando...
+          </span>
+        ) : (
+          'Guardar'
+        )}
+      </Button>
+    </form>
+  );
+}
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: No loading state
+export function TripList({ trips }: TripListProps) {
+  return (
+    <div>
+      {trips.map(trip => <TripCard key={trip.id} trip={trip} />)} {/* VIOLATION: trips may be undefined */}
+    </div>
+  );
+}
+```
+
+```typescript
+// VIOLATION: No error handling
+export function HomePage() {
+  const { data: trips } = useQuery({ queryKey: ['trips'], queryFn: getTrips });
+  return <TripList trips={trips} />; // VIOLATION: No error or loading check
+}
+```
+
+```typescript
+// VIOLATION: Technical error message
+<ErrorState message="Error 500: Internal Server Error" /> {/* VIOLATION: Should be user-friendly */}
+```
+
+```typescript
+// VIOLATION: No empty state
+export function TripList({ trips }: TripListProps) {
+  if (trips.length === 0) {
+    return null; // VIOLATION: Should show EmptyState
+  }
+  return <div>{/* Render trips */}</div>;
+}
+```
+
+```typescript
+// VIOLATION: Loading state without indicator
+export function Component() {
+  const { isLoading } = useQuery({ queryKey: ['data'], queryFn: getData });
+  if (isLoading) {
+    return <div>Cargando...</div>; // VIOLATION: Should use LoadingState or Skeleton
+  }
+}
+```
+
+```typescript
+// VIOLATION: Error without retry option
+<ErrorState message="Error al cargar datos" /> {/* VIOLATION: Should provide onRetry */}
+```
+
+## Error Message Guidelines
+
+- Write error messages in Spanish.
+- Make messages user-friendly and actionable.
+- Do not expose technical details (status codes, stack traces).
+- Provide context about what went wrong.
+- Suggest how to fix the error when possible.
+
+## Loading Indicator Guidelines
+
+- Use consistent loading indicators across the app.
+- Show loading immediately, don't delay.
+- Use appropriate indicator type: spinner for full-page, skeleton for content.
+- Provide accessible labels: `aria-label="Cargando..."`.
+
+## Empty State Guidelines
+
+- Use descriptive titles explaining why it's empty.
+- Provide helpful descriptions when appropriate.
+- Include call-to-action buttons when relevant.
+- Use appropriate icons (slate-300, 64px size).
+- Make empty states feel welcoming, not like errors.
+
+## State Priority
+
+1. Loading: Show immediately when data is being fetched.
+2. Error: Show when request fails, allow retry.
+3. Empty: Show when data exists but is empty.
+4. Content: Show when data is available.
+
+## Exceptions
+
+- Simple components may skip some states if not applicable.
+- Development mode may show mock data instead of empty states.
+- Test components may use simplified state handling.

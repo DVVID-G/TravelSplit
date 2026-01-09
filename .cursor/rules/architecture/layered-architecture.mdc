@@ -1,0 +1,242 @@
+---
+description: Enforces Layered Architecture pattern and CSED (Controller-Service-Entity-DTO) structure for TravelSplit backend modules.
+globs:
+  - Backend/src/modules/**/*.ts
+  - Backend/src/common/**/*.ts
+alwaysApply: false
+---
+
+# Layered Architecture and CSED Pattern
+
+## Rules
+
+- Enforce strict Layered Architecture with horizontal layers.
+- Each layer has single responsibility and communicates only with immediate lower layer.
+- Use CSED pattern (Controller-Service-Entity-DTO) for all backend modules.
+- Controllers never access repositories or entities directly.
+- Services contain all business logic and data access.
+- Entities represent data models only, no business logic.
+- DTOs handle data transfer and validation only.
+
+## Layer Hierarchy
+
+### Layer 1: Controllers (HTTP Layer)
+- Handle HTTP requests and responses.
+- Validate input using DTOs.
+- Delegate all business logic to Services.
+- Never access repositories or entities directly.
+- Return DTOs, not entities.
+
+### Layer 2: Services (Business Logic Layer)
+- Contain all business logic.
+- Access data through TypeORM repositories.
+- Transform entities to DTOs.
+- Handle business rules and validations.
+- Never access HTTP request/response objects.
+
+### Layer 3: Repositories/Entities (Data Access Layer)
+- Entities define data structure only.
+- Repositories handle database operations.
+- No business logic in entities or repositories.
+- Use TypeORM decorators for database mapping.
+
+### Layer 4: DTOs (Data Transfer Layer)
+- Define contracts for API input/output.
+- Use class-validator for validation.
+- Transform between entities and API contracts.
+- Separate concerns from entities.
+
+## CSED Pattern Structure
+
+Each module must follow this structure:
+
+```
+modules/{resource}/
+├── controllers/
+│   └── {resource}.controller.ts
+├── services/
+│   └── {resource}.service.ts
+├── entities/
+│   └── {resource}.entity.ts
+├── dto/
+│   ├── create-{resource}.dto.ts
+│   ├── update-{resource}.dto.ts
+│   └── {resource}-response.dto.ts
+└── {resource}.module.ts
+```
+
+## Communication Rules
+
+- Controllers → Services: Allowed (delegation).
+- Services → Repositories/Entities: Allowed (data access).
+- Controllers → Repositories: Prohibited.
+- Controllers → Entities: Prohibited.
+- Services → Controllers: Prohibited (use DTOs).
+- Entities → Services: Prohibited.
+
+## Base Entity Pattern
+
+- All entities extend `BaseEntity` for common fields.
+- BaseEntity provides: `id`, `createdAt`, `updatedAt`, `deletedAt`.
+- Soft delete enabled by default via `deletedAt`.
+- Entities never contain business logic methods.
+
+## DO
+
+```typescript
+// Controller delegates to Service
+@Controller('users')
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+  
+  @Get(':id')
+  async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<UserResponseDto> {
+    return this.usersService.findOne(id);
+  }
+}
+
+// Service contains business logic
+@Injectable()
+export class UsersService {
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
+  
+  async findOne(id: string): Promise<UserResponseDto> {
+    const user = await this.userRepository.findOne({
+      where: { id, deletedAt: IsNull() },
+    });
+    
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    
+    return UserMapper.toResponseDto(user);
+  }
+}
+
+// Entity extends BaseEntity
+@Entity('users')
+export class User extends BaseEntity {
+  @Column({ unique: true })
+  email!: string;
+  
+  @Column()
+  name!: string;
+  
+  @Column({ name: 'password_hash' })
+  passwordHash!: string;
+}
+
+// DTO for validation
+export class CreateUserDto {
+  @IsEmail()
+  @ApiProperty({ example: 'user@example.com' })
+  email!: string;
+  
+  @IsString()
+  @MinLength(6)
+  @ApiProperty({ example: 'password123' })
+  password!: string;
+  
+  @IsString()
+  @ApiProperty({ example: 'John Doe' })
+  name!: string;
+}
+```
+
+```typescript
+// Module structure
+@Module({
+  imports: [TypeOrmModule.forFeature([User])],
+  controllers: [UsersController],
+  providers: [UsersService],
+  exports: [UsersService],
+})
+export class UsersModule {}
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: Controller accessing repository directly
+@Controller('users')
+export class UsersController {
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
+  
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return this.userRepository.findOne({ where: { id } }); // VIOLATION
+  }
+}
+```
+
+```typescript
+// VIOLATION: Service accessing HTTP request
+@Injectable()
+export class UsersService {
+  async findOne(@Request() req: Request) { // VIOLATION
+    // Business logic
+  }
+}
+```
+
+```typescript
+// VIOLATION: Entity with business logic
+@Entity('users')
+export class User extends BaseEntity {
+  @Column()
+  email!: string;
+  
+  // VIOLATION: Business logic in entity
+  validateEmail(): boolean {
+    return this.email.includes('@');
+  }
+}
+```
+
+```typescript
+// VIOLATION: DTO with database queries
+export class CreateUserDto {
+  @IsEmail()
+  email!: string;
+  
+  // VIOLATION: Database operation in DTO
+  async checkIfExists() {
+    return repository.findOne({ where: { email: this.email } });
+  }
+}
+```
+
+```typescript
+// VIOLATION: Controller returning entity directly
+@Get(':id')
+async findOne(@Param('id') id: string): Promise<User> { // VIOLATION
+  return this.usersService.findOne(id);
+}
+```
+
+## Module Organization
+
+- Each domain resource has its own module.
+- Modules export services for use in other modules.
+- Modules import only what they need.
+- Shared entities go in `common/entities/`.
+- Shared DTOs go in `common/dto/` if used across modules.
+
+## Dependency Injection
+
+- Use constructor injection for all dependencies.
+- Services injected into controllers.
+- Repositories injected into services.
+- Never use `new` keyword for services or repositories.
+
+## Exceptions
+
+- Health check modules may not require entities or DTOs.
+- Common utilities may be shared across layers but must be pure functions.
+- Mappers can transform between entities and DTOs (placed in `common/mappers/`).

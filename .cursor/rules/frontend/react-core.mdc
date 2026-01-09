@@ -1,0 +1,312 @@
+---
+description: Enforces React v19 standards including hooks, component composition, and best practices for TravelSplit frontend.
+globs:
+  - Frontend/src/**/*.tsx
+  - Frontend/src/**/*.ts
+alwaysApply: false
+---
+
+# React v19 Core Standards
+
+## Rules
+
+- Use functional components only, no class components.
+- Use hooks for state management and side effects.
+- Extract custom hooks for reusable logic.
+- Use proper dependency arrays in hooks.
+- Memoize expensive computations with `useMemo()`.
+- Memoize callbacks with `useCallback()` when passed as props.
+- Use TypeScript for all components and hooks.
+- Keep components small and focused on single responsibility.
+
+## Component Structure
+
+- Use function declarations for components: `export function ComponentName()`.
+- Define props interface: `interface ComponentNameProps`.
+- Use destructuring for props.
+- Return JSX directly or use early returns for conditional rendering.
+- Keep components under 200 lines when possible.
+
+## Hooks Usage
+
+- Use `useState()` for local component state.
+- Use `useEffect()` for side effects (API calls, subscriptions, DOM manipulation).
+- Use `useCallback()` for functions passed to child components.
+- Use `useMemo()` for expensive calculations.
+- Use `useRef()` for mutable values that don't trigger re-renders.
+- Follow Rules of Hooks: only call hooks at top level, not in loops or conditions.
+
+## Custom Hooks
+
+- Extract reusable logic into custom hooks.
+- Name custom hooks with `use` prefix: `useAuth`, `useUser`, `useExpenseForm`.
+- Return objects or arrays with descriptive names.
+- Keep hooks focused on single concern.
+- Place hooks in `hooks/` directory.
+
+## Component Composition
+
+- Compose components from smaller components.
+- Use children prop for flexible composition.
+- Pass props explicitly, avoid prop drilling.
+- Use Context API for deeply nested prop passing when needed.
+- Prefer composition over inheritance.
+
+## State Management
+
+- Use local state (`useState`) for component-specific state.
+- Use Context API for shared state across component tree.
+- Use TanStack Query for server state.
+- Use Zustand for global UI state and session management.
+- Avoid prop drilling beyond 2-3 levels.
+
+## Effect Dependencies
+
+- Include all dependencies in dependency array.
+- Use ESLint rule `exhaustive-deps` to catch missing dependencies.
+- Use `useCallback()` and `useMemo()` to stabilize dependencies.
+- Avoid empty dependency arrays unless effect should run only on mount.
+
+## Performance Optimization
+
+- Memoize expensive calculations with `useMemo()`.
+- Memoize callbacks with `useCallback()`.
+- Use `React.memo()` for components that re-render frequently with same props.
+- Lazy load components with `React.lazy()` and `Suspense`.
+- Avoid creating objects/functions in render.
+
+## DO
+
+```typescript
+// Functional component with proper typing
+interface ButtonProps {
+  children: ReactNode;
+  variant?: 'primary' | 'secondary';
+  onClick?: () => void;
+  disabled?: boolean;
+}
+
+export function Button({
+  children,
+  variant = 'primary',
+  onClick,
+  disabled = false,
+}: ButtonProps) {
+  return (
+    <button
+      type="button"
+      className={`btn btn-${variant}`}
+      onClick={onClick}
+      disabled={disabled}
+    >
+      {children}
+    </button>
+  );
+}
+
+// Custom hook for reusable logic
+export function useAuth() {
+  const [authState, setAuthState] = useState<AuthState>({
+    isAuthenticated: false,
+    user: null,
+    isLoading: true,
+  });
+  
+  const login = useCallback(async (credentials: LoginRequest) => {
+    const response = await loginUser(credentials);
+    localStorage.setItem(TOKEN_KEY, response.token);
+    setAuthState({
+      isAuthenticated: true,
+      user: response.user,
+      isLoading: false,
+    });
+    return response;
+  }, []);
+  
+  const logout = useCallback(() => {
+    localStorage.removeItem(TOKEN_KEY);
+    setAuthState({
+      isAuthenticated: false,
+      user: null,
+      isLoading: false,
+    });
+  }, []);
+  
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+  
+  return {
+    ...authState,
+    login,
+    logout,
+  };
+}
+
+// Component with proper effect dependencies
+export function UserProfile({ userId }: { userId: string }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    let cancelled = false;
+    
+    async function fetchUser() {
+      setIsLoading(true);
+      try {
+        const data = await getUserById(userId);
+        if (!cancelled) {
+          setUser(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user:', error);
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+    
+    fetchUser();
+    
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]); // Correct dependency array
+  
+  if (isLoading) return <LoadingState />;
+  if (!user) return <NotFoundState />;
+  
+  return <div>{user.name}</div>;
+}
+
+// Memoized component
+export const ExpensiveComponent = React.memo(function ExpensiveComponent({
+  data,
+  onUpdate,
+}: {
+  data: ExpensiveData;
+  onUpdate: (id: string) => void;
+}) {
+  const processedData = useMemo(() => {
+    return expensiveCalculation(data);
+  }, [data]);
+  
+  const handleUpdate = useCallback((id: string) => {
+    onUpdate(id);
+  }, [onUpdate]);
+  
+  return <div>{/* Render processedData */}</div>;
+});
+```
+
+```typescript
+// Component composition
+export function ExpenseForm({ onSubmit }: ExpenseFormProps) {
+  return (
+    <form onSubmit={handleSubmit}>
+      <FormField label="Título">
+        <Input name="title" />
+      </FormField>
+      <FormField label="Monto">
+        <AmountInput name="amount" />
+      </FormField>
+      <Button type="submit">Guardar</Button>
+    </form>
+  );
+}
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: Class component (use functional instead)
+export class Button extends React.Component<ButtonProps> { // VIOLATION
+  render() {
+    return <button>{this.props.children}</button>;
+  }
+}
+```
+
+```typescript
+// VIOLATION: Missing dependency in useEffect
+useEffect(() => {
+  fetchUser(userId); // VIOLATION: userId not in dependency array
+}, []); // Should be [userId]
+```
+
+```typescript
+// VIOLATION: Creating function in render
+function Component({ onClick }: Props) {
+  return (
+    <button onClick={() => onClick('value')}> // VIOLATION: Creates new function on each render
+      Click
+    </button>
+  );
+}
+```
+
+```typescript
+// VIOLATION: Hooks called conditionally
+function Component({ condition }: Props) {
+  if (condition) {
+    const [state, setState] = useState(0); // VIOLATION: Hook called conditionally
+  }
+  return <div>Content</div>;
+}
+```
+
+```typescript
+// VIOLATION: Missing cleanup in useEffect
+useEffect(() => {
+  const interval = setInterval(() => {
+    // Do something
+  }, 1000);
+  // VIOLATION: Missing cleanup function
+}, []);
+```
+
+```typescript
+// VIOLATION: Prop drilling
+function App() {
+  const [user, setUser] = useState(null);
+  return <Page user={user} setUser={setUser} />; // VIOLATION: Pass through multiple levels
+}
+
+function Page({ user, setUser }: Props) {
+  return <Content user={user} setUser={setUser} />;
+}
+
+function Content({ user, setUser }: Props) {
+  return <Profile user={user} setUser={setUser} />; // Use Context instead
+}
+```
+
+## Context API Usage
+
+- Create contexts in `contexts/` directory.
+- Use `createContext()` and `useContext()` hooks.
+- Provide context at appropriate level in component tree.
+- Use custom hook to access context: `useAuthContext()`.
+- Avoid overusing Context (prefer props for 1-2 levels).
+
+## Component Organization
+
+- Place components in appropriate directory: `atoms/`, `molecules/`, `organisms/`.
+- Export components from `index.ts` for clean imports.
+- Keep component files focused on single component.
+- Co-locate related components when they're tightly coupled.
+
+## TypeScript Best Practices
+
+- Define props interfaces for all components.
+- Use `ReactNode` for children prop.
+- Use proper event types: `FormEvent`, `MouseEvent`, `ChangeEvent`.
+- Avoid `any` type, use `unknown` when type is truly unknown.
+- Use type inference when types are obvious.
+
+## Exceptions
+
+- Test files may use class components for testing purposes.
+- Legacy code migration may temporarily include class components.
+- Utility functions may not follow component patterns.

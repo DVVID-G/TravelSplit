@@ -1,0 +1,235 @@
+---
+description: Enforces responsive design standards including mobile-first approach, breakpoints, and viewport handling for TravelSplit frontend.
+globs:
+  - Frontend/src/**/*.tsx
+alwaysApply: false
+---
+
+# Responsive Design Standards
+
+## Rules
+
+- Use mobile-first approach: design for mobile (360px - 430px) first, then scale up.
+- Use Tailwind breakpoints: `sm:` (640px), `md:` (768px), `lg:` (1024px).
+- Set proper viewport meta tag in HTML.
+- Use responsive utilities: `px-4 md:px-8`, `text-base md:text-lg`.
+- Ensure touch targets are at least 44px (min-h-[44px] or h-12).
+- Use `max-w-md` for mobile containers, `max-w-7xl` for desktop.
+- Maintain consistent spacing across breakpoints.
+- Test on actual mobile devices when possible.
+
+## Mobile-First Approach
+
+- Write base styles for mobile (default, no prefix).
+- Add larger screen styles with breakpoint prefixes: `md:`, `lg:`.
+- Never use desktop-first approach (avoid `lg:` then base).
+- Design primarily for mobile (90% of usage).
+
+## Breakpoints
+
+- `sm:` (640px): Small tablets, large phones.
+- `md:` (768px): Tablets, small laptops.
+- `lg:` (1024px): Desktop screens.
+- Use breakpoints sparingly, only when necessary.
+- Prefer fluid layouts over fixed breakpoints.
+
+## Container Sizing
+
+- Mobile: `max-w-md` (448px) centered with `mx-auto`.
+- Desktop: `max-w-7xl` (1280px) for full-width layouts.
+- Use `px-4` or `px-6` for mobile padding.
+- Use `px-8` or `px-12` for desktop padding.
+
+## Touch Targets
+
+- Minimum touch target size: 44px × 44px (iOS) or 48px × 48px (Android).
+- Use `min-h-[44px]` or `h-12` for buttons.
+- Ensure adequate spacing between interactive elements.
+- Use `gap-4` or `gap-6` for spacing between buttons.
+
+## Typography Scaling
+
+- Base font sizes: `text-sm` (14px), `text-base` (16px), `text-lg` (18px).
+- Headings: `text-xl` (20px), `text-2xl` (24px), `text-3xl` (30px).
+- Scale up for desktop: `text-base md:text-lg`, `text-2xl md:text-3xl`.
+- Maintain readable line heights: `leading-normal`, `leading-relaxed`.
+
+## Spacing Responsiveness
+
+- Use consistent spacing scale: `p-4`, `p-6`, `p-8`.
+- Scale padding for larger screens: `p-4 md:p-8`.
+- Use `gap-4 md:gap-6` for flex/grid gaps.
+- Maintain visual hierarchy across breakpoints.
+
+## Layout Patterns
+
+- Stack vertically on mobile, horizontal on desktop.
+- Use `flex-col md:flex-row` for responsive layouts.
+- Hide/show elements with `hidden md:block` or `block md:hidden`.
+- Use grid with responsive columns: `grid-cols-1 md:grid-cols-2 lg:grid-cols-3`.
+
+## DO
+
+```typescript
+// Mobile-first container
+export function Container({ children }: ContainerProps) {
+  return (
+    <div className="min-h-screen bg-slate-50 px-4 py-8 md:px-8 md:py-12">
+      <div className="max-w-md md:max-w-7xl mx-auto">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// Responsive typography
+export function Heading({ children }: HeadingProps) {
+  return (
+    <h1 className="text-2xl md:text-3xl font-heading font-bold text-slate-900">
+      {children}
+    </h1>
+  );
+}
+
+// Responsive spacing
+export function Card({ children }: CardProps) {
+  return (
+    <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
+      {children}
+    </div>
+  );
+}
+
+// Responsive layout
+export function TripGrid({ trips }: TripGridProps) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+      {trips.map(trip => (
+        <TripCard key={trip.id} trip={trip} />
+      ))}
+    </div>
+  );
+}
+
+// Responsive button sizing
+export function Button({ children, size = 'md' }: ButtonProps) {
+  const sizes = {
+    sm: 'px-3 py-1.5 text-sm min-h-[36px]',
+    md: 'px-4 py-2 text-base min-h-[44px]', // Touch target
+    lg: 'px-6 py-3 text-lg h-12', // Touch target
+  };
+  
+  return (
+    <button className={`${sizes[size]} rounded-xl`}>
+      {children}
+    </button>
+  );
+}
+
+// Responsive navigation
+export function Navigation() {
+  return (
+    <nav className="hidden md:flex items-center space-x-4">
+      {/* Desktop navigation */}
+    </nav>
+  );
+}
+
+// Mobile menu
+export function MobileMenu() {
+  return (
+    <div className="md:hidden">
+      {/* Mobile navigation */}
+    </div>
+  );
+}
+```
+
+```typescript
+// Responsive form layout
+export function FormLayout({ children }: FormLayoutProps) {
+  return (
+    <div className="w-full max-w-md mx-auto px-4 py-8 md:px-8 md:py-12">
+      <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+        {children}
+      </div>
+    </div>
+  );
+}
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: Desktop-first approach
+<div className="lg:p-8 p-4"> {/* VIOLATION: Should be p-4 lg:p-8 */}
+  Content
+</div>
+```
+
+```typescript
+// VIOLATION: Too small touch target
+<button className="h-8 px-2"> {/* VIOLATION: Should be min-h-[44px] */}
+  Click
+</button>
+```
+
+```typescript
+// VIOLATION: Fixed width breaking mobile
+<div className="w-[800px]"> {/* VIOLATION: Use max-w-md or responsive width */}
+  Content
+</div>
+```
+
+```typescript
+// VIOLATION: No responsive spacing
+<div className="p-4"> {/* VIOLATION: Should scale for desktop p-4 md:p-8 */}
+  Content
+</div>
+```
+
+```typescript
+// VIOLATION: Horizontal layout on mobile
+<div className="flex-row"> {/* VIOLATION: Should be flex-col md:flex-row */}
+  <div>Item 1</div>
+  <div>Item 2</div>
+</div>
+```
+
+```typescript
+// VIOLATION: No viewport meta tag
+// index.html missing: <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+```
+
+## Viewport Configuration
+
+- Include viewport meta tag: `<meta name="viewport" content="width=device-width, initial-scale=1.0" />`.
+- Prevent zoom on iOS inputs: ensure inputs are at least 16px font size.
+- Use `user-scalable=no` only if absolutely necessary (not recommended).
+
+## Safe Areas (iOS)
+
+- Respect safe areas for notch and home indicator.
+- Use `pb-24` or `pb-safe` for bottom padding when using fixed bottom navigation.
+- Test on actual iOS devices to verify safe areas.
+
+## Image Responsiveness
+
+- Use responsive images: `w-full h-auto`.
+- Use `object-fit` for maintaining aspect ratios.
+- Provide appropriate image sizes for different breakpoints.
+- Use `loading="lazy"` for images below the fold.
+
+## Testing Guidelines
+
+- Test on actual mobile devices (360px - 430px width).
+- Test on tablets (768px width).
+- Test on desktop (1024px+ width).
+- Use browser DevTools responsive mode.
+- Verify touch targets are accessible.
+
+## Exceptions
+
+- Print styles may use different breakpoints.
+- Email templates may use fixed widths.
+- Admin panels may prioritize desktop experience.

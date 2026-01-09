@@ -1,0 +1,251 @@
+---
+description: Enforces Atomic Design principles and component organization standards for TravelSplit frontend.
+globs:
+  - Frontend/src/components/**/*.tsx
+alwaysApply: false
+---
+
+# Atomic Design Standards
+
+## Rules
+
+- Organize components using Atomic Design hierarchy: Atoms → Molecules → Organisms.
+- Place components in appropriate directories: `atoms/`, `molecules/`, `organisms/`.
+- Export all components from `components/index.ts` barrel file.
+- Keep components focused on single responsibility.
+- Compose complex components from simpler ones.
+- Use consistent naming: `ComponentName.tsx` matching component name.
+
+## Atomic Design Hierarchy
+
+### Atoms
+- Basic building blocks that cannot be broken down further.
+- Examples: `Button`, `Input`, `Skeleton`, `Toast`.
+- Self-contained and reusable.
+- No business logic, only presentation.
+- Accept props for customization.
+
+### Molecules
+- Simple combinations of atoms.
+- Examples: `FormField`, `Card`, `CategorySelector`, `TripCard`.
+- Composed of multiple atoms.
+- May contain simple logic for composition.
+- Reusable across different contexts.
+
+### Organisms
+- Complex components combining molecules and atoms.
+- Examples: `Header`, `BottomTabBar`, `ExpenseForm`.
+- May contain business logic and state management.
+- Context-specific but reusable.
+- May use hooks for data fetching.
+
+## Component Organization
+
+- Place atoms in `components/atoms/` directory.
+- Place molecules in `components/molecules/` directory.
+- Place organisms in `components/organisms/` directory.
+- Export all components from `components/index.ts`.
+- Use named exports, not default exports.
+
+## Component Structure
+
+- One component per file.
+- File name matches component name: `Button.tsx` → `Button`.
+- Export component as named export.
+- Define props interface: `ComponentNameProps`.
+- Include JSDoc comments for complex components.
+
+## Composition Rules
+
+- Atoms cannot import from molecules or organisms.
+- Molecules can import from atoms only.
+- Organisms can import from atoms, molecules, and other organisms.
+- Pages compose organisms, molecules, and atoms.
+- Avoid circular dependencies.
+
+## DO
+
+```typescript
+// Atom: Button.tsx
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  children: ReactNode;
+  variant?: 'primary' | 'secondary' | 'danger';
+  size?: 'sm' | 'md' | 'lg';
+}
+
+export const Button = ({ children, variant = 'primary', size = 'md', ...props }: ButtonProps) => {
+  return (
+    <button
+      className={`btn btn-${variant} btn-${size}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
+
+// Molecule: FormField.tsx (composes Input atom)
+import { Input } from '../atoms/Input';
+
+interface FormFieldProps {
+  label: string;
+  error?: string;
+  children: ReactNode;
+}
+
+export const FormField = ({ label, error, children }: FormFieldProps) => {
+  return (
+    <div className="space-y-2">
+      <label className="font-medium text-sm">{label}</label>
+      {children}
+      {error && <p className="text-sm text-red-500">{error}</p>}
+    </div>
+  );
+};
+
+// Organism: Header.tsx (composes Button and other components)
+import { Button } from '../atoms/Button';
+import { useAuthContext } from '@/contexts/AuthContext';
+
+interface HeaderProps {
+  title?: string;
+  showActions?: boolean;
+}
+
+export const Header = ({ title = 'TravelSplit', showActions = true }: HeaderProps) => {
+  const { isAuthenticated, logout } = useAuthContext();
+  
+  return (
+    <header className="bg-white shadow-sm">
+      <div className="flex justify-between items-center">
+        <h1>{title}</h1>
+        {showActions && (
+          <nav>
+            {isAuthenticated ? (
+              <Button onClick={logout}>Cerrar Sesión</Button>
+            ) : (
+              <Button variant="primary">Iniciar Sesión</Button>
+            )}
+          </nav>
+        )}
+      </div>
+    </header>
+  );
+};
+
+// Barrel export: components/index.ts
+export { Button } from './atoms/Button';
+export { Input } from './atoms/Input';
+export { FormField } from './molecules/FormField';
+export { Card } from './molecules/Card';
+export { Header } from './organisms/Header';
+```
+
+```typescript
+// Page composing organisms, molecules, and atoms
+import { Header } from '@/components/organisms/Header';
+import { Card } from '@/components/molecules/Card';
+import { Button } from '@/components/atoms/Button';
+
+export function HomePage() {
+  return (
+    <div>
+      <Header />
+      <main>
+        <Card title="Bienvenido">
+          <Button>Crear Viaje</Button>
+        </Card>
+      </main>
+    </div>
+  );
+}
+```
+
+## DON'T
+
+```typescript
+// VIOLATION: Atom importing from molecule
+// atoms/Button.tsx
+import { FormField } from '../molecules/FormField'; // VIOLATION: Atoms cannot import molecules
+
+export const Button = () => {
+  return <button>Click</button>;
+};
+```
+
+```typescript
+// VIOLATION: Component in wrong directory
+// components/Button.tsx (should be in atoms/)
+export const Button = () => {
+  return <button>Click</button>;
+};
+```
+
+```typescript
+// VIOLATION: Multiple components in one file
+// components/Buttons.tsx
+export const PrimaryButton = () => <button>Primary</button>;
+export const SecondaryButton = () => <button>Secondary</button>; // VIOLATION: Separate files
+```
+
+```typescript
+// VIOLATION: Default export
+// components/Button.tsx
+export default function Button() { // VIOLATION: Use named export
+  return <button>Click</button>;
+}
+```
+
+```typescript
+// VIOLATION: Circular dependency
+// molecules/FormField.tsx
+import { Button } from '../atoms/Button';
+
+// atoms/Button.tsx
+import { FormField } from '../molecules/FormField'; // VIOLATION: Circular dependency
+```
+
+```typescript
+// VIOLATION: Business logic in atom
+// atoms/Button.tsx
+export const Button = () => {
+  const { data } = useQuery({ queryKey: ['user'] }); // VIOLATION: Atoms should not fetch data
+  return <button>{data?.name}</button>;
+};
+```
+
+## Component Guidelines
+
+### Atoms
+- Pure presentation components.
+- No side effects or data fetching.
+- Highly reusable.
+- Minimal props interface.
+- No dependencies on other components.
+
+### Molecules
+- Compose atoms together.
+- May have simple conditional logic.
+- Reusable across contexts.
+- May accept complex props.
+- No business logic or data fetching.
+
+### Organisms
+- Complex UI sections.
+- May use hooks for data fetching.
+- May contain business logic.
+- Context-specific but reusable.
+- Compose molecules and atoms.
+
+## Naming Conventions
+
+- Component files: `PascalCase.tsx` (e.g., `Button.tsx`).
+- Component names: `PascalCase` (e.g., `Button`).
+- Props interfaces: `ComponentNameProps` (e.g., `ButtonProps`).
+- Directory names: `kebab-case` (e.g., `atoms/`, `molecules/`).
+
+## Exceptions
+
+- Shared utilities may be in `utils/` directory.
+- Hooks are in `hooks/` directory, not components.
+- Types are in `types/` directory, not components.
