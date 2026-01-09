@@ -4,6 +4,10 @@ import { createExpense, uploadReceiptImage } from '@/services/expense.service';
 import type { CreateExpenseFormData } from '@/schemas/expense.schema';
 import type { CreateExpenseRequest } from '@/types/expense.types';
 
+function isErrorWithMessage(error: unknown): error is { message: string } {
+  return typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string';
+}
+
 interface UseExpenseFormOptions {
   tripId: string;
   onSuccess?: () => void;
@@ -33,7 +37,10 @@ export function useExpenseForm({ tripId, onSuccess, onSuccessMessage }: UseExpen
           receiptUrl = uploadResult.url;
         } catch (uploadError) {
           // If upload fails, continue without image
-          console.warn('Failed to upload image:', uploadError);
+          const message = isErrorWithMessage(uploadError)
+            ? uploadError.message
+            : 'Unknown upload error';
+          console.warn('Failed to upload image:', message);
           // Don't block expense creation if image upload fails
         }
       }
@@ -69,8 +76,9 @@ export function useExpenseForm({ tripId, onSuccess, onSuccessMessage }: UseExpen
         }
       }, 1000);
     } catch (err) {
-      const error = err as { message?: string };
-      const errorMessage = error?.message || 'Error al crear el gasto';
+      const errorMessage = isErrorWithMessage(err)
+        ? err.message
+        : 'Error al crear el gasto';
       setError(errorMessage);
       throw err; // Re-throw to let form handle it
     } finally {

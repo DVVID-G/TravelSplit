@@ -90,9 +90,6 @@ export function useAuth() {
       isLoading: false,
     });
 
-    // Ensure state is propagated before promise resolves
-    await new Promise(resolve => setTimeout(resolve, 0));
-
     return response;
   }, []);
 
