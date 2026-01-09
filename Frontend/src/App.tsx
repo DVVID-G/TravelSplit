@@ -7,6 +7,8 @@ import { HomePage } from '@/pages/HomePage';
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { ExpenseFormPage } from '@/pages/ExpenseFormPage';
+import { TripsListPage } from '@/pages/TripsListPage';
+import { CreateTripPage } from '@/pages/CreateTripPage';
 import { ProtectedRoute } from '@/components/molecules/ProtectedRoute';
 
 /**
@@ -65,6 +67,22 @@ function App() {
             {
               path: '/register',
               element: <RegisterPage />,
+            },
+            {
+              path: '/trips',
+              element: (
+                <ProtectedRoute>
+                  <TripsListPage />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: '/trips/new',
+              element: (
+                <ProtectedRoute>
+                  <CreateTripPage />
+                </ProtectedRoute>
+              ),
             },
             {
               path: '/trips/:tripId/expenses/new',
