@@ -33,8 +33,6 @@ export function JoinTripModal({ isOpen, onClose, onSuccess }: JoinTripModalProps
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Auto-uppercase and allow only A-Z and 0-9
     const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -109,6 +107,8 @@ export function JoinTripModal({ isOpen, onClose, onSuccess }: JoinTripModalProps
       joinInputRef.current.focus();
     }
   }, [isOpen]);
+
+  if (!isOpen) return null;
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
