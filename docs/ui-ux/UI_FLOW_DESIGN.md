@@ -232,7 +232,7 @@ Home (no auth) → Login/Register → Home (auth) → Viajes → [Crear Viaje] �
 
 ---
 
-#### Pantalla 1b: HomePage - Usuario Autenticado (Sin Viajes)
+#### Pantalla 1a: HomePage - Usuario Autenticado (Sin Viajes)
 ```
 ┌─────────────────────────────────────┐
 │  TravelSplit  [Inicio] Juan [Cerrar]│ ← Header con acciones: Inicio + Nombre + Cerrar Sesión
@@ -257,7 +257,73 @@ Home (no auth) → Login/Register → Home (auth) → Viajes → [Crear Viaje] �
 
 **Acción**: Click en "Crear mi primer viaje" → `/trips/new`
 
-**Nota**: Esta pantalla solo se muestra si el usuario está autenticado. Muestra BottomTabBar.
+**Nota**: Esta pantalla solo se muestra si el usuario está autenticado pero no tiene viajes. Muestra BottomTabBar.
+
+---
+
+#### Pantalla 1b: HomePage - Usuario Autenticado (Con Viajes)
+```
+┌─────────────────────────────────────┐
+│  TravelSplit                        │ ← Header estándar
+│                              
+├─────────────────────────────────────┤
+│                                     │
+│  Saldos                             │ ← Sección título (font-heading, font-semibold)
+│                                     │
+│  ┌─────────────────────────────┐   │ ← Card (bg-white, rounded-xl, p-4)
+│  │ Juan → Pedro                │   │ ← Nombres (font-medium)
+│  │              $ 50.000       │   │ ← Monto (badge rojo bg-red-50 text-red-700)
+│  └─────────────────────────────┘   │
+│                                     │
+│  ┌─────────────────────────────┐   │
+│  │ Carlos → Juan               │   │
+│  │              $ 25.000       │   │ ← Badge verde (bg-emerald-50 text-emerald-700)
+│  └─────────────────────────────┘   │
+│                                     │
+│  ┌─────────────────────────────┐   │
+│  │ María → Pedro               │   │
+│  │              $ 15.000       │   │ ← Badge azul (bg-blue-50 text-blue-700)
+│  └─────────────────────────────┘   │
+│                                     │
+│  Gastos Recientes      [Ver todos] │ ← Sección título + link (text-violet-600)
+│                                     │
+│  ┌─────────────────────────────┐   │ ← ExpenseCard (bg-white, rounded-xl, p-4)
+│  │ [🍽️] Cena en La Vitrola    │   │ ← Icono circular + Título (font-medium)
+│  │      Pagó Pedro • 16 ene    │   │ ← Info secundaria (text-slate-500, text-sm)
+│  │      $ 180.000    4 personas│   │ ← Monto (font-semibold) + participantes
+│  └─────────────────────────────┘   │
+│                                     │
+│  ┌─────────────────────────────┐   │
+│  │ [🚗] Taxi al hotel          │   │
+│  │      Pagó Juan • 15 ene     │   │
+│  │      $ 25.000     4 personas│   │
+│  └─────────────────────────────┘   │
+│                                     │
+│  ┌─────────────────────────────┐   │
+│  │ [🍽️] Desayuno Café del Mar │   │
+│  │      Pagó María • 17 ene    │   │
+│  │      $ 85.000     3 personas│   │
+│  └─────────────────────────────┘   │
+│                                     │
+├─────────────────────────────────────┤
+│ [Home] [Map] [User]                 │ ← BottomTabBar (Home activo)
+└─────────────────────────────────────┘
+```
+
+**Características**:
+- Muestra resumen del viaje activo en el header
+- Sección "Saldos" con badges de colores según tipo de deuda
+- Sección "Gastos Recientes" con últimos 3 gastos
+- Link "Ver todos" para navegar a la lista completa
+- Iconos de categoría (🍽️ comida, 🚗 transporte, 🏨 alojamiento)
+- Información de pagador y fecha en formato corto
+
+**Acciones**:
+- Click en card de saldo → Ver detalle de deuda
+- Click en "Ver todos" → `/trips/:tripId` (tab Gastos)
+- Click en ExpenseCard → Ver detalle del gasto
+
+**Nota**: Esta pantalla se muestra cuando el usuario está autenticado y tiene al menos un viaje activo. Muestra BottomTabBar con Home activo.
 
 ---
 
@@ -329,7 +395,7 @@ Home (no auth) → Login/Register → Home (auth) → Viajes → [Crear Viaje] �
 │  │ [Map Icon] Viaje a Cartagena│   │ ← Icono + Título (font-semibold)
 │  │                             │   │
 │  │ [Users] 4 participantes     │   │ ← Icono + Texto (text-slate-500)
-│  │ [Dollar] $ 1.250.000        │   │ ← Monto (font-semibold)
+│  │ [Cop] $ 1.250.000        │   │ ← Monto (font-semibold)
 │  │ [Calendar] Hace 2 días      │   │ ← Fecha relativa (text-slate-500)
 │  └─────────────────────────────┘   │
 │                                     │
@@ -338,7 +404,7 @@ Home (no auth) → Login/Register → Home (auth) → Viajes → [Crear Viaje] �
 │  │         Bogotá              │   │
 │  │                             │   │
 │  │ [Users] 3 participantes     │   │
-│  │ [Dollar] $ 450.000          │   │
+│  │ [Cop] $ 450.000          │   │
 │  │ [Calendar] Hace 1 semana    │   │
 │  └─────────────────────────────┘   │
 │                                     │
