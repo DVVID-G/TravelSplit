@@ -1,4 +1,4 @@
-import { Map, Users, Calendar, DollarSign } from 'lucide-react';
+import { Map as MapIcon, Users, Calendar, DollarSign } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { TripResponse, TripListItem } from '@/types/trip.types';
 import { formatRelativeDate } from '@/utils/date';
@@ -38,7 +38,7 @@ export const TripCard = ({ trip, onClick }: TripCardProps) => {
   const cardContent = (
     <div className="bg-white rounded-xl p-6 shadow-md active:scale-[0.98] transition-transform focus-visible:outline-2 focus-visible:outline-violet-600 focus-visible:outline-offset-2">
       <div className="flex items-start gap-3 mb-4">
-        <Map className="w-5 h-5 text-slate-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
+        <MapIcon className="w-5 h-5 text-slate-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
         <h3 className="text-lg font-heading font-semibold text-slate-900 flex-1">{trip.name}</h3>
       </div>
 

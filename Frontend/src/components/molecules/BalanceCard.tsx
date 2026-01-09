@@ -27,11 +27,11 @@ export const BalanceCard = ({ balance }: BalanceCardProps) => {
     blue: 'bg-blue-50 text-blue-700',
   };
 
-  const badgeColorClass = badgeColors[balance.badgeColor];
+  const badgeColorClass = badgeColors[balance.badgeColor] ?? badgeColors.blue;
 
   return (
     <div
-      className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md hover:bg-slate-50 transition-all duration-200 cursor-default"
+      className="bg-white rounded-xl p-4 shadow-sm cursor-default"
       // TODO: Add onClick when navigation is implemented
       // When implemented, change cursor-default to cursor-pointer and uncomment onClick
       // onClick={onClick}

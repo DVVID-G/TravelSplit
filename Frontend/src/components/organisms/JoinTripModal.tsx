@@ -19,6 +19,7 @@ export function JoinTripModal({ isOpen, onClose, onSuccess }: JoinTripModalProps
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const savedFocusRef = useRef<HTMLElement | null>(null);
+  const joinInputRef = useRef<HTMLInputElement | null>(null);
 
   // Focus management: save and restore focus
   useEffect(() => {
@@ -87,6 +88,28 @@ export function JoinTripModal({ isOpen, onClose, onSuccess }: JoinTripModalProps
     }
   };
 
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isLoading) {
+        handleClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, isLoading, handleClose]);
+
+  useEffect(() => {
+    if (isOpen && joinInputRef.current) {
+      joinInputRef.current.focus();
+    }
+  }, [isOpen]);
+
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       handleClose();
@@ -99,6 +122,8 @@ export function JoinTripModal({ isOpen, onClose, onSuccess }: JoinTripModalProps
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       onClick={handleOverlayClick}
+      role="dialog"
+      tabIndex={-1}
     >
       <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
         {/* Close button */}
@@ -133,6 +158,7 @@ export function JoinTripModal({ isOpen, onClose, onSuccess }: JoinTripModalProps
               Código del viaje
             </label>
             <input
+              ref={joinInputRef}
               id="trip-code"
               type="text"
               value={code}
@@ -145,7 +171,6 @@ export function JoinTripModal({ isOpen, onClose, onSuccess }: JoinTripModalProps
                   : 'border-slate-300 focus:border-violet-600 focus:ring-2 focus:ring-violet-100'
               } focus:outline-none`}
               disabled={isLoading}
-              autoFocus
               autoComplete="off"
             />
             <p

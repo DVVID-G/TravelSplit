@@ -147,8 +147,11 @@ export const ExpenseForm = ({
       />
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Monto (COP)</label>
+        <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="amount">
+          Monto (COP)
+        </label>
         <AmountInput
+          id="amount"
           value={watch('amount')}
           onChange={value => setValue('amount', value, { shouldValidate: true })}
           error={errors.amount?.message}
