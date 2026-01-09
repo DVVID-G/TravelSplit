@@ -8,6 +8,7 @@ import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { ExpenseFormPage } from '@/pages/ExpenseFormPage';
 import { TripsListPage } from '@/pages/TripsListPage';
+import { TripDetailPage } from '@/pages/TripDetailPage';
 import { CreateTripPage } from '@/pages/CreateTripPage';
 import { ProtectedRoute } from '@/components/molecules/ProtectedRoute';
 
@@ -32,7 +33,7 @@ function AppLayout() {
   const { isAuthenticated } = useAuthContext();
   const hideNavRoutes = ['/login', '/register'];
   const isAuthPage = hideNavRoutes.includes(location.pathname);
-  
+
   // Show BottomTabBar only if authenticated and not on auth pages
   const shouldShowNav = isAuthenticated && !isAuthPage;
 
@@ -77,6 +78,14 @@ function App() {
               ),
             },
             {
+              path: '/trips/:id',
+              element: (
+                <ProtectedRoute>
+                  <TripDetailPage />
+                </ProtectedRoute>
+              ),
+            },
+            {
               path: '/trips/new',
               element: (
                 <ProtectedRoute>
@@ -103,7 +112,7 @@ function App() {
           ],
         },
       ]),
-    []
+    [],
   );
 
   return (

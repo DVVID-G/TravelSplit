@@ -48,6 +48,46 @@ export interface TripResponse {
   // For backward compatibility
   created_at?: string;
   updated_at?: string;
+  // Trip detail specific fields (when fetching single trip)
+  userRole?: TripParticipantRole;
+  participants?: TripParticipantDetail[];
+  participantsMeta?: ParticipantsPaginationMeta;
+}
+
+export interface TripStats {
+  totalExpenses: number;
+  totalAmount: number;
+  totalParticipants: number;
+  userBalance: number;
+}
+
+/**
+ * User summary within a participant
+ */
+export interface UserSummary {
+  id: string;
+  nombre: string;
+  email: string;
+}
+
+/**
+ * Participant detail from backend
+ */
+export interface TripParticipantDetail {
+  id: string;
+  userId: string;
+  role: TripParticipantRole;
+  user: UserSummary;
+}
+
+/**
+ * Pagination metadata for participants list
+ */
+export interface ParticipantsPaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
 }
 
 export interface CreateTripRequest {
@@ -90,4 +130,3 @@ export interface RecentExpense {
   amount: number; // Amount in COP
   participantCount: number; // Number of people involved
 }
-

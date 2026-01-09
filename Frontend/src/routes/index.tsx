@@ -4,6 +4,7 @@ import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { ExpenseFormPage } from '@/pages/ExpenseFormPage';
 import { TripsListPage } from '@/pages/TripsListPage';
+import { TripDetailPage } from '@/pages/TripDetailPage';
 import { CreateTripPage } from '@/pages/CreateTripPage';
 import { ProtectedRoute } from '@/components/molecules/ProtectedRoute';
 
@@ -40,6 +41,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <CreateTripPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/trips/:id',
+    element: (
+      <ProtectedRoute>
+        <TripDetailPage />
       </ProtectedRoute>
     ),
   },
