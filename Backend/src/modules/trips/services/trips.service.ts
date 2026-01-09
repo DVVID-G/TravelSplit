@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { Trip } from '../entities/trip.entity';
@@ -18,6 +23,8 @@ import { TripMapper } from '../../../common/mappers/trip.mapper';
  */
 @Injectable()
 export class TripsService {
+  private readonly logger = new Logger(TripsService.name);
+
   constructor(
     @InjectRepository(Trip)
     private readonly tripRepository: Repository<Trip>,
@@ -242,5 +249,79 @@ export class TripsService {
         parseInt(raw.participantCount, 10),
       );
     });
+  }
+
+  /**
+   * Permite a un usuario autenticado unirse a un viaje existente usando su código.
+   * Solo se puede unir a viajes con estado ACTIVE.
+   * El usuario se agrega como participante con rol MEMBER.
+   *
+   * @param code - Código único del viaje (8 caracteres alfanuméricos)
+   * @param userId - ID del usuario autenticado que quiere unirse
+   * @returns Entidad Trip al que se unió el usuario
+   * @throws NotFoundException si el viaje no existe o no está activo
+   * @throws ConflictException si el usuario ya es participante del viaje
+   */
+  async joinByCode(code: string, userId: string): Promise<Trip> {
+    // Buscar el viaje por código (solo viajes activos y no eliminados)
+    const trip = await this.tripRepository.findOne({
+      where: {
+        code,
+        deletedAt: IsNull(),
+        status: TripStatus.ACTIVE,
+      },
+    });
+
+    if (!trip) {
+      this.logger.warn(
+        `Intento fallido de unirse: código ${code}, usuario ${userId}, razón: Viaje no encontrado o no está activo`,
+      );
+      throw new NotFoundException('El viaje no existe o está cerrado');
+    }
+
+    // Verificar que el usuario existe
+    const user = await this.userRepository.findOne({
+      where: { id: userId, deletedAt: IsNull() },
+    });
+
+    if (!user) {
+      this.logger.warn(
+        `Intento fallido de unirse: código ${code}, usuario ${userId}, razón: Usuario no encontrado`,
+      );
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    // Verificar si el usuario ya es participante del viaje
+    const existingParticipant = await this.tripParticipantRepository.findOne({
+      where: {
+        tripId: trip.id,
+        userId: user.id,
+        deletedAt: IsNull(),
+      },
+    });
+
+    if (existingParticipant) {
+      this.logger.warn(
+        `Intento fallido de unirse: código ${code}, usuario ${userId}, viaje ${trip.id}, razón: Ya es participante`,
+      );
+      throw new ConflictException('Ya eres participante de este viaje');
+    }
+
+    // Crear TripParticipant con rol MEMBER
+    const newParticipant = this.tripParticipantRepository.create({
+      trip,
+      tripId: trip.id,
+      user,
+      userId: user.id,
+      role: ParticipantRole.MEMBER,
+    });
+
+    await this.tripParticipantRepository.save(newParticipant);
+
+    this.logger.log(
+      `Usuario ${userId} se unió exitosamente al viaje ${trip.id} (${trip.name}) usando código ${code}`,
+    );
+
+    return trip;
   }
 }

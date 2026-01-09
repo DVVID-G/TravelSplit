@@ -16,14 +16,18 @@ import {
   ApiUnauthorizedResponse,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiNotFoundResponse,
+  ApiConflictResponse,
 } from '@nestjs/swagger';
 import { TripsService } from '../services/trips.service';
 import { CreateTripDto } from '../dto/create-trip.dto';
+import { JoinTripDto } from '../dto/join-trip.dto';
 import { TripResponseDto } from '../dto/trip-response.dto';
 import { TripListQueryDto } from '../dto/trip-list-query.dto';
 import { TripListItemDto } from '../dto/trip-list-item.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../../../common/interfaces/authenticated-request.interface';
+import { TripMapper } from '../../../common/mappers/trip.mapper';
 
 /**
  * Controller de Trips.
@@ -125,5 +129,55 @@ export class TripsController {
     @Request() req: AuthenticatedRequest,
   ): Promise<TripListItemDto[]> {
     return this.tripsService.findAllByUser(req.user!.id, queryDto);
+  }
+
+  /**
+   * Permite a un usuario autenticado unirse a un viaje activo usando su código único.
+   * El usuario se agrega como participante con rol MEMBER.
+   *
+   * @method join
+   * @param {JoinTripDto} joinTripDto - DTO con el código del viaje
+   * @param {AuthenticatedRequest} req - Request con el usuario autenticado
+   * @returns {TripResponseDto} Detalles del viaje al que se unió el usuario
+   * @throws {NotFoundException} Si el viaje no existe o no está activo
+   * @throws {ConflictException} Si el usuario ya es participante
+   * @example
+   * // POST /trips/join
+   * // Headers: Authorization: Bearer {token}
+   * // Body: { code: "ABC12345" }
+   * // Respuesta: { id: "...", name: "...", currency: "COP", status: "ACTIVE", code: "ABC12345", createdAt: "...", updatedAt: "..." }
+   */
+  @Post('join')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Unirse a un viaje por código',
+    description:
+      'Permite a un usuario autenticado unirse a un viaje existente utilizando su código único de 8 caracteres. El usuario se agrega como participante con rol MEMBER. Solo se puede unir a viajes activos.',
+  })
+  @ApiCreatedResponse({
+    description: 'Te has unido al viaje exitosamente',
+    type: TripResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Código de viaje inválido o datos de entrada incorrectos',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'No autorizado. Se requiere autenticación.',
+  })
+  @ApiNotFoundResponse({
+    description: 'El viaje no existe o está cerrado',
+  })
+  @ApiConflictResponse({
+    description: 'Ya eres participante de este viaje',
+  })
+  async join(
+    @Body() joinTripDto: JoinTripDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<TripResponseDto> {
+    const trip = await this.tripsService.joinByCode(
+      joinTripDto.code,
+      req.user!.id,
+    );
+    return TripMapper.toResponseDto(trip);
   }
 }
