@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
+import { useEffect } from 'react';
 import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms/Button';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -26,7 +27,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
  */
 export const LoginPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuthContext();
+  const { login, isAuthenticated } = useAuthContext();
 
   const {
     register,
@@ -39,10 +40,6 @@ export const LoginPage = () => {
 
   const mutation = useMutation({
     mutationFn: (data: LoginRequest) => login(data),
-    onSuccess: () => {
-      // Redirect to home after successful login
-      navigate('/');
-    },
     onError: (error: ApiError) => {
       // Handle different error types
       if (error.statusCode === 401) {
@@ -82,6 +79,12 @@ export const LoginPage = () => {
   const onSubmit = (data: LoginFormData) => {
     mutation.mutate(data);
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-8">

@@ -282,7 +282,7 @@ const HomePageWithTrips = ({ trips }: { trips: TripResponse[] }) => {
             <Link
               to={`/trips/${activeTrip.id}`}
               className="text-sm text-violet-600 font-medium hover:underline"
-              aria-label="Ver todos los gastos recientes"
+              aria-label="Ver todos los gastos del viaje"
             >
               Ver todos
             </Link>
@@ -316,7 +316,7 @@ export const HomePage = () => {
     refetch,
   } = useQuery({
     queryKey: ['user-trips'],
-    queryFn: getUserTrips,
+    queryFn: () => getUserTrips(token as string),
     enabled: isAuthenticated && !!token, // Only execute if authenticated AND token exists
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

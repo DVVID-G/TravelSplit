@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Map as MapIcon, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Header } from '@/components';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { TripCard } from '@/components/molecules/TripCard';
@@ -50,6 +50,7 @@ export function TripsListPage() {
   const { isAuthenticated, token } = useAuthContext();
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
+  const isMountedRef = useRef(true);
 
   // Query to get all user trips
   const {
@@ -59,24 +60,31 @@ export function TripsListPage() {
     refetch,
   } = useQuery({
     queryKey: ['user-trips'],
-    queryFn: getUserTrips,
+    queryFn: () => getUserTrips(token as string),
     enabled: isAuthenticated && !!token,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
   });
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Handle successful join
   const handleJoinSuccess = (trip: TripResponse) => {
     setToastMessage(`Te uniste al viaje "${trip.name}"`);
     setShowToast(true);
 
-    // Refetch trips to include the new one
-    refetch();
-
-    // Navigate to the trip after a short delay
-    setTimeout(() => {
-      navigate(`/trips/${trip.id}`);
-    }, 1500);
+    // Refetch trips then navigate when still mounted
+    refetch().finally(() => {
+      setTimeout(() => {
+        if (isMountedRef.current) {
+          navigate(`/trips/${trip.id}`);
+        }
+      }, 1500);
+    });
   };
 
   // Loading state
