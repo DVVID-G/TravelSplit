@@ -2,7 +2,10 @@ import { forwardRef } from 'react';
 import type { InputHTMLAttributes } from 'react';
 import { parseCurrency, formatCurrency } from '@/utils/currency';
 
-interface AmountInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> {
+interface AmountInputProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'value' | 'onChange'
+> {
   value?: number;
   onChange?: (value: number) => void;
   error?: string;
@@ -59,4 +62,3 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
 );
 
 AmountInput.displayName = 'AmountInput';
-

@@ -37,7 +37,7 @@ export const EmailSearchInput = ({
 
   const handleSearch = async () => {
     const trimmedEmail = email.trim().toLowerCase();
-    
+
     if (!trimmedEmail) {
       setError('Por favor, ingresa un correo electrónico');
       return;
@@ -76,7 +76,7 @@ export const EmailSearchInput = ({
       } else {
         throw new Error('Error al buscar usuario');
       }
-    } catch (err) {
+    } catch {
       // Si el endpoint no existe, simulamos que el usuario no está registrado
       setSearchResult({ found: false, email: trimmedEmail });
     } finally {
@@ -122,7 +122,7 @@ export const EmailSearchInput = ({
           <Input
             type="email"
             value={email}
-            onChange={(e) => {
+            onChange={e => {
               setEmail(e.target.value);
               setSearchResult(null);
               setError(null);
@@ -159,9 +159,7 @@ export const EmailSearchInput = ({
                   <Mail size={20} className="text-violet-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-slate-900">
-                    {searchResult.user.nombre}
-                  </p>
+                  <p className="text-sm font-medium text-slate-900">{searchResult.user.nombre}</p>
                   <p className="text-xs text-slate-600">{searchResult.user.email}</p>
                 </div>
               </div>
@@ -183,9 +181,7 @@ export const EmailSearchInput = ({
                   <Mail size={20} className="text-yellow-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-yellow-900 mb-1">
-                    Usuario no registrado
-                  </p>
+                  <p className="text-sm font-medium text-yellow-900 mb-1">Usuario no registrado</p>
                   <p className="text-xs text-yellow-700">
                     El usuario <strong>{searchResult.email}</strong> no está registrado en
                     TravelSplit.
@@ -212,12 +208,7 @@ export const EmailSearchInput = ({
                     <Mail size={16} />
                     <span>Enviar invitación</span>
                   </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleClear}
-                  >
+                  <Button type="button" variant="secondary" size="sm" onClick={handleClear}>
                     Cancelar
                   </Button>
                 </div>
@@ -229,13 +220,3 @@ export const EmailSearchInput = ({
     </div>
   );
 };
-
-
-
-
-
-
-
-
-
-

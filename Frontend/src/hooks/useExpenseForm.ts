@@ -31,7 +31,7 @@ export function useExpenseForm({ tripId, onSuccess, onSuccessMessage }: UseExpen
         try {
           const uploadResult = await uploadReceiptImage(data.receiptFile);
           receiptUrl = uploadResult.url;
-        } catch (uploadError: any) {
+        } catch (uploadError) {
           // If upload fails, continue without image
           console.warn('Failed to upload image:', uploadError);
           // Don't block expense creation if image upload fails
@@ -57,7 +57,7 @@ export function useExpenseForm({ tripId, onSuccess, onSuccessMessage }: UseExpen
       if (onSuccessMessage) {
         onSuccessMessage(successMessage);
       }
-      
+
       // Delay to ensure user sees the success state and can read the toast
       // Toast duration is 3500ms, so we wait a bit longer to allow reading
       setTimeout(() => {
@@ -68,8 +68,9 @@ export function useExpenseForm({ tripId, onSuccess, onSuccessMessage }: UseExpen
           navigate(`/trips/${tripId}`);
         }
       }, 1000);
-    } catch (err: any) {
-      const errorMessage = err?.message || 'Error al crear el gasto';
+    } catch (err) {
+      const error = err as { message?: string };
+      const errorMessage = error?.message || 'Error al crear el gasto';
       setError(errorMessage);
       throw err; // Re-throw to let form handle it
     } finally {
@@ -83,4 +84,3 @@ export function useExpenseForm({ tripId, onSuccess, onSuccessMessage }: UseExpen
     error,
   };
 }
-

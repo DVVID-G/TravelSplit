@@ -8,6 +8,8 @@ interface BeneficiariesSelectorProps {
   onToggle: (userId: string) => void;
   onSelectAll: () => void;
   onDeselectAll: () => void;
+  onAddByEmail: (userId: string) => void;
+  onInviteByEmail: (email: string) => Promise<void>;
   error?: string;
 }
 
@@ -29,20 +31,13 @@ export const BeneficiariesSelector = ({
 }: BeneficiariesSelectorProps) => {
   // Filter out the payer from beneficiaries list
   const availableBeneficiaries = selectedPayerId
-    ? participants.filter((p) => p.user_id !== selectedPayerId)
+    ? participants.filter(p => p.user_id !== selectedPayerId)
     : participants;
-
-  const allSelected =
-    availableBeneficiaries.length > 0 &&
-    selectedBeneficiaryIds.length === availableBeneficiaries.length;
-  const someSelected = selectedBeneficiaryIds.length > 0 && !allSelected;
 
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-2">
-        <label className="block text-sm font-medium text-slate-700">
-          Beneficiarios
-        </label>
+        <label className="block text-sm font-medium text-slate-700">Beneficiarios</label>
         <div className="flex gap-2">
           <button
             type="button"
@@ -60,12 +55,12 @@ export const BeneficiariesSelector = ({
           </button>
         </div>
       </div>
-      {(onAddByEmail || onInviteByEmail) && (
+      {onAddByEmail && (
         <div className="mb-3">
           <EmailSearchInput
             onAdd={onAddByEmail || (() => {})}
             onInvite={onInviteByEmail}
-            existingEmails={participants.map((p) => p.user?.email || '').filter(Boolean)}
+            existingEmails={participants.map(p => p.user?.email || '').filter(Boolean)}
           />
         </div>
       )}
@@ -75,7 +70,7 @@ export const BeneficiariesSelector = ({
             No hay otros participantes disponibles. El pagador no puede ser beneficiario.
           </p>
         ) : (
-          availableBeneficiaries.map((participant) => {
+          availableBeneficiaries.map(participant => {
             const isSelected = selectedBeneficiaryIds.includes(participant.user_id);
             return (
               <label
@@ -100,4 +95,3 @@ export const BeneficiariesSelector = ({
     </div>
   );
 };
-

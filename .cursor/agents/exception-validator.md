@@ -1,3 +1,8 @@
+---
+name: exception-validator
+model: default
+---
+
 # Agent: Exception Validator
 
 ## Role

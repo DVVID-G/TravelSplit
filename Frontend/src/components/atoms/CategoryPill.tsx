@@ -29,4 +29,3 @@ export const CategoryPill = ({ icon, name, isSelected, onClick }: CategoryPillPr
     </button>
   );
 };
-

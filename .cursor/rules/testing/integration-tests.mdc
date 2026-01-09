@@ -76,7 +76,8 @@ describe('UsersController (e2e)', () => {
   let authToken: string;
   let testUserId: string;
 
-  beforeEach(async () => {
+  // Use beforeAll to speed up shared setup; prefer beforeEach only when tests need full isolation
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         AppModule,
@@ -103,20 +104,51 @@ describe('UsersController (e2e)', () => {
     testUserId = registerResponse.body.user.id;
   });
 
-  afterEach(async () => {
-    // Clean up test data
+  afterAll(async () => {
+    // Clean up test data and close app; ensure DB state is reset between suites
+    // Example helpers (implement using your ORM/DB client):
+    // await truncateTables(dataSource);
+    // await cleanupTestData(dataSource);
+    // await rollbackTransaction(testQueryRunner);
     await app.close();
   });
 
   describe('GET /api/users', () => {
-    it('should return 200 and list of users when authenticated', () => {
+    it('should return 200 and list of users with pagination when authenticated', () => {
       return request(app.getHttpServer())
         .get('/api/users')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200)
         .expect((res) => {
-          expect(Array.isArray(res.body)).toBe(true);
+          const { data, pagination } = res.body;
+          expect(Array.isArray(data)).toBe(true);
+          expect(data.length).toBeGreaterThan(0); // when fixtures exist
+          data.forEach((user: any) => {
+            expect(typeof user.id).toBe('string');
+            expect(typeof user.email).toBe('string');
+            expect(typeof user.createdAt).toBe('string');
+          });
+          expect(pagination).toMatchObject({
+            total: expect.any(Number),
+            page: expect.any(Number),
+            per_page: expect.any(Number),
+            has_next_page: expect.any(Boolean),
+          });
         });
+    });
+
+    it('should return empty data and zero totals when no users', async () => {
+      // Seed zero users or clear fixtures before this test
+      const res = await request(app.getHttpServer())
+        .get('/api/users')
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200);
+
+      const { data, pagination } = res.body;
+      expect(Array.isArray(data)).toBe(true);
+      expect(data.length).toBe(0);
+      expect(pagination.total).toBe(0);
+      expect(pagination.has_next_page).toBe(false);
     });
 
     it('should return 401 when not authenticated', () => {

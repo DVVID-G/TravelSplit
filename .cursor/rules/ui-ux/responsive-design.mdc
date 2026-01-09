@@ -14,7 +14,7 @@ alwaysApply: false
 - Set proper viewport meta tag in HTML.
 - Use responsive utilities: `px-4 md:px-8`, `text-base md:text-lg`.
 - Ensure touch targets are at least 44px (min-h-[44px] or h-12).
-- Use `max-w-md` for mobile containers, `max-w-7xl` for desktop.
+- Use `max-w-md` for mobile containers, add a tablet step like `md:max-w-2xl` (or `md:max-w-4xl`), and `max-w-7xl` for desktop.
 - Maintain consistent spacing across breakpoints.
 - Test on actual mobile devices when possible.
 
@@ -36,9 +36,10 @@ alwaysApply: false
 ## Container Sizing
 
 - Mobile: `max-w-md` (448px) centered with `mx-auto`.
+- Tablet: `md:max-w-2xl`–`md:max-w-4xl` for smoother scaling.
 - Desktop: `max-w-7xl` (1280px) for full-width layouts.
 - Use `px-4` or `px-6` for mobile padding.
-- Use `px-8` or `px-12` for desktop padding.
+- Use `md:px-8` or `md:px-12` for tablet, and `px-8` or `px-12` for desktop padding.
 
 ## Touch Targets
 
@@ -75,7 +76,7 @@ alwaysApply: false
 export function Container({ children }: ContainerProps) {
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-8 md:px-8 md:py-12">
-      <div className="max-w-md md:max-w-7xl mx-auto">
+      <div className="max-w-md md:max-w-2xl lg:max-w-7xl mx-auto">
         {children}
       </div>
     </div>
@@ -219,6 +220,14 @@ export function FormLayout({ children }: FormLayoutProps) {
 - Use `object-fit` for maintaining aspect ratios.
 - Provide appropriate image sizes for different breakpoints.
 - Use `loading="lazy"` for images below the fold.
+
+## Accessibility
+
+- Meet WCAG AA contrast: 4.5:1 for body text, 3:1 for large text/graphics; verify across the same breakpoints noted in Viewport Configuration and Safe Areas (including iOS safe-area padding).
+- Map all colors to design-system tokens (e.g., `--color-text-primary`, `--color-surface`, `--color-brand`, `--color-focus-ring`); avoid ad-hoc hex values to keep contrast consistent.
+- Enforce visible focus styles on all interactive elements (buttons, links, form controls): e.g., `focus:ring-2 focus:ring-[var(--color-focus-ring)] focus:ring-offset-2 focus:outline-none` or the tokenized equivalent.
+- Use semantic HTML for structure and keep enforced focus states per ui-ux-auditor guidance; do not remove focus outlines.
+- When testing responsive media (e.g., `w-full h-auto`, `loading="lazy"`), also validate focus visibility and contrast at mobile, tablet, and desktop widths with safe-area padding applied.
 
 ## Testing Guidelines
 

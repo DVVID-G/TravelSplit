@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
  * - Soporte para Soft Delete global (con deleted_at)
  * - Sincronización automática de esquema en desarrollo
  * - Logging de consultas SQL en desarrollo
+ * - Configuración de migraciones para control de versiones de esquema
  */
 export const getDatabaseConfig = (
   configService: ConfigService,
@@ -21,8 +22,11 @@ export const getDatabaseConfig = (
     password: configService.get<string>('DB_PASSWORD', 'postgres'),
     database: configService.get<string>('DB_NAME', 'travelsplit'),
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+    migrations: [__dirname + '/../migrations/**/*{.ts,.js}'],
     synchronize: configService.get<boolean>('DB_SYNCHRONIZE', true), // Solo en desarrollo
     logging: configService.get<boolean>('DB_LOGGING', false),
+    migrationsRun: false, // Set to true to auto-run migrations on startup
+    migrationsTableName: 'migrations',
     // TypeORM automáticamente respeta @DeleteDateColumn para Soft Delete
   };
 };

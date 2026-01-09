@@ -27,13 +27,3 @@ export const ErrorState = ({ message, onRetry, className = '' }: ErrorStateProps
     </div>
   );
 };
-
-
-
-
-
-
-
-
-
-

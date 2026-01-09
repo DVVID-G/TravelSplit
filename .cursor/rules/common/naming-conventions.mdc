@@ -21,6 +21,13 @@ alwaysApply: true
 - Suffix arrays/collections with plural nouns.
 - Use verb-noun pattern for function names.
 
+## Cross-Layer Naming Consistency
+
+- Frontend form field names must match backend DTO property names exactly (no renames or casing shifts).
+- Use the same language (Spanish or English) for semantic field names across layers to avoid mixed-language payloads.
+- Examples that must align between frontend form fields and backend DTOs: `contraseña`, `payer_id`, `category_id`.
+- This formalizes prior guidance about verifying request field names—treat mismatches as rule violations, not best-effort checks.
+
 ## Variables and Functions
 
 - Variables: `camelCase` with descriptive names.
@@ -47,6 +54,12 @@ alwaysApply: true
 - React components: `PascalCase.tsx` matching component name.
 - Test files: `*.spec.ts` or `*.test.ts`.
 - Configuration files: `kebab-case.config.ts`.
+
+## Schema/Validation Naming
+
+- Schema files: `kebab-case` with `.schema.ts` suffix (e.g., `login.schema.ts`, `expense.schema.ts`) or placed under `schemas/{resource}.schema.ts`.
+- Exported schema identifiers: `camelCase`/Pascal-style like `loginSchema`, `createExpenseSchema` (use `{action}{Resource}Schema`).
+- Keep file names and exported schema names aligned so imports are predictable across layers.
 
 ## Module and Directory Naming
 

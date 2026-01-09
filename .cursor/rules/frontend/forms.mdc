@@ -13,7 +13,7 @@ alwaysApply: false
 - Use React Hook Form for all form state management.
 - Use Zod schemas for form validation.
 - Use `zodResolver` to integrate Zod with React Hook Form.
-- Define schemas in `schemas/` directory.
+- Define schemas in `schemas/` directory using `kebab-case` filenames with `.schema.ts` suffix (e.g., `schemas/login.schema.ts`, `schemas/expense.schema.ts`).
 - Use TypeScript types inferred from Zod schemas.
 - Handle form errors with user-friendly messages in Spanish.
 - Use controlled components with `register()` or `Controller`.
@@ -29,8 +29,8 @@ alwaysApply: false
 
 ## Zod Schema Definition
 
-- Create schemas in `schemas/` directory.
-- Use descriptive schema names: `loginSchema`, `createExpenseSchema`.
+- Create schemas in `schemas/` directory using `kebab-case` filenames with `.schema.ts` suffix: e.g., `schemas/login.schema.ts`, `schemas/expense.schema.ts`.
+- Export descriptive schema identifiers following `{action}{Resource}Schema`: e.g., `loginSchema`, `createExpenseSchema`.
 - Export schema and inferred type.
 - Provide user-friendly error messages in Spanish.
 - Use appropriate Zod validators: `z.string()`, `z.number()`, `z.email()`, etc.
@@ -65,14 +65,22 @@ alwaysApply: false
 // Zod schema definition
 import { z } from 'zod';
 
+// Shared validators (e.g., src/schemas/validators.ts)
+export const emailValidator = z
+  .string()
+  .email('El email debe tener un formato válido')
+  .min(1, 'El email es requerido');
+
+export const passwordValidator = z
+  .string()
+  .min(6, 'La contraseña debe tener al menos 6 caracteres');
+
+// Schema consuming shared validators
+import { emailValidator, passwordValidator } from './validators';
+
 export const loginSchema = z.object({
-  email: z
-    .string()
-    .email('El email debe tener un formato válido')
-    .min(1, 'El email es requerido'),
-  contraseña: z
-    .string()
-    .min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  email: emailValidator,
+  contraseña: passwordValidator,
 });
 
 export type LoginFormData = z.infer<typeof loginSchema>;
@@ -284,8 +292,11 @@ const loginSchema = z.object({...}); // VIOLATION: Should be in schemas/
 ## Form Accessibility
 
 - Associate labels with inputs using `htmlFor` and `id`.
-- Use `aria-describedby` for error messages.
-- Use `aria-invalid` for fields with errors.
+- Use `aria-describedby` for error messages and `aria-invalid` for fields with errors (per keyboard navigation/accessibility checklist).
+- After submit: move focus to success confirmation on success, or to the first invalid field on error.
+- Use `role="alert"` or an ARIA live region for dynamic error messages so screen readers announce them.
+- Keep focus recovery predictable: return focus to the first invalid field when errors occur.
+- Group related controls (radio/checkbox sets) with `fieldset` and `legend` for proper semantics.
 - Provide clear error messages near form fields.
 - Ensure keyboard navigation works correctly.
 

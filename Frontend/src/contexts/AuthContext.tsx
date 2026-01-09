@@ -34,6 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
  * Hook to access authentication context
  * @throws Error if used outside AuthProvider
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuthContext(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -41,15 +42,3 @@ export function useAuthContext(): AuthContextType {
   }
   return context;
 }
-
-
-
-
-
-
-
-
-
-
-
-

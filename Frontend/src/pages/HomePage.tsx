@@ -1,15 +1,74 @@
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Map as MapIcon, Users, Receipt, Calculator, Camera } from 'lucide-react';
 import { Header } from '@/components';
 import { EmptyState } from '@/components/molecules/EmptyState';
-import { TripCard } from '@/components/molecules/TripCard';
+import { BalanceCard } from '@/components/molecules/BalanceCard';
+import { RecentExpenseCard } from '@/components/molecules/RecentExpenseCard';
 import { ErrorState } from '@/components/molecules/ErrorState';
 import { Button } from '@/components/atoms/Button';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { getUserTrips } from '@/services/trip.service';
-import { formatCurrency } from '@/utils/currency';
-import type { TripResponse } from '@/types/trip.types';
+import type { TripResponse, Balance, RecentExpense } from '@/types/trip.types';
+
+/**
+ * TODO: Replace with actual API endpoints when backend is ready
+ * MOCK_BALANCES should come from GET /trips/:tripId/balances
+ * MOCK_RECENT_EXPENSES should come from GET /trips/:tripId/expenses/recent?limit=3
+ */
+const MOCK_BALANCES: Balance[] = [
+  {
+    id: '1',
+    fromName: 'Juan',
+    toName: 'Pedro',
+    amount: 50000,
+    badgeColor: 'red',
+  },
+  {
+    id: '2',
+    fromName: 'Carlos',
+    toName: 'Juan',
+    amount: 25000,
+    badgeColor: 'green',
+  },
+  {
+    id: '3',
+    fromName: 'María',
+    toName: 'Pedro',
+    amount: 15000,
+    badgeColor: 'blue',
+  },
+];
+
+const MOCK_RECENT_EXPENSES: RecentExpense[] = [
+  {
+    id: '1',
+    category: 'food',
+    title: 'Cena en La Vitrola',
+    paidBy: 'Pedro',
+    date: '2026-01-16',
+    amount: 180000,
+    participantCount: 4,
+  },
+  {
+    id: '2',
+    category: 'transport',
+    title: 'Taxi al hotel',
+    paidBy: 'Juan',
+    date: '2026-01-15',
+    amount: 25000,
+    participantCount: 4,
+  },
+  {
+    id: '3',
+    category: 'food',
+    title: 'Desayuno Café del Mar',
+    paidBy: 'María',
+    date: '2026-01-17',
+    amount: 85000,
+    participantCount: 3,
+  },
+];
 
 /**
  * Loading state component
@@ -68,73 +127,93 @@ const HomePageNotAuthenticated = () => {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="px-6 py-12 md:py-16">
-        <div className="max-w-2xl mx-auto text-center">
-          <div className="flex justify-center mb-6">
-            <div className="bg-violet-100 rounded-full p-4">
-              <MapIcon className="w-12 h-12 text-violet-600" aria-hidden="true" />
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="flex justify-center mb-6">
+              <div className="bg-violet-100 rounded-full p-4">
+                <MapIcon className="w-12 h-12 text-violet-600" aria-hidden="true" />
+              </div>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-heading font-bold text-slate-900 mb-4">
+              Divide gastos de viaje sin complicaciones
+            </h1>
+            <p className="text-lg text-slate-600 mb-8 max-w-2xl mx-auto">
+              TravelSplit te ayuda a gestionar los gastos de tus viajes grupales de forma simple y
+              transparente. Sin hojas de cálculo, sin confusiones.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full sm:w-auto"
+                onClick={() => navigate('/register')}
+              >
+                Empezar ahora
+              </Button>
+              <Button
+                variant="secondary"
+                size="lg"
+                className="w-full sm:w-auto"
+                onClick={() => navigate('/login')}
+              >
+                Iniciar sesión
+              </Button>
             </div>
           </div>
-          <h1 className="text-3xl md:text-4xl font-heading font-bold text-slate-900 mb-4">
-            Divide gastos de viaje sin complicaciones
-          </h1>
-          <p className="text-lg text-slate-600 mb-8 max-w-2xl mx-auto">
-            TravelSplit te ayuda a gestionar los gastos de tus viajes grupales de forma simple y transparente. 
-            Sin hojas de cálculo, sin confusiones.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
-            <Button variant="primary" size="lg" className="w-full sm:w-auto" onClick={() => navigate('/register')}>
-              Empezar ahora
-            </Button>
-            <Button variant="secondary" size="lg" className="w-full sm:w-auto" onClick={() => navigate('/login')}>
-              Iniciar sesión
-            </Button>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Benefits Section */}
-      <section className="px-6 py-12 bg-white">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-heading font-bold text-slate-900 text-center mb-8">
-            Todo lo que necesitas para dividir gastos
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {benefits.map((benefit) => (
-              <div key={benefit.title} className="bg-slate-50 rounded-xl p-6">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 mt-1">{benefit.icon}</div>
-                  <div>
-                    <h3 className="text-xl font-heading font-semibold text-slate-900 mb-2">
-                      {benefit.title}
-                    </h3>
-                    <p className="text-slate-600 text-sm">{benefit.description}</p>
+        {/* Benefits Section */}
+        <section className="px-6 py-12 bg-white">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-heading font-bold text-slate-900 text-center mb-8">
+              Todo lo que necesitas para dividir gastos
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {benefits.map(benefit => (
+                <div key={benefit.title} className="bg-slate-50 rounded-xl p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 mt-1">{benefit.icon}</div>
+                    <div>
+                      <h3 className="text-xl font-heading font-semibold text-slate-900 mb-2">
+                        {benefit.title}
+                      </h3>
+                      <p className="text-slate-600 text-sm">{benefit.description}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* CTA Section */}
-      <section className="px-6 py-12 pb-16">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-2xl font-heading font-bold text-slate-900 mb-4">
-            ¿Listo para tu próximo viaje?
-          </h2>
-          <p className="text-slate-600 mb-6">
-            Únete a TravelSplit y disfruta de dividir gastos sin estrés
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
-            <Button variant="primary" size="lg" className="w-full sm:w-auto" onClick={() => navigate('/register')}>
-              Empezar ahora
-            </Button>
-            <Button variant="secondary" size="lg" className="w-full sm:w-auto" onClick={() => navigate('/login')}>
-              Ya tengo cuenta
-            </Button>
+        {/* CTA Section */}
+        <section className="px-6 py-12 pb-16">
+          <div className="max-w-2xl mx-auto text-center">
+            <h2 className="text-2xl font-heading font-bold text-slate-900 mb-4">
+              ¿Listo para tu próximo viaje?
+            </h2>
+            <p className="text-slate-600 mb-6">
+              Únete a TravelSplit y disfruta de dividir gastos sin estrés
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full sm:w-auto"
+                onClick={() => navigate('/register')}
+              >
+                Empezar ahora
+              </Button>
+              <Button
+                variant="secondary"
+                size="lg"
+                className="w-full sm:w-auto"
+                onClick={() => navigate('/login')}
+              >
+                Ya tengo cuenta
+              </Button>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
       </main>
     </div>
   );
@@ -156,7 +235,12 @@ const HomePageEmptyState = () => {
           title="¿Planeando una escapada?"
           description="Crea tu primer viaje para empezar a dividir gastos fácilmente"
           action={
-            <Button variant="primary" size="lg" className="w-full" onClick={() => navigate('/trips/new')}>
+            <Button
+              variant="primary"
+              size="lg"
+              className="w-full"
+              onClick={() => navigate('/trips/new')}
+            >
               + Crear mi primer viaje
             </Button>
           }
@@ -167,54 +251,48 @@ const HomePageEmptyState = () => {
 };
 
 /**
- * Helper function to calculate total amount from trips
- * Note: TripResponse doesn't include total_amount yet, so this is a placeholder
- * @param trips - Array of trips
- * @returns Total amount (currently returns 0 as placeholder)
- */
-const calculateTotalAmount = (trips: TripResponse[]): number => {
-  // TODO: Calculate from expenses when backend adds total_amount or expense endpoint is available
-  return 0;
-};
-
-/**
  * HomePage - With Trips State
- * Shows summary and recent trips for authenticated users with trips
+ * Shows dashboard with balances and recent expenses for authenticated users with trips
+ * Displays general overview of all user's active debts and recent expenses across all trips
  */
-const HomePageWithTrips = ({ trips, totalAmount }: { trips: TripResponse[]; totalAmount: number }) => {
-  const navigate = useNavigate();
-  const recentTrips = trips.slice(0, 3);
+const HomePageWithTrips = ({ trips }: { trips: TripResponse[] }) => {
+  // Use first trip for navigation to "Ver todos" link
+  const activeTrip = trips[0];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col pb-24">
       <Header />
       <main className="px-6 py-8">
-        {/* Summary Section - Hidden until backend implements total_amount */}
-        {/* TODO: Uncomment when backend adds total_amount to TripResponse
-        {totalAmount > 0 && (
-          <div className="bg-white rounded-xl p-6 shadow-md mb-6">
-            <h2 className="text-lg font-heading font-semibold text-slate-900 mb-2">Total gastado</h2>
-            <p className="text-3xl font-bold text-slate-900">{formatCurrency(totalAmount)}</p>
-          </div>
-        )}
-        */}
+        <h1 className="sr-only">Resumen general de viajes</h1>
 
-        {/* Recent Trips Section */}
-        <div className="mb-6">
-          <h2 className="text-lg font-heading font-semibold text-slate-900 mb-4">Viajes recientes</h2>
-          <div className="space-y-4">
-            {recentTrips.map((trip) => (
-              <TripCard key={trip.id} trip={trip} />
+        {/* Saldos Section */}
+        <section className="mb-8">
+          <h2 className="text-lg font-heading font-semibold text-slate-900 mb-4">Saldos</h2>
+          <div className="space-y-3">
+            {MOCK_BALANCES.map(balance => (
+              <BalanceCard key={balance.id} balance={balance} />
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* View All Trips Button */}
-        {trips.length > 3 && (
-          <Button variant="secondary" size="lg" className="w-full" onClick={() => navigate('/trips')}>
-            Ver todos mis viajes
-          </Button>
-        )}
+        {/* Gastos Recientes Section */}
+        <section>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-heading font-semibold text-slate-900">Gastos Recientes</h2>
+            <Link
+              to={`/trips/${activeTrip.id}`}
+              className="text-sm text-violet-600 font-medium hover:underline"
+              aria-label="Ver todos los gastos recientes"
+            >
+              Ver todos
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {MOCK_RECENT_EXPENSES.map(expense => (
+              <RecentExpenseCard key={expense.id} expense={expense} />
+            ))}
+          </div>
+        </section>
       </main>
     </div>
   );
@@ -228,13 +306,18 @@ const HomePageWithTrips = ({ trips, totalAmount }: { trips: TripResponse[]; tota
  * 3. Authenticated with trips - Shows summary and recent trips
  */
 export const HomePage = () => {
-  const { isAuthenticated, isLoading: authLoading } = useAuthContext();
+  const { isAuthenticated, isLoading: authLoading, token } = useAuthContext();
 
-  // Query to get trips (only if authenticated)
-  const { data: trips, isLoading: tripsLoading, error: tripsError, refetch } = useQuery({
+  // Query to get trips (only if authenticated AND token exists)
+  const {
+    data: trips,
+    isLoading: tripsLoading,
+    error: tripsError,
+    refetch,
+  } = useQuery({
     queryKey: ['user-trips'],
     queryFn: getUserTrips,
-    enabled: isAuthenticated, // Only execute if authenticated
+    enabled: isAuthenticated && !!token, // Only execute if authenticated AND token exists
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
@@ -274,6 +357,5 @@ export const HomePage = () => {
   }
 
   // State 3: Authenticated with trips
-  const totalAmount = calculateTotalAmount(trips);
-  return <HomePageWithTrips trips={trips} totalAmount={totalAmount} />;
+  return <HomePageWithTrips trips={trips} />;
 };

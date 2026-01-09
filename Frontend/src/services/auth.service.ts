@@ -26,7 +26,7 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  token: string;
+  accessToken: string;
   user?: {
     id: string;
     nombre: string;
@@ -89,7 +89,7 @@ export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
 
     // Parse validation errors from backend
     let errorMessage = errorData.message || 'Error al iniciar sesión';
-    
+
     // If it's a validation error (400), try to extract a cleaner message
     if (response.status === 400 && Array.isArray(errorData.message)) {
       // NestJS validation errors come as an array
@@ -117,4 +117,3 @@ export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
 
   return response.json();
 }
-

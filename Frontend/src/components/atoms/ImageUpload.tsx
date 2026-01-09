@@ -47,11 +47,7 @@ export const ImageUpload = ({ value, onChange, error }: ImageUploadProps) => {
     <div className="w-full">
       {preview ? (
         <div className="relative inline-block">
-          <img
-            src={preview}
-            alt="Recibo del gasto"
-            className="w-12 h-12 rounded-lg object-cover"
-          />
+          <img src={preview} alt="Recibo del gasto" className="w-12 h-12 rounded-lg object-cover" />
           <button
             type="button"
             onClick={handleRemove}
@@ -86,4 +82,3 @@ export const ImageUpload = ({ value, onChange, error }: ImageUploadProps) => {
     </div>
   );
 };
-

@@ -323,6 +323,50 @@ Componente para modales y diálogos.
 - **Inputs:** `h-12 rounded-xl`
 - **Botones:** Primario (h-12, full-width) y Secundario/Ghost
 
+### 3.11 Modal de Unirse a Viaje
+
+Modal específico para ingresar código de 8 caracteres para unirse a un viaje existente.
+
+**Características del Input:**
+
+- **Alineación:** `text-center` - Código centrado para fácil lectura
+- **Transformación:** `uppercase` - Auto-conversión a mayúsculas
+- **Espaciado:** `tracking-wider` - Mejor legibilidad de caracteres
+- **Peso:** `font-semibold` - Destacar el código
+- **Tamaño:** `text-base` - Consistente con otros inputs del sistema
+- **Dimensiones:** `h-12 w-full max-w-full` - Prevenir overflow en pantallas pequeñas
+- **Max length:** 8 caracteres exactos
+- **Placeholder:** "Ej: ABC12345"
+- **Validación:** Solo A-Z y 0-9, filtrado automático con regex `/[^A-Z0-9]/g`
+
+**Estados del Input:**
+
+- **Normal:** `border-slate-300`
+- **Focus:** `border-violet-600 ring-2 ring-violet-100`
+- **Error:** `border-red-500 ring-2 ring-red-100`
+- **Disabled:** `opacity-50 cursor-not-allowed`
+
+**Feedback Visual:**
+
+- **Contador de caracteres:** Muestra `X/8 caracteres` mientras se escribe
+- **Color del contador:**
+  - Incompleto: `text-slate-500`
+  - Completo (8 chars): `text-violet-600`
+- **Texto de ayuda inicial:** "Código de 8 caracteres (letras y números)" cuando está vacío
+
+**Mensajes de Error Específicos:**
+
+- **404:** "No encontramos un viaje con ese código. Verifica que esté correcto."
+- **409:** "Ya eres participante de este viaje"
+- **401:** "Tu sesión ha expirado. Inicia sesión nuevamente"
+
+**Layout del Botón:**
+
+- **Ancho:** `w-full max-w-sm mx-auto` - Centrado y limitado en desktop
+- **Altura:** `h-12` - Touch target accesible
+- **Estilo:** `bg-slate-200` (secundario), no primario
+- **Icono:** Key de lucide-react
+
 ---
 
 ## ⚡ 4. UX Patterns & Feedback

@@ -74,9 +74,21 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export const Button = ({ children, variant = 'primary', size = 'md', ...props }: ButtonProps) => {
+  const base = 'inline-flex items-center justify-center font-medium rounded-lg transition focus:outline-none focus:ring-2 focus:ring-offset-2';
+  const variantClasses = {
+    primary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500',
+    secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-200 focus:ring-slate-400',
+    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
+  } satisfies Record<NonNullable<ButtonProps['variant']>, string>;
+  const sizeClasses = {
+    sm: 'px-3 py-1.5 text-sm',
+    md: 'px-4 py-2 text-base',
+    lg: 'px-5 py-3 text-lg',
+  } satisfies Record<NonNullable<ButtonProps['size']>, string>;
+
   return (
     <button
-      className={`btn btn-${variant} btn-${size}`}
+      className={`${base} ${variantClasses[variant]} ${sizeClasses[size]}`}
       {...props}
     >
       {children}
@@ -142,10 +154,8 @@ export { Header } from './organisms/Header';
 ```
 
 ```typescript
-// Page composing organisms, molecules, and atoms
-import { Header } from '@/components/organisms/Header';
-import { Card } from '@/components/molecules/Card';
-import { Button } from '@/components/atoms/Button';
+// Page composing organisms, molecules, and atoms via barrel export
+import { Header, Card, Button } from '@/components';
 
 export function HomePage() {
   return (
@@ -242,7 +252,7 @@ export const Button = () => {
 - Component files: `PascalCase.tsx` (e.g., `Button.tsx`).
 - Component names: `PascalCase` (e.g., `Button`).
 - Props interfaces: `ComponentNameProps` (e.g., `ButtonProps`).
-- Directory names: `kebab-case` (e.g., `atoms/`, `molecules/`).
+- Directory names: lowercase single words (no hyphens) for core folders, e.g., `atoms/`, `molecules/`, `organisms/`, `utils/`.
 
 ## Exceptions
 

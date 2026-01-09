@@ -15,18 +15,22 @@ interface ToastProps {
  */
 export const Toast = ({ message, type = 'info', onClose, duration = 3000 }: ToastProps) => {
   useEffect(() => {
-    if (duration > 0) {
-      const timer = setTimeout(() => {
-        onClose();
-      }, duration);
-      return () => clearTimeout(timer);
-    }
+    const timer = setTimeout(() => {
+      onClose();
+    }, duration);
+    return () => clearTimeout(timer);
   }, [duration, onClose]);
 
   const bgColors = {
     success: 'bg-emerald-50 border-emerald-200 text-emerald-800',
     error: 'bg-red-50 border-red-200 text-red-800',
     info: 'bg-slate-50 border-slate-200 text-slate-800',
+  };
+
+  const focusRingColors = {
+    success: 'focus-visible:ring-emerald-600',
+    error: 'focus-visible:ring-red-600',
+    info: 'focus-visible:ring-slate-600',
   };
 
   return (
@@ -39,7 +43,7 @@ export const Toast = ({ message, type = 'info', onClose, duration = 3000 }: Toas
       <button
         type="button"
         onClick={onClose}
-        className="ml-4 text-current opacity-70 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 rounded transition-opacity"
+        className={`ml-4 text-current opacity-70 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 ${focusRingColors[type]} focus-visible:ring-offset-2 rounded transition-opacity`}
         aria-label="Cerrar notificación"
       >
         <X size={16} />
@@ -47,4 +51,3 @@ export const Toast = ({ message, type = 'info', onClose, duration = 3000 }: Toas
     </div>
   );
 };
-

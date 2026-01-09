@@ -232,7 +232,7 @@ Home (no auth) → Login/Register → Home (auth) → Viajes → [Crear Viaje] �
 
 ---
 
-#### Pantalla 1b: HomePage - Usuario Autenticado (Sin Viajes)
+#### Pantalla 1a: HomePage - Usuario Autenticado (Sin Viajes)
 ```
 ┌─────────────────────────────────────┐
 │  TravelSplit  [Inicio] Juan [Cerrar]│ ← Header con acciones: Inicio + Nombre + Cerrar Sesión
@@ -257,7 +257,73 @@ Home (no auth) → Login/Register → Home (auth) → Viajes → [Crear Viaje] �
 
 **Acción**: Click en "Crear mi primer viaje" → `/trips/new`
 
-**Nota**: Esta pantalla solo se muestra si el usuario está autenticado. Muestra BottomTabBar.
+**Nota**: Esta pantalla solo se muestra si el usuario está autenticado pero no tiene viajes. Muestra BottomTabBar.
+
+---
+
+#### Pantalla 1b: HomePage - Usuario Autenticado (Con Viajes)
+```
+┌─────────────────────────────────────┐
+│  TravelSplit                        │ ← Header estándar
+│                              
+├─────────────────────────────────────┤
+│                                     │
+│  Saldos                             │ ← Sección título (font-heading, font-semibold)
+│                                     │
+│  ┌─────────────────────────────┐   │ ← Card (bg-white, rounded-xl, p-4)
+│  │ Juan → Pedro                │   │ ← Nombres (font-medium)
+│  │              $ 50.000       │   │ ← Monto (badge rojo bg-red-50 text-red-700)
+│  └─────────────────────────────┘   │
+│                                     │
+│  ┌─────────────────────────────┐   │
+│  │ Carlos → Juan               │   │
+│  │              $ 25.000       │   │ ← Badge verde (bg-emerald-50 text-emerald-700)
+│  └─────────────────────────────┘   │
+│                                     │
+│  ┌─────────────────────────────┐   │
+│  │ María → Pedro               │   │
+│  │              $ 15.000       │   │ ← Badge azul (bg-blue-50 text-blue-700)
+│  └─────────────────────────────┘   │
+│                                     │
+│  Gastos Recientes      [Ver todos] │ ← Sección título + link (text-violet-600)
+│                                     │
+│  ┌─────────────────────────────┐   │ ← ExpenseCard (bg-white, rounded-xl, p-4)
+│  │ [🍽️] Cena en La Vitrola    │   │ ← Icono circular + Título (font-medium)
+│  │      Pagó Pedro • 16 ene    │   │ ← Info secundaria (text-slate-500, text-sm)
+│  │      $ 180.000    4 personas│   │ ← Monto (font-semibold) + participantes
+│  └─────────────────────────────┘   │
+│                                     │
+│  ┌─────────────────────────────┐   │
+│  │ [🚗] Taxi al hotel          │   │
+│  │      Pagó Juan • 15 ene     │   │
+│  │      $ 25.000     4 personas│   │
+│  └─────────────────────────────┘   │
+│                                     │
+│  ┌─────────────────────────────┐   │
+│  │ [🍽️] Desayuno Café del Mar │   │
+│  │      Pagó María • 17 ene    │   │
+│  │      $ 85.000     3 personas│   │
+│  └─────────────────────────────┘   │
+│                                     │
+├─────────────────────────────────────┤
+│ [Home] [Map] [User]                 │ ← BottomTabBar (Home activo)
+└─────────────────────────────────────┘
+```
+
+**Características**:
+- Muestra resumen del viaje activo en el header
+- Sección "Saldos" con badges de colores según tipo de deuda
+- Sección "Gastos Recientes" con últimos 3 gastos
+- Link "Ver todos" para navegar a la lista completa
+- Iconos de categoría (🍽️ comida, 🚗 transporte, 🏨 alojamiento)
+- Información de pagador y fecha en formato corto
+
+**Acciones**:
+- Click en card de saldo → Ver detalle de deuda
+- Click en "Ver todos" → `/trips/:tripId` (tab Gastos)
+- Click en ExpenseCard → Ver detalle del gasto
+
+**Nota**: Esta pantalla se muestra cuando el usuario está autenticado y tiene al menos un viaje activo. Muestra BottomTabBar con Home activo.
 
 ---
 
@@ -325,11 +391,15 @@ Home (no auth) → Login/Register → Home (auth) → Viajes → [Crear Viaje] �
 │  Mis Viajes          [+ Crear Viaje] │ ← Header sticky, botón derecha
 ├─────────────────────────────────────┤
 │                                     │
+│  ┌─────────────────────────────┐   │
+│  │ [Key] Unirse con código     │   │ ← NUEVO: Botón secundario (h-12, full-width)
+│  └─────────────────────────────┘   │    bg-slate-200, text-slate-900, rounded-xl, font-medium, mb-6
+│                                     │    Icono: Key (lucide-react, 20px)
 │  ┌─────────────────────────────┐   │ ← TripCard (bg-white, rounded-xl, p-6)
 │  │ [Map Icon] Viaje a Cartagena│   │ ← Icono + Título (font-semibold)
 │  │                             │   │
 │  │ [Users] 4 participantes     │   │ ← Icono + Texto (text-slate-500)
-│  │ [Dollar] $ 1.250.000        │   │ ← Monto (font-semibold)
+│  │ [Cop] $ 1.250.000        │   │ ← Monto (font-semibold)
 │  │ [Calendar] Hace 2 días      │   │ ← Fecha relativa (text-slate-500)
 │  └─────────────────────────────┘   │
 │                                     │
@@ -338,7 +408,7 @@ Home (no auth) → Login/Register → Home (auth) → Viajes → [Crear Viaje] �
 │  │         Bogotá              │   │
 │  │                             │   │
 │  │ [Users] 3 participantes     │   │
-│  │ [Dollar] $ 450.000          │   │
+│  │ [Cop] $ 450.000          │   │
 │  │ [Calendar] Hace 1 semana    │   │
 │  └─────────────────────────────┘   │
 │                                     │
@@ -350,6 +420,79 @@ Home (no auth) → Login/Register → Home (auth) → Viajes → [Crear Viaje] �
 **Acciones**:
 - Click en TripCard → `/trips/:tripId`
 - Click en "+ Crear Viaje" → `/trips/new`
+- Click en "Unirse con código" → Abre Modal (Pantalla 3a)
+
+---
+
+#### Pantalla 3a: Modal "Unirse a un viaje" (NUEVO)
+```
+┌─────────────────────────────────────┐
+│  [Overlay oscuro bg-black/50]       │ ← Overlay para destacar modal
+│         ┌─────────────────────┐    │
+│         │ [Key] Unirse a un   │    │ ← Icono Key (24px, violet-600) + Título 
+│         │       viaje         │    │    (font-heading, font-bold, text-xl)
+│         │                     │    │
+│         │  Ingresa el código  │    │ ← Descripción (text-slate-600, text-sm, mb-4)
+│         │  de 8 caracteres que│    │
+│         │  compartió el       │    │
+│         │  creador del viaje  │    │
+│         │                     │    │
+│         │  Código del viaje   │    │ ← Label (text-sm font-medium text-slate-700)
+│         │  ┌───────────────┐  │    │
+│         │  │  ABC12345     │  │    │ ← Input (h-12, rounded-xl, text-center)
+│         │  └───────────────┘  │    │    uppercase, tracking-wider, text-lg, font-semibold
+│         │                     │    │    placeholder: "Ej: ABC12345"
+│         │  ℹ️ Código de 8     │    │ ← Info text (text-slate-500, text-xs)
+│         │     caracteres      │    │
+│         │                     │    │
+│         │  [❌ Mensaje error]  │    │ ← Si hay error: bg-red-50, border-red-200
+│         │                     │    │    text-red-600, rounded-xl, p-3, text-sm
+│         │                     │    │    Ejemplos:
+│         │                     │    │    - "Código inválido o viaje no encontrado"
+│         │                     │    │    - "Ya eres participante de este viaje"
+│         │                     │    │    - "Este viaje está cerrado"
+│         │                     │    │
+│         │  ┌───────────────┐  │    │
+│         │  │  Unirse       │  │    │ ← Botón primario (h-12, full-width, bg-violet-600)
+│         │  └───────────────┘  │    │    Loading: spinner + "Uniéndose..."
+│         │                     │    │    Disabled si código < 8 caracteres
+│         │  [Cancelar]         │    │ ← Botón text/ghost (text-slate-600, hover:text-slate-900)
+│         │                     │    │
+│         └─────────────────────┘    │ ← Modal (bg-white, rounded-2xl, p-6, max-w-sm, shadow-2xl)
+│                                     │
+└─────────────────────────────────────┘
+```
+
+**Acciones**:
+- Click en "Unirse" → POST `/trips/join` con código
+  - Éxito (201): Toast verde "Te uniste al viaje '{nombre}'" + Cierra modal + Navega a `/trips/:tripId`
+  - Error 400: Muestra "El código debe tener 8 caracteres"
+  - Error 404: Muestra "Código inválido o viaje no encontrado"
+  - Error 409: Muestra "Ya eres participante de este viaje"
+  - Error 401: Redirect a `/login`
+- Click en "Cancelar" → Cierra modal
+- Click fuera del modal → Cierra modal
+- Input auto-uppercase: Transforma minúsculas a mayúsculas automáticamente
+- Validación en tiempo real: Solo permite A-Z y 0-9
+
+**Estados del Input:**
+- **Default:** `border-slate-300`
+- **Focus:** `border-violet-600 ring-2 ring-violet-100`
+- **Error:** `border-red-500 ring-2 ring-red-100`
+- **Typing:** Si longitud < 8, botón disabled
+- **Valid:** Si longitud === 8, botón enabled
+
+**Toast de Éxito (tras unirse):**
+```
+┌─────────────────────────────────────┐
+│  ┌─────────────────────────────┐   │ ← Toast (fixed top-4 right-4, z-50)
+│  │ ✅ Te uniste al viaje       │   │    bg-emerald-50, border-emerald-200
+│  │    "Viaje a Cartagena"      │   │    text-emerald-700, rounded-xl, p-4
+│  │                             │   │    shadow-lg
+│  └─────────────────────────────┘   │    Auto-dismiss en 3s
+│                                     │
+└─────────────────────────────────────┘
+```
 
 ---
 

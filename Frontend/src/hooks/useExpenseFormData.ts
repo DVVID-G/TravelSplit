@@ -99,10 +99,7 @@ export function useExpenseFormData({
   } = useTripParticipants(tripId);
 
   // Create mock participants
-  const mockParticipants = useMemo(
-    () => createMockParticipants(user, tripId),
-    [user, tripId],
-  );
+  const mockParticipants = useMemo(() => createMockParticipants(user, tripId), [user, tripId]);
 
   // Determine if we should use mock data
   // Use mock if: no tripId OR backend errors OR no data available
@@ -134,13 +131,7 @@ export function useExpenseFormData({
       return mockParticipants;
     }
     return fetchedParticipants;
-  }, [
-    shouldUseMockData,
-    fetchedParticipants,
-    participantsError,
-    user,
-    mockParticipants,
-  ]);
+  }, [shouldUseMockData, fetchedParticipants, participantsError, user, mockParticipants]);
 
   // Determine loading state (only if not using mock data)
   const isLoading = useMemo(() => {
@@ -166,4 +157,3 @@ export function useExpenseFormData({
     },
   };
 }
-

@@ -1,3 +1,8 @@
+---
+name: UI-UX-Auditor
+model: default
+---
+
 # Agent: UI/UX Auditor (Architect UI/X)
 
 ## Role

@@ -55,7 +55,7 @@ export function useAuth() {
           isLoading: false,
         });
       }
-    } catch (error) {
+    } catch {
       // If there's an error reading from localStorage, clear it
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
@@ -76,19 +76,22 @@ export function useAuth() {
   const login = useCallback(async (credentials: LoginRequest): Promise<LoginResponse> => {
     const response = await loginUser(credentials);
 
-    // Store token and user data
-    localStorage.setItem(TOKEN_KEY, response.token);
+    // Store token and user data in localStorage first
+    localStorage.setItem(TOKEN_KEY, response.accessToken);
     if (response.user) {
       localStorage.setItem(USER_KEY, JSON.stringify(response.user));
     }
 
-    // Update state
+    // Update state synchronously after localStorage
     setAuthState({
       isAuthenticated: true,
       user: response.user || null,
-      token: response.token,
+      token: response.accessToken,
       isLoading: false,
     });
+
+    // Ensure state is propagated before promise resolves
+    await new Promise(resolve => setTimeout(resolve, 0));
 
     return response;
   }, []);
@@ -119,15 +122,3 @@ export function useAuth() {
     checkAuth,
   };
 }
-
-
-
-
-
-
-
-
-
-
-
-

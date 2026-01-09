@@ -16,6 +16,7 @@ alwaysApply: false
 - Never expose internal implementation details in error messages.
 - Use appropriate HTTP status codes.
 - Handle errors at appropriate layer (service throws, controller catches, filter formats).
+- Async/await: services must throw (not swallow with .catch) so errors bubble; controllers must await/return service Promises so Nest/global filters catch them; nested async calls should await or propagate; rely on global unhandled rejection handling (e.g., AppExceptionFilter or process-level handler) to avoid silent promise rejections.
 
 ## Exception Types
 
@@ -82,26 +83,43 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
     
-    const message =
+    const rawResponse =
       exception instanceof HttpException
         ? exception.getResponse()
         : 'Error interno del servidor';
-    
+
+    let safeMessage: string;
+    if (typeof rawResponse === 'string') {
+      safeMessage = rawResponse;
+    } else if (Array.isArray(rawResponse)) {
+      safeMessage = rawResponse.map((item) => String(item)).join(', ');
+    } else if (rawResponse && typeof rawResponse === 'object') {
+      const maybeMessage = (rawResponse as { message?: unknown }).message;
+      if (typeof maybeMessage === 'string') {
+        safeMessage = maybeMessage;
+      } else if (Array.isArray(maybeMessage)) {
+        safeMessage = maybeMessage.map((item) => String(item)).join(', ');
+      } else {
+        safeMessage = JSON.stringify(rawResponse);
+      }
+    } else {
+      safeMessage = 'Ocurrió un error';
+    }
+
     const errorResponse = {
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
       method: request.method,
-      message:
-        typeof message === 'string'
-          ? message
-          : (message as { message: string }).message || 'Ocurrió un error',
+      message: safeMessage,
     };
-    
-    this.logger.error(
-      `${request.method} ${request.url}`,
-      exception instanceof Error ? exception.stack : JSON.stringify(exception),
-    );
+
+    // Respect logger level; avoid dumping full stacks in prod unless configured
+    if (exception instanceof Error) {
+      this.logger.error(`${request.method} ${request.url}`, exception.stack);
+    } else {
+      this.logger.error(`${request.method} ${request.url}`, JSON.stringify(exception));
+    }
     
     response.status(status).json(errorResponse);
   }
@@ -124,6 +142,21 @@ export class UsersService {
     
     return user;
   }
+
+  // Resilience guidance for transient DB failures (findOne/read paths)
+  // - Default: no retries for repository reads unless you apply bounded exponential backoff.
+  // - If needed, keep resilience inside the service (closest to the repository call) or a dedicated infra helper; do not sprinkle ad-hoc retries across controllers.
+  // - Use small, capped retries for idempotent reads only (e.g., 2-3 attempts, exponential backoff, jitter) to avoid hammering the DB.
+  // - Circuit breakers belong in infra/middleware (e.g., wrapping the data source/ORM) to prevent cascading failures.
+  // Example with p-retry (pseudo):
+  // const user = await retry(() => this.userRepository.findOne({ where: { id, deletedAt: IsNull() } }), {
+  //   retries: 2,
+  //   factor: 2,
+  //   minTimeout: 100,
+  //   maxTimeout: 500,
+  //   onFailedAttempt: (err) => this.logger.warn(`Retry findOne user ${id}: attempt ${err.attemptNumber}`),
+  // });
+  // Example circuit-breaker placement (pseudo): wrap the underlying data source/repo factory; the service should call the wrapped repo rather than implement breaker logic itself.
   
   async create(createUserDto: CreateUserDto): Promise<User> {
     const existingUser = await this.userRepository.findOne({
@@ -165,6 +198,11 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 }
+
+// Controller Layer Error Handling guidance
+// - Annotate all mutation endpoints (POST/PUT/PATCH/DELETE) with explicit @HttpCode(...) values; do not rely on Nest defaults.
+// - Example above: UsersController.create uses @HttpCode(HttpStatus.CREATED); update other mutations likewise (e.g., PATCH -> 200/204, DELETE -> 204).
+// - Keep success and error codes explicit to improve maintainability and API contract clarity.
 ```
 
 ```typescript
