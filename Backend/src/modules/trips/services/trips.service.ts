@@ -268,6 +268,23 @@ export class TripsService {
     return results.entities.map((trip) => {
       const raw = rawByTripId.get(trip.id);
 
+      if (!raw) {
+        this.logger.warn(
+          `Trip list raw aggregation missing for tripId=${trip.id}. Falling back to defaults for userRole and participantCount.`,
+        );
+      } else {
+        if (raw.userRole === undefined) {
+          this.logger.warn(
+            `Trip list raw aggregation missing field userRole for tripId=${trip.id}. Falling back to ParticipantRole.MEMBER.`,
+          );
+        }
+        if (raw.participantCount === undefined) {
+          this.logger.warn(
+            `Trip list raw aggregation missing field participantCount for tripId=${trip.id}. Falling back to '1'.`,
+          );
+        }
+      }
+
       const userRole = raw?.userRole ?? ParticipantRole.MEMBER;
       const participantCountStr = raw?.participantCount ?? '1';
 
@@ -350,8 +367,25 @@ export class TripsService {
       `Usuario ${userId} se unió exitosamente al viaje ${trip.id} (${trip.name}) usando código ${code}`,
     );
 
-    // Invalidar caché del trip
-    await this.invalidateTripCache(trip.id, userId);
+    // Invalidar caché del trip para TODOS los participantes (incluyendo el nuevo)
+    const participantRows = await this.tripParticipantRepository.find({
+      where: {
+        tripId: trip.id,
+        deletedAt: IsNull(),
+      },
+      select: {
+        userId: true,
+      },
+    });
+
+    const participantIds = new Set<string>(participantRows.map((p) => p.userId));
+    participantIds.add(userId);
+
+    await Promise.all(
+      Array.from(participantIds).map((participantId) =>
+        this.invalidateTripCache(trip.id, participantId),
+      ),
+    );
 
     return trip;
   }

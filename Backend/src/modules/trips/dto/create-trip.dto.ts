@@ -1,11 +1,13 @@
 import {
   IsString,
   IsNotEmpty,
+  MaxLength,
   IsArray,
   IsEmail,
   IsOptional,
   ArrayMinSize,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 /**
@@ -31,8 +33,10 @@ export class CreateTripDto {
     example: 'Viaje a Cartagena',
     type: String,
   })
+  @Transform(({ value }) => String(value ?? '').trim())
   @IsString()
   @IsNotEmpty({ message: 'El nombre del viaje es requerido' })
+  @MaxLength(255, { message: 'El nombre del viaje no puede exceder 255 caracteres' })
   name!: string;
 
   /**
