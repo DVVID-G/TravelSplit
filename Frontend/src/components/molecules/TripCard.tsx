@@ -1,4 +1,9 @@
-import { Map as MapIcon, Users, Calendar, DollarSign } from 'lucide-react';
+import {
+  Map as MapIcon,
+  Users as UsersIcon,
+  Calendar as CalendarIcon,
+  DollarSign as DollarSignIcon,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { TripResponse, TripListItem } from '@/types/trip.types';
 import { formatRelativeDate } from '@/utils/date';
@@ -44,19 +49,19 @@ export const TripCard = ({ trip, onClick }: TripCardProps) => {
 
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-sm text-slate-500">
-          <Users className="w-4 h-4" aria-hidden="true" />
+          <UsersIcon className="w-4 h-4" aria-hidden="true" />
           <span>
             {participantCount} {participantCount === 1 ? 'participante' : 'participantes'}
           </span>
         </div>
 
         <div className="flex items-center gap-2 text-sm">
-          <DollarSign className="w-4 h-4 text-slate-500" aria-hidden="true" />
+          <DollarSignIcon className="w-4 h-4 text-slate-500" aria-hidden="true" />
           <span className="font-semibold text-slate-900">{formatCurrency(totalAmount)}</span>
         </div>
 
         <div className="flex items-center gap-2 text-sm text-slate-500">
-          <Calendar className="w-4 h-4" aria-hidden="true" />
+          <CalendarIcon className="w-4 h-4" aria-hidden="true" />
           <span>{formatRelativeDate(trip.createdAt)}</span>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Key, Loader2 } from 'lucide-react';
 import { joinTripByCode } from '@/services/trip.service';
 import type { TripResponse } from '@/types/trip.types';
@@ -78,13 +78,13 @@ export function JoinTripModal({ isOpen, onClose, onSuccess }: JoinTripModalProps
     }
   };
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (!isLoading) {
       onClose();
       setCode('');
       setError('');
     }
-  };
+  }, [isLoading, onClose]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -122,10 +122,13 @@ export function JoinTripModal({ isOpen, onClose, onSuccess }: JoinTripModalProps
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       onClick={handleOverlayClick}
-      role="dialog"
-      tabIndex={-1}
     >
-      <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+      <div
+        className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
+        role="dialog"
+        tabIndex={-1}
+        aria-labelledby="join-trip-title"
+      >
         {/* Close button */}
         <button
           type="button"
@@ -142,7 +145,9 @@ export function JoinTripModal({ isOpen, onClose, onSuccess }: JoinTripModalProps
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100">
             <Key size={24} className="text-violet-600" />
           </div>
-          <h2 className="font-heading text-xl font-bold text-slate-900">Unirse a un viaje</h2>
+          <h2 id="join-trip-title" className="font-heading text-xl font-bold text-slate-900">
+            Unirse a un viaje
+          </h2>
         </div>
 
         {/* Description */}

@@ -9,8 +9,8 @@ export interface TripParticipant {
   trip_id: string;
   user_id: string;
   role: TripParticipantRole;
-  joined_at: string;
-  is_active: boolean;
+  joined_at?: string;
+  is_active?: boolean;
   // Relations
   user?: {
     id: string;

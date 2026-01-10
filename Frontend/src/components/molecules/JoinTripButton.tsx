@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import clsx from 'clsx';
 import { Key } from 'lucide-react';
 import { JoinTripModal } from '@/components/organisms/JoinTripModal';
 import type { TripResponse } from '@/types/trip.types';
@@ -31,7 +32,7 @@ export function JoinTripButton({ onSuccess, className = '' }: JoinTripButtonProp
       <button
         type="button"
         onClick={() => setIsModalOpen(true)}
-        className={`${JOIN_BUTTON_CLASSES} ${className}`}
+        className={clsx(JOIN_BUTTON_CLASSES, className)}
       >
         <Key size={20} />
         Unirse con código

@@ -5,7 +5,12 @@ import type { CreateExpenseFormData } from '@/schemas/expense.schema';
 import type { CreateExpenseRequest } from '@/types/expense.types';
 
 function isErrorWithMessage(error: unknown): error is { message: string } {
-  return typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string';
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof (error as { message?: unknown }).message === 'string'
+  );
 }
 
 interface UseExpenseFormOptions {
@@ -76,9 +81,7 @@ export function useExpenseForm({ tripId, onSuccess, onSuccessMessage }: UseExpen
         }
       }, 1000);
     } catch (err) {
-      const errorMessage = isErrorWithMessage(err)
-        ? err.message
-        : 'Error al crear el gasto';
+      const errorMessage = isErrorWithMessage(err) ? err.message : 'Error al crear el gasto';
       setError(errorMessage);
       throw err; // Re-throw to let form handle it
     } finally {
