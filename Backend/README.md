@@ -96,6 +96,7 @@ Ver `.env.example` para la lista completa de variables. Las principales son:
 - `DB_USERNAME`: Usuario de PostgreSQL
 - `DB_PASSWORD`: Contraseña de PostgreSQL
 - `DB_NAME`: Nombre de la base de datos
+- `DB_SYNCHRONIZE`: Sincroniza el esquema automáticamente (default: false). Solo habilitar explícitamente en desarrollo local (`DB_SYNCHRONIZE=true`); en staging/producción usar migraciones.
 
 ## Endpoints
 
