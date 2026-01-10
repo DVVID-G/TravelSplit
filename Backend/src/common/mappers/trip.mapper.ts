@@ -1,7 +1,10 @@
 import { Trip } from '../../modules/trips/entities/trip.entity';
 import { TripResponseDto } from '../../modules/trips/dto/trip-response.dto';
 import { TripListItemDto } from '../../modules/trips/dto/trip-list-item.dto';
-import { TripDetailResponseDto, ParticipantsPaginationMeta } from '../../modules/trips/dto/trip-detail-response.dto';
+import {
+  TripDetailResponseDto,
+  ParticipantsPaginationMeta,
+} from '../../modules/trips/dto/trip-detail-response.dto';
 import { TripParticipantDto } from '../../modules/trips/dto/trip-participant.dto';
 import { UserSummaryDto } from '../../modules/trips/dto/user-summary.dto';
 import { ParticipantRole } from '../../modules/trips/enums/participant-role.enum';
@@ -122,5 +125,4 @@ export class TripMapper {
       email: user.email,
     };
   }
-
 }

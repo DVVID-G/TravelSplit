@@ -36,7 +36,9 @@ export class CreateTripDto {
   @Transform(({ value }) => String(value ?? '').trim())
   @IsString()
   @IsNotEmpty({ message: 'El nombre del viaje es requerido' })
-  @MaxLength(255, { message: 'El nombre del viaje no puede exceder 255 caracteres' })
+  @MaxLength(255, {
+    message: 'El nombre del viaje no puede exceder 255 caracteres',
+  })
   name!: string;
 
   /**
