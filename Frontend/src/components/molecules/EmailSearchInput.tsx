@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Search, Mail, UserPlus, X } from 'lucide-react';
 import { Input } from '../atoms/Input';
 import { Button } from '../atoms/Button';
+import { API_BASE_URL } from '@/config/api';
 
 interface EmailSearchInputProps {
   onAdd: (email: string) => void;
@@ -60,7 +61,7 @@ export const EmailSearchInput = ({
       // TODO: Implementar búsqueda en backend
       // Por ahora, simulamos la búsqueda
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'}/users/search?email=${encodeURIComponent(trimmedEmail)}`,
+        `${API_BASE_URL}/users/search?email=${encodeURIComponent(trimmedEmail)}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('travelsplit_token')}`,
