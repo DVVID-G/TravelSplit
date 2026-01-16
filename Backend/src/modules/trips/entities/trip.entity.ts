@@ -1,4 +1,4 @@
-import { Entity, Column, Index, OneToMany } from 'typeorm';
+import { Entity, Column, OneToMany } from 'typeorm';
 import { BaseEntity } from '../../../common/entities/base.entity';
 import { TripParticipant } from './trip-participant.entity';
 import { TripStatus } from '../enums/trip-status.enum';

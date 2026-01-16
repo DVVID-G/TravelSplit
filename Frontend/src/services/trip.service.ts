@@ -5,8 +5,7 @@
 
 import type { TripResponse, CreateTripRequest, TripListItem, TripStats } from '@/types/trip.types';
 import type { ApiError } from '@/types/api.types';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+import { API_BASE_URL } from '@/config/api';
 
 function getAuthToken(): string {
   const token = localStorage.getItem('travelsplit_token');
@@ -83,7 +82,9 @@ export async function getTripById(
  * @returns Promise with array of trips with extended information
  * @throws Error with status code and message on failure
  */
-export async function getUserTrips(token: string): Promise<TripListItem[]> {
+export async function getUserTrips(): Promise<TripListItem[]> {
+  const token = getAuthToken();
+
   const response = await fetch(`${API_BASE_URL}/trips`, {
     method: 'GET',
     headers: {

@@ -1,11 +1,15 @@
 import { Trip } from '../../modules/trips/entities/trip.entity';
 import { TripResponseDto } from '../../modules/trips/dto/trip-response.dto';
 import { TripListItemDto } from '../../modules/trips/dto/trip-list-item.dto';
-import { TripDetailResponseDto, ParticipantsPaginationMeta } from '../../modules/trips/dto/trip-detail-response.dto';
+import {
+  TripDetailResponseDto,
+  ParticipantsPaginationMeta,
+} from '../../modules/trips/dto/trip-detail-response.dto';
 import { TripParticipantDto } from '../../modules/trips/dto/trip-participant.dto';
 import { UserSummaryDto } from '../../modules/trips/dto/user-summary.dto';
 import { ParticipantRole } from '../../modules/trips/enums/participant-role.enum';
 import { TripParticipant } from '../../modules/trips/entities/trip-participant.entity';
+import { User } from '../../modules/users/entities/user.entity';
 
 /**
  * Mapper utility for converting Trip entities to DTOs.
@@ -108,7 +112,9 @@ export class TripMapper {
    * @param user - User entity
    * @returns UserSummaryDto with basic user data
    */
-  static toUserSummaryDto(user: any): UserSummaryDto | null {
+  static toUserSummaryDto(
+    user: Pick<User, 'id' | 'nombre' | 'email'> | null | undefined,
+  ): UserSummaryDto | null {
     if (!user) {
       return null;
     }
@@ -119,5 +125,4 @@ export class TripMapper {
       email: user.email,
     };
   }
-
 }

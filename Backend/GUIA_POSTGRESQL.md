@@ -52,16 +52,16 @@ docker run -d \
 
 ## ⚙️ Paso 2: Configurar Variables de Entorno
 
-1. **Crea el archivo `.env`** en el directorio `Backend`:
+1. **Crea el archivo `.env.local` (recomendado)** en el directorio `Backend`:
    ```bash
    # En Windows (PowerShell)
-   Copy-Item env.example.txt .env
+   Copy-Item .env.example .env.local
    
    # En Linux/Mac
-   cp env.example.txt .env
+   cp .env.example .env.local
    ```
 
-2. **Edita el archivo `.env`** con tus configuraciones. El archivo debería verse así:
+2. **Edita el archivo `.env.local`** con tus configuraciones. El archivo debería verse así:
 
    ```env
    # Application Configuration
@@ -75,9 +75,17 @@ docker run -d \
    DB_USERNAME=postgres
    DB_PASSWORD=postgres
    DB_NAME=travelsplit
-   DB_SYNCHRONIZE=true
+   # Importante: por defecto el backend NO sincroniza el esquema automáticamente.
+   # Para habilitar sincronización automática (solo desarrollo), configura:
+   # DB_SYNCHRONIZE=true
+   DB_SYNCHRONIZE=false
    DB_LOGGING=false
    ```
+
+   **Nota importante (DB_SYNCHRONIZE)**:
+   - `DB_SYNCHRONIZE=false` es el comportamiento por defecto (recomendado).
+   - Si estás en **desarrollo local** y quieres que TypeORM cree/actualice tablas automáticamente, debes configurar **explícitamente** `DB_SYNCHRONIZE=true`.
+   - En entornos no locales (staging/producción), mantén `DB_SYNCHRONIZE=false` y usa **migraciones**.
 
    **Nota importante**: Las credenciales en `.env` deben coincidir con las del `docker-compose.yml`:
    - `DB_USERNAME` = `POSTGRES_USER` (postgres)

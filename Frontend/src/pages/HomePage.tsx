@@ -316,7 +316,7 @@ export const HomePage = () => {
     refetch,
   } = useQuery({
     queryKey: ['user-trips'],
-    queryFn: () => getUserTrips(token as string),
+    queryFn: () => getUserTrips(),
     enabled: isAuthenticated && !!token, // Only execute if authenticated AND token exists
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

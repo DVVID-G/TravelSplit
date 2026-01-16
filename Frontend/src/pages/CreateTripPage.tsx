@@ -10,8 +10,7 @@ import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms/Button';
 import { useAuthContext } from '@/contexts/AuthContext';
 import type { ApiError } from '@/types/api.types';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+import { API_BASE_URL } from '@/config/api';
 
 interface Participant {
   email: string;

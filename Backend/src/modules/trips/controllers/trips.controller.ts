@@ -219,8 +219,7 @@ export class TripsController {
     name: 'participantsLimit',
     required: false,
     type: Number,
-    description:
-      'Límite de participantes por página (default: 20, max: 100)',
+    description: 'Límite de participantes por página (default: 20, max: 100)',
     example: 20,
   })
   @ApiOkResponse({
@@ -241,16 +240,19 @@ export class TripsController {
   ): Promise<TripDetailResponseDto> {
     // Validar y sanitizar parámetros de paginación
     const safePage = Math.max(1, Number(participantsPage) || 1);
-    const safeLimit = Math.min(Math.max(1, Number(participantsLimit) || 20), 100);
-
-    const { trip, paginationMeta, userRole } = await this.tripsService.findOneById(
-      id,
-      req.user!.id,
-      safePage,
-      safeLimit,
+    const safeLimit = Math.min(
+      Math.max(1, Number(participantsLimit) || 20),
+      100,
     );
+
+    const { trip, paginationMeta, userRole } =
+      await this.tripsService.findOneById(
+        id,
+        req.user!.id,
+        safePage,
+        safeLimit,
+      );
 
     return TripMapper.toDetailDto(trip, userRole, paginationMeta);
   }
-
 }

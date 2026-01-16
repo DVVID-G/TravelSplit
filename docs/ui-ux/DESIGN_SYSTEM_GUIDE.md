@@ -7,7 +7,7 @@
 
 ---
 
-## 🎨 1. Visual Language (Look & Feel)
+## 1. Visual Language (Look & Feel)
 
 ### 1.1 Dirección de Arte: "Modern Friendly"
 
@@ -189,7 +189,7 @@ Home (no auth) → Login/Register → Home (auth) → Viajes → [Crear Viaje] �
 
 ---
 
-## 🧩 3. Componentes Clave (Atomic Specs)
+## 3. Componentes Clave (Atomic Specs)
 
 ### 3.1 Tarjetas de Viaje (Trip Card)
 
@@ -215,8 +215,8 @@ El componente más repetido en el feed de gastos dentro de un viaje.
 
 #### Formato de Moneda (COP)
 
-- ✅ **SIEMPRE sin decimales:** `$ 25.000` (No `$25.000,00`)
-- ✅ Usar separador de miles (punto)
+- **SIEMPRE sin decimales:** `$ 25.000` (No `$25.000,00`)
+- Usar separador de miles (punto)
 
 ### 3.3 Visualización de Saldos (Texto Simple)
 
@@ -369,7 +369,7 @@ Modal específico para ingresar código de 8 caracteres para unirse a un viaje e
 
 ---
 
-## ⚡ 4. UX Patterns & Feedback
+## 4. UX Patterns & Feedback
 
 ### 4.1 Manejo de Error: Strict User Policy (Active Help)
 
@@ -422,7 +422,7 @@ No dejar pantallas en blanco. Cada empty state debe guiar al usuario hacia la ac
 
 ---
 
-## 🎨 5. Especificaciones de Diseño Visual (Design Tokens)
+## 5. Especificaciones de Diseño Visual (Design Tokens)
 
 ### 5.1 Headers Estándar
 
@@ -461,7 +461,7 @@ No dejar pantallas en blanco. Cada empty state debe guiar al usuario hacia la ac
 
 ---
 
-## 🛠️ 6. Implementación Técnica (Dev Guidelines)
+## 6. Implementación Técnica (Dev Guidelines)
 
 ### 6.1 Librerías Recomendadas
 
@@ -488,7 +488,7 @@ Usar prefijos `md:` y `lg:` solo para adaptar el layout en escritorio (centrar e
 
 ---
 
-## ✅ Implementation Checklist
+## Implementation Checklist
 
 Entregar esta lista al equipo de desarrollo:
 
@@ -534,7 +534,7 @@ Entregar esta lista al equipo de desarrollo:
 
 ---
 
-## 💡 Nota Final de Architect UI/X
+## Nota Final de Architect UI/X
 
 > El éxito de este MVP radica en la fluidez del formulario de gasto. Si un usuario borracho en un bar puede registrar una cerveza en 5 segundos, el producto será un éxito. **Prioricen la velocidad de interacción en el "Botón +".**
 
@@ -542,7 +542,7 @@ Entregar esta lista al equipo de desarrollo:
 
 ---
 
-## 📚 Referencias
+## Referencias
 
 - **UI Flow Design:** Ver `docs/UI_FLOW_DESIGN.md` para mocks visuales y flujos completos
 - **Especificación Técnica:** Ver `docs/UI_IMPLEMENTATION_SPEC.md` para detalles de implementación

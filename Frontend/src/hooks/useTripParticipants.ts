@@ -18,17 +18,15 @@ export function useTripParticipants(tripId: string | undefined) {
       if (!tripId) {
         throw new Error('Trip ID is required');
       }
-      return getTripById(tripId, { participantsLimit: 100 }).then((trip) => {
+      return getTripById(tripId, { participantsLimit: 100 }).then(trip => {
         const rawParticipants: TripParticipantDetail[] = trip.participants ?? [];
 
         // Map backend participant detail into TripParticipant shape expected by consumers
-        return rawParticipants.map<TripParticipant>((participant) => ({
+        return rawParticipants.map<TripParticipant>(participant => ({
           id: participant.id,
           trip_id: tripId,
           user_id: participant.userId,
           role: participant.role,
-          joined_at: '',
-          is_active: true,
           user: participant.user,
         }));
       });

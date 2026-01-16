@@ -49,6 +49,7 @@ export function TripsListPage() {
   const navigate = useNavigate();
   const { isAuthenticated, token } = useAuthContext();
   const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error'>('success');
   const [showToast, setShowToast] = useState(false);
   const isMountedRef = useRef(true);
 
@@ -60,7 +61,7 @@ export function TripsListPage() {
     refetch,
   } = useQuery({
     queryKey: ['user-trips'],
-    queryFn: () => getUserTrips(token as string),
+    queryFn: () => getUserTrips(),
     enabled: isAuthenticated && !!token,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
@@ -74,17 +75,33 @@ export function TripsListPage() {
 
   // Handle successful join
   const handleJoinSuccess = (trip: TripResponse) => {
+    setToastType('success');
     setToastMessage(`Te uniste al viaje "${trip.name}"`);
     setShowToast(true);
 
-    // Refetch trips then navigate when still mounted
-    refetch().finally(() => {
-      setTimeout(() => {
-        if (isMountedRef.current) {
-          navigate(`/trips/${trip.id}`);
+    // Refetch trips and only navigate on success
+    refetch()
+      .then(result => {
+        if (result.isError) {
+          throw result.error;
         }
-      }, 1500);
-    });
+
+        setTimeout(() => {
+          if (isMountedRef.current) {
+            navigate(`/trips/${trip.id}`);
+          }
+        }, 1500);
+      })
+      .catch(err => {
+        console.error('Failed to refetch trips after join:', err);
+        if (isMountedRef.current) {
+          setToastType('error');
+          setToastMessage(
+            'Te uniste al viaje, pero no pudimos actualizar la lista. Intenta recargar.',
+          );
+          setShowToast(true);
+        }
+      });
   };
 
   // Loading state
@@ -169,7 +186,7 @@ export function TripsListPage() {
       {/* Success Toast */}
       <Toast
         message={toastMessage}
-        type="success"
+        type={toastType}
         isVisible={showToast}
         onClose={() => setShowToast(false)}
       />
