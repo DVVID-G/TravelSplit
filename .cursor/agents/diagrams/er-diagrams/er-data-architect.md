@@ -221,4 +221,3 @@ As a Data Architect expert, ensure all models meet these standards:
 - PlantUML ER Diagrams: https://plantuml.com/ie-diagram
 - Database Normalization: https://en.wikipedia.org/wiki/Database_normalization
 - Data Modeling Best Practices: https://www.dataversity.net/
--
