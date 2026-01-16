@@ -1,6 +1,7 @@
 ---
 name: agent-reviewer
 model: default
+description: specialized expert agent for evaluating and auditing other AI agents in the project.
 ---
 
 # Agent: Agent Reviewer
