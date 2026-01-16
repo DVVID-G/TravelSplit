@@ -172,11 +172,25 @@
   Implementar endpoint/módulo para subir archivo y almacenar en sistema local o servicio cloud. 
 - Story Points: 3
 
-### TCK-EXP-004 – Feed de gastos del viaje (GET /trips/:id/expenses)
+### TCK-EXP-004 – Feed de gastos del viaje (GET /trips/:id/expenses) ✅ COMPLETADO
 - Relacionado con: US-EXP-003
 - Tipo: Backend
+- Estado: ✅ Completado
 - Descripción:
   Listar gastos ordenados por fecha descendente, visibles para todos los participantes. 
+- Tareas:
+  - ✅ Implementar endpoint GET /trips/:trip_id/expenses con paginación
+  - ✅ Implementar endpoint GET /trips/:trip_id/expenses/:expense_id para detalles
+  - ✅ Validación de participación del usuario
+  - ✅ Filtro opcional por categoría
+  - ✅ Ordenamiento por fecha descendente
+  - ✅ Exclusión de gastos eliminados (soft delete)
+- Criterios de Aceptación:
+  - ✅ Solo participantes pueden ver gastos
+  - ✅ Gastos ordenados por fecha descendente
+  - ✅ Paginación implementada (page, limit, máximo 100)
+  - ✅ Metadatos de paginación incluidos
+  - ✅ Filtro por categoría opcional
 - Story Points: 2
 
 ### TCK-EXP-005 – Editar y eliminar gasto (solo Creador)
