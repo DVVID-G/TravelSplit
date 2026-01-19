@@ -1,9 +1,8 @@
 ---
 description: Enforces Layered Architecture pattern and CSED (Controller-Service-Entity-DTO) structure for TravelSplit backend modules.
 globs:
-  - Backend/src/modules/**/*.ts
-  - Backend/src/common/**/*.ts
-alwaysApply: false
+  - Backend/src/**
+alwaysApply: true
 ---
 
 # Layered Architecture and CSED Pattern
