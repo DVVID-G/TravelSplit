@@ -10,13 +10,14 @@ import { BeneficiariesSelector } from './BeneficiariesSelector';
 import { ImageUpload } from '../atoms/ImageUpload';
 import { Button } from '../atoms/Button';
 import type { ExpenseCategory } from '@/types/expense.types';
-import type { TripParticipant } from '@/types/trip.types';
+import type { TripParticipant, TripCurrency } from '@/types/trip.types';
 
 interface ExpenseFormProps {
   tripId: string;
   categories: ExpenseCategory[];
   participants: TripParticipant[];
   currentUserId: string;
+  currency?: TripCurrency; // Optional: Currency of the trip (COP or USD). Defaults to COP for backward compatibility
   onSubmit: (data: CreateExpenseFormData & { receiptFile?: File | null }) => Promise<void>;
   isLoading?: boolean;
   error?: string | null;
@@ -31,6 +32,7 @@ export const ExpenseForm = ({
   categories,
   participants,
   currentUserId,
+  currency = 'COP',
   onSubmit,
   isLoading = false,
   error,
@@ -47,6 +49,7 @@ export const ExpenseForm = ({
       payer_id: currentUserId,
       beneficiary_ids: participants.map(p => p.user_id),
       amount: 0,
+      expense_date: new Date().toISOString().split('T')[0], // Default to today
     },
   });
 
@@ -148,13 +151,26 @@ export const ExpenseForm = ({
 
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="amount">
-          Monto (COP)
+          Monto ({currency})
         </label>
         <AmountInput
           id="amount"
           value={watch('amount')}
           onChange={value => setValue('amount', value, { shouldValidate: true })}
           error={errors.amount?.message}
+          currency={currency}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="expense_date">
+          Fecha del gasto
+        </label>
+        <Input
+          id="expense_date"
+          type="date"
+          {...register('expense_date')}
+          error={errors.expense_date?.message}
         />
       </div>
 

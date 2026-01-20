@@ -7,6 +7,7 @@ interface JoinTripModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (trip: TripResponse) => void;
+  onError?: (error: unknown) => void;
 }
 
 /**
@@ -14,7 +15,12 @@ interface JoinTripModalProps {
  * Complex organism with form, validation, API integration, and accessibility features
  * Follows Atomic Design: Located in organisms/ due to high complexity (10+ elements, API calls, multiple states)
  */
-export function JoinTripModal({ isOpen, onClose, onSuccess }: JoinTripModalProps) {
+export function JoinTripModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  onError,
+}: JoinTripModalProps) {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -72,6 +78,11 @@ export function JoinTripModal({ isOpen, onClose, onSuccess }: JoinTripModalProps
         setError('Tu sesión ha expirado. Inicia sesión nuevamente');
       } else {
         setError(error.message || 'Error al unirse al viaje');
+      }
+
+      // Notify parent component of error
+      if (onError) {
+        onError(err);
       }
     } finally {
       setIsLoading(false);

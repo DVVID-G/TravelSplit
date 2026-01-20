@@ -2,10 +2,9 @@ import {
   Map as MapIcon,
   Users as UsersIcon,
   Calendar as CalendarIcon,
-  DollarSign as DollarSignIcon,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import type { TripResponse, TripListItem } from '@/types/trip.types';
+import type { TripResponse, TripListItem, TripCurrency } from '@/types/trip.types';
 import { formatRelativeDate } from '@/utils/date';
 import { formatCurrency } from '@/utils/currency';
 
@@ -39,6 +38,7 @@ function getParticipantCount(trip: TripResponse): number {
 export const TripCard = ({ trip, onClick }: TripCardProps) => {
   const participantCount = getParticipantCount(trip);
   const totalAmount = trip.totalAmount ?? 0;
+  const trip_currency = (trip.currency as TripCurrency) || 'COP';
 
   const cardContent = (
     <div className="bg-white rounded-xl p-6 shadow-md active:scale-[0.98] transition-transform focus-visible:outline-2 focus-visible:outline-violet-600 focus-visible:outline-offset-2">
@@ -56,8 +56,10 @@ export const TripCard = ({ trip, onClick }: TripCardProps) => {
         </div>
 
         <div className="flex items-center gap-2 text-sm">
-          <DollarSignIcon className="w-4 h-4 text-slate-500" aria-hidden="true" />
-          <span className="font-semibold text-slate-900">{formatCurrency(totalAmount)}</span>
+          <span className="font-semibold text-slate-900">
+            {formatCurrency(totalAmount, trip_currency)}
+          </span>
+          <span className="text-xs text-slate-500">({trip_currency})</span>
         </div>
 
         <div className="flex items-center gap-2 text-sm text-slate-500">

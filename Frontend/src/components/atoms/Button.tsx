@@ -20,7 +20,7 @@ export const Button = ({
   ...props
 }: ButtonProps) => {
   const baseStyles =
-    'font-medium rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+    'font-medium rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center';
 
   const variants = {
     primary:

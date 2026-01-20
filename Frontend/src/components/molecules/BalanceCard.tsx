@@ -1,9 +1,10 @@
 import { ArrowRight } from 'lucide-react';
-import type { Balance } from '@/types/trip.types';
+import type { Balance, TripCurrency } from '@/types/trip.types';
 import { formatCurrency } from '@/utils/currency';
 
 interface BalanceCardProps {
   balance: Balance;
+  currency?: TripCurrency; // Optional: Currency of the trip (COP or USD). Defaults to COP for backward compatibility
   // TODO: Add onClick handler for navigation to balance detail
   // Should navigate to: /trips/:tripId/balances/:balanceId or /trips/:tripId?tab=saldos
   // Requires backend endpoint: GET /trips/:tripId/balances/:balanceId
@@ -19,7 +20,7 @@ interface BalanceCardProps {
  * Used in HomePage to show balances section
  * Follows Design System: bg-white, rounded-xl, p-4, shadow-sm
  */
-export const BalanceCard = ({ balance }: BalanceCardProps) => {
+export const BalanceCard = ({ balance, currency = 'COP' }: BalanceCardProps) => {
   // Determine badge colors based on badgeColor prop
   const badgeColors = {
     red: 'bg-red-50 text-red-700',
@@ -46,7 +47,7 @@ export const BalanceCard = ({ balance }: BalanceCardProps) => {
 
         {/* Right: Amount badge */}
         <div className={`rounded-full px-3 py-1 text-sm font-semibold ${badgeColorClass}`}>
-          {formatCurrency(balance.amount)}
+          {formatCurrency(balance.amount, currency)}
         </div>
       </div>
     </div>
