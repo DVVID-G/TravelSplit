@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { getTripById, getTripStats } from '@/services/trip.service';
-import type { TripStats, TripResponse } from '@/types/trip.types';
+import { getTripById } from '@/services/trip.service';
+import type { TripResponse } from '@/types/trip.types';
 
 interface UseTripDetailOptions {
   participantsPage?: number;
@@ -12,15 +12,11 @@ interface UseTripDetailResult {
   tripLoading: boolean;
   tripError: unknown;
   refetchTrip: () => Promise<unknown>;
-  stats?: TripStats;
-  statsLoading: boolean;
-  statsError: unknown;
-  refetchStats: () => Promise<unknown>;
   isLoading: boolean;
 }
 
 /**
- * Custom hook to fetch trip details and statistics.
+ * Custom hook to fetch trip details.
  * Encapsulates query keys and pagination defaults for participants.
  */
 export function useTripDetail(
@@ -43,30 +39,11 @@ export function useTripDetail(
     retry: 1,
   });
 
-  const {
-    data: stats,
-    isLoading: statsLoading,
-    error: statsError,
-    refetch: refetchStats,
-  } = useQuery({
-    queryKey: ['trip-stats', tripId],
-    queryFn: () => getTripStats(tripId!),
-    enabled: !!tripId,
-    staleTime: 60 * 1000,
-    retry: 1,
-  });
-
-  const isLoading = tripLoading || statsLoading;
-
   return {
     trip,
     tripLoading,
     tripError,
     refetchTrip,
-    stats,
-    statsLoading,
-    statsError,
-    refetchStats,
-    isLoading,
+    isLoading: tripLoading,
   };
 }
