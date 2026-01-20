@@ -8,9 +8,11 @@ import { createTripSchema, type CreateTripFormData } from '@/schemas/trip.schema
 import { createTrip } from '@/services/trip.service';
 import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms/Button';
+import { CurrencySelector } from '@/components/molecules/CurrencySelector';
 import { useAuthContext } from '@/contexts/AuthContext';
 import type { ApiError } from '@/types/api.types';
 import { API_BASE_URL } from '@/config/api';
+import type { TripCurrency } from '@/types/trip.types';
 
 interface Participant {
   email: string;
@@ -26,10 +28,12 @@ interface SearchResult {
 
 /**
  * CreateTripPage
- * Form to create a new trip with name and participants
- * Currency is fixed to COP (Colombian Peso)
+ * Form to create a new trip with name, currency selection, and participants
+ * Currency can be selected between COP (Colombian Peso) or USD (US Dollar)
+ * Default currency is COP if not specified
  *
  * Features:
+ * - Select trip currency (COP or USD)
  * - Search users by email
  * - Add existing users as participants
  * - Invite non-registered users
@@ -72,9 +76,16 @@ export function CreateTripPage() {
     handleSubmit,
     formState: { errors },
     setError,
+    watch,
+    setValue,
   } = useForm<CreateTripFormData>({
     resolver: zodResolver(createTripSchema),
+    defaultValues: {
+      currency: 'COP',
+    },
   });
+
+  const selected_currency = watch('currency') as TripCurrency;
 
   // Mutation for creating trip
   const mutation = useMutation({
@@ -232,14 +243,17 @@ export function CreateTripPage() {
                 />
               </div>
 
-              {/* Static information about currency */}
+              {/* Currency selector */}
+              <div>
+                <CurrencySelector
+                  selected_currency={selected_currency}
+                  on_select={(currency: TripCurrency) => setValue('currency', currency)}
+                  error={errors.currency?.message}
+                />
+              </div>
+
+              {/* Information about code generation */}
               <div className="space-y-2">
-                <p className="text-sm text-slate-500 flex items-center gap-2">
-                  <span className="text-base">ℹ️</span>
-                  <span>
-                    <span className="font-medium">Moneda:</span> COP
-                  </span>
-                </p>
                 <p className="text-sm text-slate-500 flex items-center gap-2">
                   <span className="text-base">ℹ️</span>
                   <span>Se generará un código único para invitar</span>

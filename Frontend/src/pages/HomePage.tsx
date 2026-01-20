@@ -1,74 +1,17 @@
-import { useQuery } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
-import { Map as MapIcon, Users, Receipt, Calculator, Camera } from 'lucide-react';
+import { Map as MapIcon, Users, Receipt, Calculator, Camera, DollarSign } from 'lucide-react';
 import { Header } from '@/components';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { BalanceCard } from '@/components/molecules/BalanceCard';
-import { RecentExpenseCard } from '@/components/molecules/RecentExpenseCard';
+import { ExpenseCard } from '@/components/molecules/ExpenseCard';
+import { TripCard } from '@/components/molecules/TripCard';
 import { ErrorState } from '@/components/molecules/ErrorState';
 import { Button } from '@/components/atoms/Button';
+import { Skeleton } from '@/components/atoms/Skeleton';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { getUserTrips } from '@/services/trip.service';
-import type { TripResponse, Balance, RecentExpense } from '@/types/trip.types';
-
-/**
- * TODO: Replace with actual API endpoints when backend is ready
- * MOCK_BALANCES should come from GET /trips/:tripId/balances
- * MOCK_RECENT_EXPENSES should come from GET /trips/:tripId/expenses/recent?limit=3
- */
-const MOCK_BALANCES: Balance[] = [
-  {
-    id: '1',
-    fromName: 'Juan',
-    toName: 'Pedro',
-    amount: 50000,
-    badgeColor: 'red',
-  },
-  {
-    id: '2',
-    fromName: 'Carlos',
-    toName: 'Juan',
-    amount: 25000,
-    badgeColor: 'green',
-  },
-  {
-    id: '3',
-    fromName: 'María',
-    toName: 'Pedro',
-    amount: 15000,
-    badgeColor: 'blue',
-  },
-];
-
-const MOCK_RECENT_EXPENSES: RecentExpense[] = [
-  {
-    id: '1',
-    category: 'food',
-    title: 'Cena en La Vitrola',
-    paidBy: 'Pedro',
-    date: '2026-01-16',
-    amount: 180000,
-    participantCount: 4,
-  },
-  {
-    id: '2',
-    category: 'transport',
-    title: 'Taxi al hotel',
-    paidBy: 'Juan',
-    date: '2026-01-15',
-    amount: 25000,
-    participantCount: 4,
-  },
-  {
-    id: '3',
-    category: 'food',
-    title: 'Desayuno Café del Mar',
-    paidBy: 'María',
-    date: '2026-01-17',
-    amount: 85000,
-    participantCount: 3,
-  },
-];
+import { useHomePageData } from '@/hooks/useHomePageData';
+import { formatCurrency } from '@/utils/currency';
+import type { TripCurrency } from '@/types/trip.types';
 
 /**
  * Loading state component
@@ -255,44 +198,144 @@ const HomePageEmptyState = () => {
  * Shows dashboard with balances and recent expenses for authenticated users with trips
  * Displays general overview of all user's active debts and recent expenses across all trips
  */
-const HomePageWithTrips = ({ trips }: { trips: TripResponse[] }) => {
-  // Use first trip for navigation to "Ver todos" link
-  const activeTrip = trips[0];
+const HomePageWithTrips = () => {
+  const navigate = useNavigate();
+  const {
+    trips,
+    recentTrips,
+    balances,
+    recentExpenses,
+    totalSpent,
+    isLoading,
+    balancesLoading,
+    expensesLoading,
+    error,
+    refetch,
+  } = useHomePageData();
+
+  // Determine currency (use first trip's currency or default to COP)
+  const defaultCurrency: TripCurrency = trips[0]?.currency || 'COP';
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pb-24">
       <Header />
-      <main className="px-6 py-8">
+      <main className="px-6 py-8 space-y-8">
         <h1 className="sr-only">Resumen general de viajes</h1>
 
-        {/* Saldos Section */}
-        <section className="mb-8">
-          <h2 className="text-lg font-heading font-semibold text-slate-900 mb-4">Saldos</h2>
-          <div className="space-y-3">
-            {MOCK_BALANCES.map(balance => (
-              <BalanceCard key={balance.id} balance={balance} />
-            ))}
+        {/* Total Gastado Section */}
+        <section>
+          <div className="bg-gradient-to-br from-violet-600 to-violet-700 rounded-2xl p-6 shadow-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <DollarSign className="w-6 h-6 text-violet-200 flex-shrink-0" aria-hidden="true" />
+              <h2 className="text-lg font-heading font-semibold text-white">Total Gastado</h2>
+            </div>
+            <p className="text-3xl font-bold text-white mb-1">
+              {formatCurrency(totalSpent, defaultCurrency)}
+            </p>
+            <p className="text-sm text-violet-200">
+              En {trips.length} {trips.length === 1 ? 'viaje' : 'viajes'}
+            </p>
           </div>
         </section>
 
+        {/* Viajes Recientes Section */}
+        {recentTrips.length > 0 && (
+          <section>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-heading font-semibold text-slate-900">Viajes Recientes</h2>
+              {trips.length > 3 && (
+                <Link
+                  to="/trips"
+                  className="text-sm text-violet-600 font-medium hover:underline focus-visible:outline-2 focus-visible:outline-violet-600 focus-visible:outline-offset-2 rounded-lg px-2 py-1"
+                  aria-label="Ver todos mis viajes"
+                >
+                  Ver todos
+                </Link>
+              )}
+            </div>
+            <div className="space-y-4">
+              {recentTrips.map(trip => (
+                <TripCard key={trip.id} trip={trip} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Saldos Section */}
+        {balancesLoading ? (
+          <section>
+            <h2 className="text-lg font-heading font-semibold text-slate-900 mb-4">Saldos</h2>
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <Skeleton key={i} className="h-16 w-full rounded-xl" />
+              ))}
+            </div>
+          </section>
+        ) : balances.length > 0 ? (
+          <section>
+            <h2 className="text-lg font-heading font-semibold text-slate-900 mb-4">Saldos</h2>
+            <div className="space-y-3">
+              {balances.map(balance => (
+                <BalanceCard
+                  key={balance.id}
+                  balance={balance}
+                  currency={balance.tripId ? trips.find(t => t.id === balance.tripId)?.currency : defaultCurrency}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {/* Gastos Recientes Section */}
-        <section>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-heading font-semibold text-slate-900">Gastos Recientes</h2>
-            <Link
-              to={`/trips/${activeTrip.id}`}
-              className="text-sm text-violet-600 font-medium hover:underline"
-              aria-label="Ver todos los gastos del viaje"
-            >
-              Ver todos
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {MOCK_RECENT_EXPENSES.map(expense => (
-              <RecentExpenseCard key={expense.id} expense={expense} />
-            ))}
-          </div>
-        </section>
+        {expensesLoading ? (
+          <section>
+            <h2 className="text-lg font-heading font-semibold text-slate-900 mb-4">Gastos Recientes</h2>
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <Skeleton key={i} className="h-20 w-full rounded-xl" />
+              ))}
+            </div>
+          </section>
+        ) : recentExpenses.length > 0 ? (
+          <section>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-heading font-semibold text-slate-900">Gastos Recientes</h2>
+              {trips.length > 0 && (
+                <Link
+                  to="/trips"
+                  className="text-sm text-violet-600 font-medium hover:underline focus-visible:outline-2 focus-visible:outline-violet-600 focus-visible:outline-offset-2 rounded-lg px-2 py-1"
+                  aria-label="Ver todos mis viajes"
+                >
+                  Ver todos
+                </Link>
+              )}
+            </div>
+            <div className="space-y-3">
+              {recentExpenses.map(({ expense, currency }) => (
+                <ExpenseCard
+                  key={expense.id}
+                  expense={expense}
+                  currency={(currency as TripCurrency) || defaultCurrency}
+                  onClick={() => {
+                    if (expense.trip_id) {
+                      navigate(`/trips/${expense.trip_id}`);
+                    }
+                  }}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {/* Error State */}
+        {error && (
+          <section>
+            <ErrorState
+              message="Hubo un problema al cargar algunos datos. Intenta de nuevo."
+              onRetry={() => refetch()}
+            />
+          </section>
+        )}
       </main>
     </div>
   );
@@ -306,20 +349,8 @@ const HomePageWithTrips = ({ trips }: { trips: TripResponse[] }) => {
  * 3. Authenticated with trips - Shows summary and recent trips
  */
 export const HomePage = () => {
-  const { isAuthenticated, isLoading: authLoading, token } = useAuthContext();
-
-  // Query to get trips (only if authenticated AND token exists)
-  const {
-    data: trips,
-    isLoading: tripsLoading,
-    error: tripsError,
-    refetch,
-  } = useQuery({
-    queryKey: ['user-trips'],
-    queryFn: () => getUserTrips(),
-    enabled: isAuthenticated && !!token, // Only execute if authenticated AND token exists
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  const { isAuthenticated, isLoading: authLoading } = useAuthContext();
+  const { trips, isLoading, error, refetch } = useHomePageData();
 
   // Loading state
   if (authLoading) {
@@ -332,7 +363,7 @@ export const HomePage = () => {
   }
 
   // Error state - Only show if authenticated (query was enabled)
-  if (tripsError) {
+  if (error && trips.length === 0) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col">
         <Header />
@@ -347,7 +378,7 @@ export const HomePage = () => {
   }
 
   // Loading state - Show loading indicator during fetch/refetch
-  if (tripsLoading) {
+  if (isLoading && trips.length === 0) {
     return <LoadingState />;
   }
 
@@ -357,5 +388,5 @@ export const HomePage = () => {
   }
 
   // State 3: Authenticated with trips
-  return <HomePageWithTrips trips={trips} />;
+  return <HomePageWithTrips />;
 };

@@ -6,7 +6,7 @@ import { Header } from '@/components';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { TripCard } from '@/components/molecules/TripCard';
 import { ErrorState } from '@/components/molecules/ErrorState';
-import { Toast } from '@/components/molecules/Toast';
+import { Toast } from '@/components';
 import { Button } from '@/components/atoms/Button';
 import { JoinTripButton } from '@/components/molecules/JoinTripButton';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -45,12 +45,44 @@ const LoadingState = () => {
  * - Empty: Shows empty state with "Crear mi primer viaje" button
  * - Success: Shows list of TripCard components
  */
+// Delay to show success toast before navigation
+const NAVIGATION_DELAY_MS = 1500;
+
+/**
+ * Helper function to clean error messages from backend
+ * Translates technical errors to user-friendly messages
+ */
+const cleanErrorMessage = (error: unknown): string => {
+  const message = (error as { message?: string })?.message || '';
+
+  // Remove technical parts and translate common errors
+  if (message.includes('Validation failed') || message.includes('must be')) {
+    return 'Los datos ingresados no son válidos';
+  }
+  if (message.includes('Bad Request')) {
+    return 'Solicitud inválida. Verifica los datos e intenta nuevamente';
+  }
+  if (message.includes('Unauthorized') || message.includes('401')) {
+    return 'Tu sesión ha expirado. Inicia sesión nuevamente';
+  }
+  if (message.includes('Not Found') || message.includes('404')) {
+    return 'No se encontró el recurso solicitado';
+  }
+  if (message.includes('Forbidden') || message.includes('403')) {
+    return 'No tienes permisos para realizar esta acción';
+  }
+
+  return message || 'Ocurrió un error. Intenta nuevamente';
+};
+
 export function TripsListPage() {
   const navigate = useNavigate();
   const { isAuthenticated, token } = useAuthContext();
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error'>('success');
   const [showToast, setShowToast] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
+  // Use ref to prevent state updates after unmount (important for setTimeout callbacks)
   const isMountedRef = useRef(true);
 
   // Query to get all user trips
@@ -75,6 +107,7 @@ export function TripsListPage() {
 
   // Handle successful join
   const handleJoinSuccess = (trip: TripResponse) => {
+    setIsJoining(true);
     setToastType('success');
     setToastMessage(`Te uniste al viaje "${trip.name}"`);
     setShowToast(true);
@@ -90,18 +123,31 @@ export function TripsListPage() {
           if (isMountedRef.current) {
             navigate(`/trips/${trip.id}`);
           }
-        }, 1500);
+        }, NAVIGATION_DELAY_MS);
       })
       .catch(err => {
         console.error('Failed to refetch trips after join:', err);
         if (isMountedRef.current) {
           setToastType('error');
           setToastMessage(
-            'Te uniste al viaje, pero no pudimos actualizar la lista. Intenta recargar.',
+            'Te uniste al viaje exitosamente, pero hubo un problema al actualizar la lista. Puedes recargar la página o navegar manualmente al viaje.',
           );
           setShowToast(true);
         }
+      })
+      .finally(() => {
+        if (isMountedRef.current) {
+          setIsJoining(false);
+        }
       });
+  };
+
+  // Handle join trip error
+  const handleJoinError = (error: unknown) => {
+    const errorMessage = cleanErrorMessage(error);
+    setToastType('error');
+    setToastMessage(errorMessage || 'No pudimos unirte al viaje. Intenta nuevamente.');
+    setShowToast(true);
   };
 
   // Loading state
@@ -161,6 +207,7 @@ export function TripsListPage() {
             size="md"
             onClick={() => navigate('/trips/new')}
             className="flex items-center gap-2"
+            aria-label="Crear nuevo viaje"
           >
             <Plus size={20} />
             <span className="hidden sm:inline">Crear Viaje</span>
@@ -168,17 +215,35 @@ export function TripsListPage() {
         }
       />
       <main className="flex-1 px-6 py-8">
+        {/* Mobile-first: Content centered on desktop to simulate app experience */}
         <div className="max-w-2xl mx-auto">
           <div className="space-y-6">
             {/* Join Trip Button */}
-            <JoinTripButton onSuccess={handleJoinSuccess} />
+            <JoinTripButton
+              onSuccess={handleJoinSuccess}
+              onError={handleJoinError}
+              disabled={isJoining}
+            />
+
+            {/* Loading state during join */}
+            {isJoining && (
+              <div className="space-y-4 animate-pulse">
+                {[1, 2].map(i => (
+                  <div key={i} className="h-24 bg-slate-200 rounded-xl"></div>
+                ))}
+              </div>
+            )}
 
             {/* Trips List */}
-            <div className="space-y-4">
-              {trips.map(trip => (
-                <TripCard key={trip.id} trip={trip} />
-              ))}
-            </div>
+            {!isJoining && (
+              <ul className="space-y-4" aria-label="Lista de viajes">
+                {trips.map(trip => (
+                  <li key={trip.id}>
+                    <TripCard trip={trip} />
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       </main>
