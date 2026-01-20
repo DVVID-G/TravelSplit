@@ -10,6 +10,12 @@ export const createTripSchema = z.object({
     .trim()
     .min(1, 'El nombre del viaje es requerido')
     .max(255, 'El nombre del viaje no puede exceder 255 caracteres'),
+  currency: z
+    .enum(['COP', 'USD'], {
+      errorMap: () => ({ message: 'La moneda debe ser COP o USD' }),
+    })
+    .optional()
+    .default('COP'),
 });
 
 export type CreateTripFormData = z.infer<typeof createTripSchema>;
