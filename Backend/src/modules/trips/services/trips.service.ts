@@ -15,12 +15,15 @@ import { isUUID } from 'class-validator';
 import { Trip } from '../entities/trip.entity';
 import { TripParticipant } from '../entities/trip-participant.entity';
 import { User } from '../../users/entities/user.entity';
+import { Expense } from '../../expenses/entities/expense.entity';
 import { CreateTripDto } from '../dto/create-trip.dto';
+import { UpdateTripDto } from '../dto/update-trip.dto';
 import { TripResponseDto } from '../dto/trip-response.dto';
 import { TripListQueryDto } from '../dto/trip-list-query.dto';
 import { TripListItemDto } from '../dto/trip-list-item.dto';
 import { ParticipantsPaginationMeta } from '../dto/trip-detail-response.dto';
 import { TripStatus } from '../enums/trip-status.enum';
+import { TripCurrency } from '../enums/trip-currency.enum';
 import { ParticipantRole } from '../enums/participant-role.enum';
 import { TripMapper } from '../../../common/mappers/trip.mapper';
 
@@ -39,6 +42,8 @@ export class TripsService {
     private readonly tripParticipantRepository: Repository<TripParticipant>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Expense)
+    private readonly expenseRepository: Repository<Expense>,
     @Inject(CACHE_MANAGER)
     private readonly cacheManager: Cache,
   ) {}
@@ -82,7 +87,7 @@ export class TripsService {
 
   /**
    * Crea un nuevo viaje y asocia automáticamente al usuario como CREATOR.
-   * La moneda siempre es COP y no puede cambiarse.
+   * La moneda puede ser COP o USD. Si no se especifica, por defecto es COP.
    * Opcionalmente puede invitar usuarios por email como miembros.
    *
    * @param createTripDto - DTO con los datos del viaje a crear
@@ -114,7 +119,7 @@ export class TripsService {
 
       const trip = this.tripRepository.create({
         name: createTripDto.name,
-        currency: 'COP', // Siempre COP, sin posibilidad de cambio
+        currency: createTripDto.currency ?? TripCurrency.COP, // Default COP si no se especifica
         status: TripStatus.ACTIVE,
         code,
       });
@@ -287,6 +292,27 @@ export class TripsService {
       rawByTripId.set(raw.trip_id, raw);
     });
 
+    // Get all trip IDs to calculate totalAmount for each
+    const tripIds = results.entities.map((trip) => trip.id);
+
+    // Calculate totalAmount for each trip
+    const totalAmountsByTripId = new Map<string, number>();
+    if (tripIds.length > 0) {
+      const totalAmountResults = await this.expenseRepository
+        .createQueryBuilder('expense')
+        .select('expense.tripId', 'tripId')
+        .addSelect('COALESCE(SUM(expense.amount), 0)', 'total')
+        .where('expense.tripId IN (:...tripIds)', { tripIds })
+        .andWhere('expense.deletedAt IS NULL')
+        .groupBy('expense.tripId')
+        .getRawMany<{ tripId: string; total: string }>();
+
+      totalAmountResults.forEach((result) => {
+        const total = result.total ? parseFloat(result.total) : 0;
+        totalAmountsByTripId.set(result.tripId, total);
+      });
+    }
+
     // Map results to TripListItemDto correlating raw rows by trip_id
     return results.entities.map((trip) => {
       const raw = rawByTripId.get(trip.id);
@@ -310,11 +336,13 @@ export class TripsService {
 
       const userRole = raw?.userRole ?? ParticipantRole.MEMBER;
       const participantCountStr = raw?.participantCount ?? '1';
+      const totalAmount = totalAmountsByTripId.get(trip.id) ?? 0;
 
       return TripMapper.toListItemDto(
         trip,
         userRole,
         parseInt(participantCountStr, 10),
+        totalAmount,
       );
     });
   }
@@ -438,6 +466,7 @@ export class TripsService {
     trip: Trip;
     paginationMeta: ParticipantsPaginationMeta;
     userRole: ParticipantRole;
+    totalAmount: number;
   }> {
     // Validar formato UUID
     if (!isUUID(tripId)) {
@@ -454,6 +483,7 @@ export class TripsService {
       trip: Trip;
       paginationMeta: ParticipantsPaginationMeta;
       userRole: ParticipantRole;
+      totalAmount: number;
     }>(cacheKey);
 
     if (cached) {
@@ -526,6 +556,18 @@ export class TripsService {
 
     const userRole = userParticipation.role;
 
+    // Calcular totalAmount sumando todos los gastos no eliminados del viaje
+    const total_amount_result = await this.expenseRepository
+      .createQueryBuilder('expense')
+      .select('COALESCE(SUM(expense.amount), 0)', 'total')
+      .where('expense.tripId = :tripId', { tripId })
+      .andWhere('expense.deletedAt IS NULL')
+      .getRawOne<{ total: string }>();
+
+    const total_amount = total_amount_result?.total
+      ? parseFloat(total_amount_result.total)
+      : 0;
+
     // Calcular metadatos de paginación
     const paginationMeta: ParticipantsPaginationMeta = {
       total: totalParticipants,
@@ -534,7 +576,7 @@ export class TripsService {
       hasMore: safePage * safeLimit < totalParticipants,
     };
 
-    const result = { trip, paginationMeta, userRole };
+    const result = { trip, paginationMeta, userRole, totalAmount: total_amount };
 
     // Guardar en caché por 5 minutos
     await this.cacheManager.set(cacheKey, result, 300);
@@ -544,6 +586,108 @@ export class TripsService {
     );
 
     return result;
+  }
+
+  /**
+   * Updates a trip's basic information.
+   * Only the CREATOR of the trip can update it.
+   * Only the name and status fields can be updated. Currency and code cannot be changed.
+   *
+   * @param tripId - ID of the trip to update
+   * @param userId - ID of the authenticated user
+   * @param updateTripDto - DTO with fields to update
+   * @returns Updated trip as TripResponseDto
+   * @throws BadRequestException if tripId is not a valid UUID
+   * @throws NotFoundException if the trip doesn't exist
+   * @throws ForbiddenException if the user is not a participant or is not the CREATOR
+   */
+  async update(
+    tripId: string,
+    userId: string,
+    updateTripDto: UpdateTripDto,
+  ): Promise<TripResponseDto> {
+    // Validate UUID format
+    if (!isUUID(tripId)) {
+      this.logger.warn(`Invalid UUID format: tripId=${tripId}`);
+      throw new BadRequestException('ID de viaje inválido');
+    }
+
+    // Verify trip exists and is not deleted
+    const trip = await this.tripRepository.findOne({
+      where: { id: tripId, deletedAt: IsNull() },
+    });
+
+    if (!trip) {
+      this.logger.warn(`Trip not found: tripId=${tripId}`);
+      throw new NotFoundException('Viaje no encontrado');
+    }
+
+    // Verify user is a participant
+    const userParticipation = await this.tripParticipantRepository.findOne({
+      where: {
+        tripId,
+        userId,
+        deletedAt: IsNull(),
+      },
+    });
+
+    if (!userParticipation) {
+      this.logger.warn(
+        `User is not a participant: tripId=${tripId}, userId=${userId}`,
+      );
+      throw new ForbiddenException('No tienes acceso a este viaje');
+    }
+
+    // Verify user is CREATOR
+    if (userParticipation.role !== ParticipantRole.CREATOR) {
+      this.logger.warn(
+        `User is not CREATOR: tripId=${tripId}, userId=${userId}, role=${userParticipation.role}`,
+      );
+      throw new ForbiddenException(
+        'Solo el creador del viaje puede actualizar su configuración',
+      );
+    }
+
+    // Update name field if provided
+    if (updateTripDto.name !== undefined) {
+      trip.name = updateTripDto.name;
+    }
+
+    // Update status field if provided
+    if (updateTripDto.status !== undefined) {
+      trip.status = updateTripDto.status;
+    }
+
+    // Save changes
+    const updatedTrip = await this.tripRepository.save(trip);
+
+    this.logger.log(
+      `Usuario ${userId} actualizó el viaje ${tripId} (${updatedTrip.name})`,
+    );
+
+    // Invalidate cache for all participants
+    const participantRows = await this.tripParticipantRepository.find({
+      where: {
+        tripId: trip.id,
+        deletedAt: IsNull(),
+      },
+      select: {
+        userId: true,
+      },
+    });
+
+    const participantIds = new Set<string>(
+      participantRows.map((p) => p.userId),
+    );
+
+    await Promise.all(
+      Array.from(participantIds).map((participantId) =>
+        this.invalidateTripCache(trip.id, participantId),
+      ),
+    );
+
+    // Return updated trip as DTO
+    return TripMapper.toResponseDto(updatedTrip);
   }
 
   /**
