@@ -55,4 +55,11 @@ export class TripDetailResponseDto extends TripResponseDto {
     type: ParticipantsPaginationMeta,
   })
   participantsMeta!: ParticipantsPaginationMeta;
+
+  @ApiProperty({
+    description: 'Monto total de gastos del viaje en la moneda del viaje',
+    example: 1250000,
+    minimum: 0,
+  })
+  totalAmount!: number;
 }

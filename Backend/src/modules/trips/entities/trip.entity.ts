@@ -8,7 +8,8 @@ import { TripStatus } from '../enums/trip-status.enum';
  * Extiende BaseEntity para heredar id, timestamps y soft delete.
  *
  * Un viaje puede tener múltiples participantes y gastos asociados.
- * La moneda está fija en COP y no puede cambiarse.
+ * La moneda puede ser COP (Peso Colombiano) o USD (Dólar Estadounidense).
+ * Por defecto es COP si no se especifica al crear el viaje.
  */
 @Entity('trips')
 export class Trip extends BaseEntity {
