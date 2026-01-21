@@ -41,6 +41,22 @@ alwaysApply: false
 - Use `px-4` or `px-6` for mobile padding.
 - Use `md:px-8` or `md:px-12` for tablet, and `px-8` or `px-12` for desktop padding.
 
+### Page Width Consistency
+
+- All pages must use consistent maximum width (`max-w-md`) for main content containers to maintain visual consistency across the application.
+- Wrap main content in `<div className="max-w-md mx-auto">` to ensure all pages have the same content width.
+- Apply `max-w-md mx-auto` to the main content wrapper, not individual sections, to maintain consistency.
+- Sticky navigation elements (tabs, headers) must respect the same width constraint when visible.
+- Exception: Landing pages or marketing pages may use wider containers (`max-w-2xl` or `max-w-4xl`) if justified by design requirements.
+
+### Responsive Grid Layout Stability
+
+- Avoid responsive grid columns that change layout at breakpoints if they cause visual displacement or content shifting.
+- Prefer single-column layouts (`grid-cols-1`) over multi-column responsive grids (`grid-cols-1 md:grid-cols-3`) when layout changes cause noticeable content displacement.
+- If responsive grids are necessary, ensure content width remains stable across breakpoints to prevent horizontal shifting.
+- Test grid layouts at all breakpoints to verify no content displacement occurs when switching between tabs or sections.
+- Use consistent grid column counts within the same page section to maintain visual stability.
+
 ## Touch Targets
 
 - Minimum touch target size: 44px × 44px (iOS) or 48px × 48px (Android).

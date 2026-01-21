@@ -309,6 +309,15 @@ export const Button = () => {
 - Empty state descriptions must guide users to the correct action location (e.g., "Toca el botón 'Agregar Gasto' arriba").
 - Icons in empty states must use `slate-300` color and appropriate size (64px for large empty states).
 
+### Navigation and Tabs Consistency
+
+- Sticky navigation elements (tabs, headers) must maintain the same maximum width as page content (`max-w-md mx-auto`) for visual consistency.
+- Tabs containers must use `rounded-t-xl` (rounded top corners) to match the visual style of cards and containers in the design system.
+- Sticky tabs must be wrapped in a container with `max-w-md mx-auto` to align with page content width, not spanning full viewport width.
+- Tabs background and border styles must be applied to the inner container with width constraint, not the outer sticky wrapper, to prevent full-width visual bars.
+- Navigation elements must use consistent padding (`px-6`) to match page content padding.
+- Tabs must maintain visual consistency with other rounded elements (`rounded-xl`) in the design system.
+
 ## Exceptions
 
 - Shared utilities may be in `utils/` directory.
