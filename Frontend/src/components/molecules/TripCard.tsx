@@ -9,8 +9,9 @@ import { formatRelativeDate } from '@/utils/date';
 import { formatCurrency } from '@/utils/currency';
 
 interface TripCardProps {
-  trip: TripResponse;
+  trip?: TripResponse;
   onClick?: () => void;
+  isLoading?: boolean;
 }
 
 /**
@@ -34,8 +35,29 @@ function getParticipantCount(trip: TripResponse): number {
  * Displays trip information in a card format
  * Follows Design System Guide: rounded-xl, shadow-md, microinteraction scale-98
  * Uses semantic Link element for accessibility
+ *
+ * @param trip - Trip data to display (optional if isLoading is true)
+ * @param onClick - Optional click handler (if provided, uses button instead of Link)
+ * @param isLoading - If true, shows skeleton loading state
  */
-export const TripCard = ({ trip, onClick }: TripCardProps) => {
+export const TripCard = ({ trip, onClick, isLoading = false }: TripCardProps) => {
+  // Skeleton loading state
+  if (isLoading || !trip) {
+    return (
+      <div className="bg-white rounded-xl p-6 shadow-md animate-pulse">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="w-5 h-5 bg-slate-200 rounded flex-shrink-0 mt-0.5" />
+          <div className="h-6 bg-slate-200 rounded flex-1" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-4 bg-slate-200 rounded w-32" />
+          <div className="h-4 bg-slate-200 rounded w-24" />
+          <div className="h-4 bg-slate-200 rounded w-28" />
+        </div>
+      </div>
+    );
+  }
+
   const participantCount = getParticipantCount(trip);
   const totalAmount = trip.totalAmount ?? 0;
   const trip_currency = (trip.currency as TripCurrency) || 'COP';
