@@ -70,7 +70,7 @@ const HomePageNotAuthenticated = () => {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="px-6 py-12 md:py-16">
-          <div className="max-w-2xl mx-auto text-center">
+          <div className="max-w-md mx-auto text-center">
             <div className="flex justify-center mb-6">
               <div className="bg-violet-100 rounded-full p-4">
                 <MapIcon className="w-12 h-12 text-violet-600" aria-hidden="true" />
@@ -79,7 +79,7 @@ const HomePageNotAuthenticated = () => {
             <h1 className="text-3xl md:text-4xl font-heading font-bold text-slate-900 mb-4">
               Divide gastos de viaje sin complicaciones
             </h1>
-            <p className="text-lg text-slate-600 mb-8 max-w-2xl mx-auto">
+            <p className="text-lg text-slate-600 mb-8">
               TravelSplit te ayuda a gestionar los gastos de tus viajes grupales de forma simple y
               transparente. Sin hojas de cálculo, sin confusiones.
             </p>
@@ -106,11 +106,11 @@ const HomePageNotAuthenticated = () => {
 
         {/* Benefits Section */}
         <section className="px-6 py-12 bg-white">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-md mx-auto">
             <h2 className="text-2xl font-heading font-bold text-slate-900 text-center mb-8">
               Todo lo que necesitas para dividir gastos
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               {benefits.map(benefit => (
                 <div key={benefit.title} className="bg-slate-50 rounded-xl p-6">
                   <div className="flex items-start gap-4">
@@ -130,7 +130,7 @@ const HomePageNotAuthenticated = () => {
 
         {/* CTA Section */}
         <section className="px-6 py-12 pb-16">
-          <div className="max-w-2xl mx-auto text-center">
+          <div className="max-w-md mx-auto text-center">
             <h2 className="text-2xl font-heading font-bold text-slate-900 mb-4">
               ¿Listo para tu próximo viaje?
             </h2>
@@ -219,11 +219,12 @@ const HomePageWithTrips = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pb-24">
       <Header />
-      <main className="px-6 py-8 space-y-8">
-        <h1 className="sr-only">Resumen general de viajes</h1>
+      <main className="px-6 py-8">
+        <div className="max-w-md mx-auto space-y-8">
+          <h1 className="sr-only">Resumen general de viajes</h1>
 
-        {/* Total Gastado Section */}
-        <section>
+          {/* Total Gastado Section */}
+          <section>
           <div className="bg-gradient-to-br from-violet-600 to-violet-700 rounded-2xl p-6 shadow-lg">
             <div className="flex items-center gap-2 mb-2">
               <DollarSign className="w-6 h-6 text-violet-200 flex-shrink-0" aria-hidden="true" />
@@ -327,15 +328,16 @@ const HomePageWithTrips = () => {
           </section>
         ) : null}
 
-        {/* Error State */}
-        {error && (
-          <section>
-            <ErrorState
-              message="Hubo un problema al cargar algunos datos. Intenta de nuevo."
-              onRetry={() => refetch()}
-            />
-          </section>
-        )}
+          {/* Error State */}
+          {error && (
+            <section>
+              <ErrorState
+                message="Hubo un problema al cargar algunos datos. Intenta de nuevo."
+                onRetry={() => refetch()}
+              />
+            </section>
+          )}
+        </div>
       </main>
     </div>
   );

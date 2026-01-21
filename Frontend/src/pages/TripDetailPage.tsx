@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Users, Calendar, DollarSign, Settings, Crown, User, Receipt } from 'lucide-react';
+import { Users, Calendar, DollarSign, Settings, Crown, User, Receipt } from 'lucide-react';
 import { Header } from '@/components';
 import { ErrorState } from '@/components/molecules/ErrorState';
 import { EmptyState } from '@/components/molecules/EmptyState';
@@ -222,22 +222,12 @@ export function TripDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      <Header title={trip.name} />
+      <Header title={trip.name} showBackButton={true} onBack={() => navigate('/trips')} />
 
-      <main className="flex-1 px-6 py-8 space-y-6">
-        {/* Back button */}
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => navigate('/trips')}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft size={20} />
-          <span>Volver a Mis Viajes</span>
-        </Button>
-
-        {/* Trip Info Card */}
-        <div className="bg-white rounded-xl p-6 shadow-md space-y-4">
+      <main className="flex-1 px-6 py-8">
+        <div className="max-w-md mx-auto space-y-6">
+          {/* Trip Info Card */}
+          <div className="bg-white rounded-xl p-6 shadow-md space-y-6">
           <div className="flex items-start justify-between">
             <div className="space-y-2">
               <h2 className="text-2xl font-heading font-bold text-slate-900">{trip.name}</h2>
@@ -247,7 +237,8 @@ export function TripDetailPage() {
               <button
                 type="button"
                 onClick={() => setIsSettingsModalOpen(true)}
-                className="p-2 text-slate-400 hover:text-slate-600 active:scale-95 active:bg-slate-100 rounded-lg transition-all focus-visible:outline-2 focus-visible:outline-violet-600 focus-visible:outline-offset-2"
+                disabled={isSettingsModalOpen}
+                className="p-2 text-slate-400 hover:text-slate-600 active:scale-95 active:bg-slate-100 rounded-lg transition-all focus-visible:outline-2 focus-visible:outline-violet-600 focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Configuración"
               >
                 <Settings size={20} />
@@ -255,7 +246,7 @@ export function TripDetailPage() {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4 border-t border-slate-200 pt-4">
+          <div className="grid grid-cols-2 gap-4 border-t border-slate-200 pt-6">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100">
                 <Users className="w-5 h-5 text-violet-600" />
@@ -280,12 +271,12 @@ export function TripDetailPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-slate-500 border-t border-slate-200 pt-4">
+          <div className="flex items-center gap-2 text-sm text-slate-500 border-t border-slate-200 pt-6">
             <Calendar className="w-4 h-4" />
             <span>Creado {createdDate}</span>
           </div>
 
-          <div className="border-t border-slate-200 pt-4">
+          <div className="border-t border-slate-200 pt-6">
             <span
               className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
                 trip.status === 'ACTIVE'
@@ -297,41 +288,47 @@ export function TripDetailPage() {
             </span>
           </div>
         </div>
+        </div>
 
-        {/* Tabs */}
-        <nav role="tablist" className="bg-white rounded-xl p-2 shadow-sm border border-slate-200 flex gap-2">
-          {[
-            { key: 'gastos', label: 'Gastos' },
-            { key: 'saldos', label: 'Saldos' },
-            { key: 'participantes', label: 'Participantes' },
-          ].map(tab => (
-            <button
-              key={tab.key}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === tab.key}
-              aria-controls={`${tab.key}-panel`}
-              id={`${tab.key}-tab`}
-              onClick={() => setActiveTab(tab.key as typeof activeTab)}
-              className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors border focus-visible:outline-2 focus-visible:outline-violet-600 focus-visible:outline-offset-2 ${
-                activeTab === tab.key
-                  ? 'bg-violet-100 text-violet-700 border-violet-200'
-                  : 'text-slate-600 hover:bg-slate-50 border-slate-200'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+        {/* Tabs - Sticky with max-w-md for consistency */}
+        <div className="sticky top-16 z-30 bg-slate-50">
+          <div className="max-w-md mx-auto bg-white rounded-t-xl border-b border-slate-200 shadow-sm">
+            <nav role="tablist" className="flex px-6">
+              {[
+                { key: 'gastos', label: 'Gastos' },
+                { key: 'saldos', label: 'Saldos' },
+                { key: 'participantes', label: 'Participantes' },
+              ].map(tab => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === tab.key}
+                  aria-controls={`${tab.key}-panel`}
+                  id={`${tab.key}-tab`}
+                  onClick={() => setActiveTab(tab.key as typeof activeTab)}
+                  className={`flex-1 px-3 py-3 text-sm font-medium transition-all duration-200 focus-visible:outline-2 focus-visible:outline-violet-600 focus-visible:outline-offset-2 ${
+                    activeTab === tab.key
+                      ? 'text-violet-600 font-semibold border-b-2 border-violet-600'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
 
         {/* Expenses Section */}
         {activeTab === 'gastos' && (
-          <section
-            role="tabpanel"
-            id="gastos-panel"
-            aria-labelledby="gastos-tab"
-            className="bg-white rounded-xl p-6 shadow-md"
-          >
+          <div className="max-w-md mx-auto space-y-6">
+            <section
+              role="tabpanel"
+              id="gastos-panel"
+              aria-labelledby="gastos-tab"
+              className="bg-white rounded-xl p-6 shadow-md"
+            >
             <div className="flex items-center justify-between mb-4">
               <h3 id="expenses-heading" className="text-lg font-heading font-semibold text-slate-900">
                 Gastos
@@ -413,16 +410,18 @@ export function TripDetailPage() {
               </>
             )}
           </section>
+          </div>
         )}
 
         {/* Statistics Section */}
         {activeTab === 'saldos' && (
-          <section
-            role="tabpanel"
-            id="saldos-panel"
-            aria-labelledby="saldos-tab"
-            className="space-y-6"
-          >
+          <div className="max-w-md mx-auto space-y-6">
+            <section
+              role="tabpanel"
+              id="saldos-panel"
+              aria-labelledby="saldos-tab"
+              className="space-y-6"
+            >
             {/* Summary Section */}
             <div className="bg-white rounded-xl p-6 shadow-md space-y-4">
               <div className="flex items-center justify-between">
@@ -481,7 +480,7 @@ export function TripDetailPage() {
                   })()}
 
                   {/* Summary Stats */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 gap-3">
                     <StatCard
                       label="Gastos"
                       value={formatCurrency(
@@ -591,16 +590,18 @@ export function TripDetailPage() {
                 </div>
               )}
           </section>
+          </div>
         )}
 
         {/* Participants Section */}
         {activeTab === 'participantes' && (
-          <section
-            role="tabpanel"
-            id="participantes-panel"
-            aria-labelledby="participantes-tab"
-            className="bg-white rounded-xl p-6 shadow-md"
-          >
+          <div className="max-w-md mx-auto space-y-6">
+            <section
+              role="tabpanel"
+              id="participantes-panel"
+              aria-labelledby="participantes-tab"
+              className="bg-white rounded-xl p-6 shadow-md"
+            >
             {isLoading ? (
               <div className="space-y-3 animate-pulse">
                 {[1, 2, 3].map(i => (
@@ -657,6 +658,7 @@ export function TripDetailPage() {
               </ul>
             )}
           </section>
+          </div>
         )}
       </main>
 

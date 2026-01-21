@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, UserCheck, UserX, X } from 'lucide-react';
+import { Search, UserCheck, UserX, X } from 'lucide-react';
+import { Header } from '@/components';
 import { createTripSchema, type CreateTripFormData } from '@/schemas/trip.schema';
 import { createTrip } from '@/services/trip.service';
 import { Input } from '@/components/atoms/Input';
@@ -212,20 +213,7 @@ export function CreateTripPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pb-24">
-      {/* Header with back button */}
-      <header className="sticky top-0 z-40 bg-white border-b border-slate-200">
-        <div className="h-16 px-6 flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="p-2 -ml-2 text-slate-700 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 rounded-lg transition-colors"
-            aria-label="Volver"
-          >
-            <ArrowLeft size={24} />
-          </button>
-          <h1 className="text-xl font-heading font-semibold text-slate-900">Crear Viaje</h1>
-        </div>
-      </header>
+      <Header title="Crear Viaje" showBackButton={true} />
 
       <main className="flex-1 px-6 py-8">
         <div className="max-w-md mx-auto">
