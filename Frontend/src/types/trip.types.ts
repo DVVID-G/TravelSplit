@@ -4,6 +4,11 @@
 
 export type TripParticipantRole = 'CREATOR' | 'MEMBER';
 
+/**
+ * Supported currencies for trips
+ */
+export type TripCurrency = 'COP' | 'USD';
+
 export interface TripParticipant {
   id: string;
   trip_id: string;
@@ -39,12 +44,12 @@ export interface Trip {
 export interface TripResponse {
   id: string;
   name: string;
-  currency: string;
+  currency: TripCurrency; // Currency of the trip (COP or USD)
   status: string;
   code: string;
   createdAt: string;
   updatedAt: string;
-  totalAmount?: number; // Optional: Total amount of expenses in the trip
+  totalAmount?: number; // Optional: Total amount of expenses in the trip (in trip currency)
   // For backward compatibility
   created_at?: string;
   updated_at?: string;
@@ -52,13 +57,6 @@ export interface TripResponse {
   userRole?: TripParticipantRole;
   participants?: TripParticipantDetail[];
   participantsMeta?: ParticipantsPaginationMeta;
-}
-
-export interface TripStats {
-  totalExpenses: number;
-  totalAmount: number;
-  totalParticipants: number;
-  userBalance: number;
 }
 
 /**
@@ -92,6 +90,7 @@ export interface ParticipantsPaginationMeta {
 
 export interface CreateTripRequest {
   name: string;
+  currency?: TripCurrency; // Optional: Currency for the trip (COP or USD). Defaults to COP if not specified.
   memberEmails?: string[];
 }
 
@@ -109,7 +108,7 @@ export interface Balance {
   id: string; // Unique identifier for the balance
   fromName: string; // Person who owes
   toName: string; // Person who is owed
-  amount: number; // Amount in COP
+  amount: number; // Amount in trip currency
   badgeColor: 'red' | 'green' | 'blue'; // Badge color based on debt type
 }
 
@@ -127,6 +126,6 @@ export interface RecentExpense {
   title: string;
   paidBy: string; // Name of the person who paid
   date: string; // ISO date string
-  amount: number; // Amount in COP
+  amount: number; // Amount in trip currency
   participantCount: number; // Number of people involved
 }

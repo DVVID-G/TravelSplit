@@ -4,6 +4,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { Trip } from './entities/trip.entity';
 import { TripParticipant } from './entities/trip-participant.entity';
 import { User } from '../users/entities/user.entity';
+import { Expense } from '../expenses/entities/expense.entity';
 import { TripsController } from './controllers/trips.controller';
 import { TripsService } from './services/trips.service';
 
@@ -28,7 +29,7 @@ import { TripsService } from './services/trips.service';
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Trip, TripParticipant, User]),
+    TypeOrmModule.forFeature([Trip, TripParticipant, User, Expense]),
     CacheModule.register({
       ttl: 300, // 5 minutos en segundos
       max: 100, // máximo 100 trips en caché

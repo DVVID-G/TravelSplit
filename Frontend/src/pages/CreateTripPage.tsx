@@ -3,14 +3,17 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, UserCheck, UserX, X } from 'lucide-react';
+import { Search, UserCheck, UserX, X } from 'lucide-react';
+import { Header } from '@/components';
 import { createTripSchema, type CreateTripFormData } from '@/schemas/trip.schema';
 import { createTrip } from '@/services/trip.service';
 import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms/Button';
+import { CurrencySelector } from '@/components/molecules/CurrencySelector';
 import { useAuthContext } from '@/contexts/AuthContext';
 import type { ApiError } from '@/types/api.types';
 import { API_BASE_URL } from '@/config/api';
+import type { TripCurrency } from '@/types/trip.types';
 
 interface Participant {
   email: string;
@@ -26,10 +29,12 @@ interface SearchResult {
 
 /**
  * CreateTripPage
- * Form to create a new trip with name and participants
- * Currency is fixed to COP (Colombian Peso)
+ * Form to create a new trip with name, currency selection, and participants
+ * Currency can be selected between COP (Colombian Peso) or USD (US Dollar)
+ * Default currency is COP if not specified
  *
  * Features:
+ * - Select trip currency (COP or USD)
  * - Search users by email
  * - Add existing users as participants
  * - Invite non-registered users
@@ -72,9 +77,16 @@ export function CreateTripPage() {
     handleSubmit,
     formState: { errors },
     setError,
+    watch,
+    setValue,
   } = useForm<CreateTripFormData>({
     resolver: zodResolver(createTripSchema),
+    defaultValues: {
+      currency: 'COP',
+    },
   });
+
+  const selected_currency = watch('currency') as TripCurrency;
 
   // Mutation for creating trip
   const mutation = useMutation({
@@ -201,20 +213,7 @@ export function CreateTripPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pb-24">
-      {/* Header with back button */}
-      <header className="sticky top-0 z-40 bg-white border-b border-slate-200">
-        <div className="h-16 px-6 flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="p-2 -ml-2 text-slate-700 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 rounded-lg transition-colors"
-            aria-label="Volver"
-          >
-            <ArrowLeft size={24} />
-          </button>
-          <h1 className="text-xl font-heading font-semibold text-slate-900">Crear Viaje</h1>
-        </div>
-      </header>
+      <Header title="Crear Viaje" showBackButton={true} />
 
       <main className="flex-1 px-6 py-8">
         <div className="max-w-md mx-auto">
@@ -232,14 +231,17 @@ export function CreateTripPage() {
                 />
               </div>
 
-              {/* Static information about currency */}
+              {/* Currency selector */}
+              <div>
+                <CurrencySelector
+                  selected_currency={selected_currency}
+                  on_select={(currency: TripCurrency) => setValue('currency', currency)}
+                  error={errors.currency?.message}
+                />
+              </div>
+
+              {/* Information about code generation */}
               <div className="space-y-2">
-                <p className="text-sm text-slate-500 flex items-center gap-2">
-                  <span className="text-base">ℹ️</span>
-                  <span>
-                    <span className="font-medium">Moneda:</span> COP
-                  </span>
-                </p>
                 <p className="text-sm text-slate-500 flex items-center gap-2">
                   <span className="text-base">ℹ️</span>
                   <span>Se generará un código único para invitar</span>

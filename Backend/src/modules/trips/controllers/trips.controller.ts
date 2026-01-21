@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
   Body,
   Query,
   Param,
@@ -9,6 +10,7 @@ import {
   HttpStatus,
   Request,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -25,6 +27,7 @@ import {
 } from '@nestjs/swagger';
 import { TripsService } from '../services/trips.service';
 import { CreateTripDto } from '../dto/create-trip.dto';
+import { UpdateTripDto } from '../dto/update-trip.dto';
 import { JoinTripDto } from '../dto/join-trip.dto';
 import { TripResponseDto } from '../dto/trip-response.dto';
 import { TripListQueryDto } from '../dto/trip-list-query.dto';
@@ -58,7 +61,7 @@ export class TripsController {
 
   /**
    * Crea un nuevo viaje y asocia automáticamente al usuario autenticado como CREATOR.
-   * La moneda siempre es COP y no puede cambiarse.
+   * La moneda puede ser COP o USD. Si no se especifica, por defecto es COP.
    * Opcionalmente puede invitar usuarios por email como miembros.
    *
    * @method create
@@ -68,15 +71,20 @@ export class TripsController {
    * @example
    * // POST /trips
    * // Headers: Authorization: Bearer {token}
-   * // Body: { name: "Viaje a Cartagena", memberEmails: ["maria@example.com"] }
+   * // Body: { name: "Viaje a Cartagena", currency: "COP", memberEmails: ["maria@example.com"] }
    * // Respuesta: { id: "...", name: "...", currency: "COP", status: "ACTIVE", code: "...", createdAt: "...", updatedAt: "..." }
+   * @example
+   * // POST /trips
+   * // Headers: Authorization: Bearer {token}
+   * // Body: { name: "Viaje a Miami", currency: "USD" }
+   * // Respuesta: { id: "...", name: "...", currency: "USD", status: "ACTIVE", code: "...", createdAt: "...", updatedAt: "..." }
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Crear un nuevo viaje',
     description:
-      'Crea un viaje con nombre y moneda fija COP. El usuario autenticado se asocia automáticamente como CREATOR. Opcionalmente puede invitar usuarios por email como miembros.',
+      'Crea un viaje con nombre y moneda seleccionable (COP o USD, por defecto COP). El usuario autenticado se asocia automáticamente como CREATOR. Opcionalmente puede invitar usuarios por email como miembros.',
   })
   @ApiCreatedResponse({
     description: 'Viaje creado exitosamente',
@@ -245,7 +253,7 @@ export class TripsController {
       100,
     );
 
-    const { trip, paginationMeta, userRole } =
+    const { trip, paginationMeta, userRole, totalAmount } =
       await this.tripsService.findOneById(
         id,
         req.user!.id,
@@ -253,6 +261,63 @@ export class TripsController {
         safeLimit,
       );
 
-    return TripMapper.toDetailDto(trip, userRole, paginationMeta);
+    return TripMapper.toDetailDto(trip, userRole, paginationMeta, totalAmount);
+  }
+
+  /**
+   * Updates a trip's basic information.
+   * Only the CREATOR of the trip can update it.
+   * Only the name and status fields can be updated. Currency and code cannot be changed.
+   *
+   * @method update
+   * @param {string} id - ID of the trip to update
+   * @param {UpdateTripDto} updateTripDto - DTO with fields to update
+   * @param {AuthenticatedRequest} req - Request with authenticated user
+   * @returns {TripResponseDto} Updated trip
+   * @throws {BadRequestException} If trip ID is invalid
+   * @throws {NotFoundException} If trip doesn't exist
+   * @throws {ForbiddenException} If user is not CREATOR
+   * @example
+   * // PATCH /trips/550e8400-e29b-41d4-a716-446655440000
+   * // Headers: Authorization: Bearer {token}
+   * // Body: { name: "Viaje a Cartagena - Actualizado" }
+   * // Response: { id: "...", name: "Viaje a Cartagena - Actualizado", currency: "COP", status: "ACTIVE", code: "...", createdAt: "...", updatedAt: "..." }
+   */
+  @Patch(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Actualizar configuración de viaje',
+    description:
+      'Permite al CREATOR del viaje modificar datos básicos del viaje (nombre). Solo el creador puede actualizar el viaje. La moneda, estado y código no pueden modificarse.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID único del viaje (UUID)',
+    type: String,
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiOkResponse({
+    description: 'Viaje actualizado exitosamente',
+    type: TripResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'ID de viaje inválido o datos de entrada incorrectos',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'No autorizado. Se requiere autenticación.',
+  })
+  @ApiForbiddenResponse({
+    description:
+      'No tienes acceso a este viaje o no eres el creador del viaje',
+  })
+  @ApiNotFoundResponse({
+    description: 'Viaje no encontrado',
+  })
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateTripDto: UpdateTripDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<TripResponseDto> {
+    return this.tripsService.update(id, req.user!.id, updateTripDto);
   }
 }

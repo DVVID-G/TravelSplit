@@ -50,19 +50,26 @@ export function useExpenseForm({ tripId, onSuccess, onSuccessMessage }: UseExpen
         }
       }
 
-      // Create expense request
+      // Ensure expense_date is present (should be required by schema, but double-check)
+      const expense_date = data.expense_date || new Date().toISOString().split('T')[0];
+
+      // Transform beneficiary_ids to beneficiaries format expected by backend
+      const beneficiaries = data.beneficiary_ids.map(user_id => ({
+        user_id,
+        // amount_owed is optional - if not provided, backend will calculate fair share
+      }));
+
+      // Create expense request (trip_id goes in URL, payer_id comes from token)
       const expenseData: CreateExpenseRequest = {
-        trip_id: tripId,
-        payer_id: data.payer_id,
-        category_id: data.category_id,
         title: data.title,
         amount: data.amount,
-        beneficiary_ids: data.beneficiary_ids,
+        category_id: data.category_id,
+        expense_date,
         receipt_url: receiptUrl,
-        expense_date: data.expense_date || new Date().toISOString().split('T')[0],
+        beneficiaries,
       };
 
-      await createExpense(expenseData);
+      await createExpense(tripId, expenseData);
 
       // Success - show feedback
       const successMessage = 'Gasto creado exitosamente';

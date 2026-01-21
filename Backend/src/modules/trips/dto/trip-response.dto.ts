@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { TripStatus } from '../enums/trip-status.enum';
+import { TripCurrency } from '../enums/trip-currency.enum';
 
 /**
  * DTO para la respuesta al crear o consultar un viaje.
@@ -19,8 +20,9 @@ export class TripResponseDto {
   name!: string;
 
   @ApiProperty({
-    description: 'Moneda del viaje (siempre COP)',
-    example: 'COP',
+    description: 'Moneda del viaje (COP o USD)',
+    enum: TripCurrency,
+    example: TripCurrency.COP,
   })
   currency!: string;
 

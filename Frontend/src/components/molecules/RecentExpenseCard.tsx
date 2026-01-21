@@ -1,5 +1,5 @@
 import { Utensils, Car, Bed, Film, Package, Users } from 'lucide-react';
-import type { RecentExpense, ExpenseCategory } from '@/types/trip.types';
+import type { RecentExpense, ExpenseCategory, TripCurrency } from '@/types/trip.types';
 import { formatCurrency } from '@/utils/currency';
 import { format, parseISO, isValid } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -10,6 +10,7 @@ function assertNever(value: never): never {
 
 interface RecentExpenseCardProps {
   expense: RecentExpense;
+  currency?: TripCurrency; // Optional: Currency of the trip (COP or USD). Defaults to COP for backward compatibility
   onClick?: () => void;
 }
 
@@ -62,7 +63,7 @@ const formatShortDate = (dateString: string): string => {
  * Used in HomePage to show recent expenses section
  * Follows Design System: bg-white, rounded-xl, p-4, shadow-sm
  */
-export const RecentExpenseCard = ({ expense, onClick }: RecentExpenseCardProps) => {
+export const RecentExpenseCard = ({ expense, currency = 'COP', onClick }: RecentExpenseCardProps) => {
   const baseClassName =
     'bg-white rounded-xl p-4 shadow-sm hover:shadow-md hover:bg-slate-50 transition-all duration-200';
   const cursorClass = onClick ? 'cursor-pointer' : 'cursor-default';
@@ -72,7 +73,7 @@ export const RecentExpenseCard = ({ expense, onClick }: RecentExpenseCardProps) 
 
   return (
     <Container
-      className={className}
+      className={`${className} w-full`}
       {...(onClick
         ? {
             onClick,
@@ -97,7 +98,7 @@ export const RecentExpenseCard = ({ expense, onClick }: RecentExpenseCardProps) 
         {/* Right: Amount and participant count */}
         <div className="flex-shrink-0 text-right">
           <p className="text-base font-semibold text-slate-900 mb-1">
-            {formatCurrency(expense.amount)}
+            {formatCurrency(expense.amount, currency)}
           </p>
           <div className="flex items-center justify-end gap-1 text-sm text-slate-500">
             <Users size={20} aria-hidden="true" />

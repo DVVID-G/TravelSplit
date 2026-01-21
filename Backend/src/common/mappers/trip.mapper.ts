@@ -42,18 +42,20 @@ export class TripMapper {
    * @param trip - Trip entity to map
    * @param userRole - Role of the authenticated user in this trip
    * @param participantCount - Total number of participants in the trip
+   * @param totalAmount - Total amount of expenses for the trip (default: 0)
    * @returns TripListItemDto with extended information
    */
   static toListItemDto(
     trip: Trip,
     userRole: ParticipantRole,
     participantCount: number,
+    totalAmount: number = 0,
   ): TripListItemDto {
     return {
       ...this.toResponseDto(trip),
       userRole,
       participantCount,
-      totalAmount: 0, // TODO: Calculate from expenses when expense module is implemented
+      totalAmount,
     };
   }
 
@@ -64,12 +66,14 @@ export class TripMapper {
    * @param trip - Trip entity with participants relation loaded
    * @param userRole - Role of the authenticated user in the trip
    * @param paginationMeta - Pagination metadata for participants
+   * @param totalAmount - Total amount of expenses for the trip (default: 0)
    * @returns TripDetailResponseDto with detailed trip information
    */
   static toDetailDto(
     trip: Trip,
     userRole: ParticipantRole,
     paginationMeta: ParticipantsPaginationMeta,
+    totalAmount: number = 0,
   ): TripDetailResponseDto {
     // Map participants to DTOs, filtering out soft-deleted ones
     const participants = (trip.participants || [])
@@ -81,6 +85,7 @@ export class TripMapper {
       userRole,
       participants,
       participantsMeta: paginationMeta,
+      totalAmount,
     };
   }
 

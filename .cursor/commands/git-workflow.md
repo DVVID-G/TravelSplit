@@ -199,3 +199,5 @@ triggers:
 - Verify remote with `git remote -v` before push
 - Use `git log --oneline -5` to see context of recent commits
 
+**MANDATORY** All must be in english
+

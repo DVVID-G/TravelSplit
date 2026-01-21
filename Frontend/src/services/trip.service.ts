@@ -3,7 +3,7 @@
  * Handles trip-related API calls
  */
 
-import type { TripResponse, CreateTripRequest, TripListItem, TripStats } from '@/types/trip.types';
+import type { TripResponse, CreateTripRequest, TripListItem } from '@/types/trip.types';
 import type { ApiError } from '@/types/api.types';
 import { API_BASE_URL } from '@/config/api';
 
@@ -111,7 +111,7 @@ export async function getUserTrips(): Promise<TripListItem[]> {
 
 /**
  * Creates a new trip
- * @param data - Trip creation data (name, optional memberEmails)
+ * @param data - Trip creation data (name, optional currency, optional memberEmails)
  * @returns Promise with created trip data
  * @throws Error with status code and message on failure
  */
@@ -190,18 +190,27 @@ export async function joinTripByCode(code: string): Promise<TripResponse> {
 }
 
 /**
- * Gets trip statistics
- * @param id - Trip ID
- * @returns Trip statistics (totals and user balance)
+ * Updates a trip's information
+ * Only the CREATOR can update the trip
+ * Can update name and status fields
+ * @param tripId - Trip ID
+ * @param data - Trip update data (name and/or status)
+ * @returns Promise with updated trip data
+ * @throws Error with status code and message on failure
  */
-export async function getTripStats(id: string): Promise<TripStats> {
+export async function updateTrip(
+  tripId: string,
+  data: { name?: string; status?: 'ACTIVE' | 'CLOSED' },
+): Promise<TripResponse> {
   const token = getAuthToken();
 
-  const response = await fetch(`${API_BASE_URL}/trips/${id}/stats`, {
-    method: 'GET',
+  const response = await fetch(`${API_BASE_URL}/trips/${tripId}`, {
+    method: 'PATCH',
     headers: {
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
+    body: JSON.stringify(data),
   });
 
   if (!response.ok) {
@@ -210,8 +219,20 @@ export async function getTripStats(id: string): Promise<TripStats> {
       statusCode: response.status,
     }));
 
+    let message = errorData.message || 'Error al actualizar el viaje';
+
+    if (response.status === 400) {
+      message = errorData.message || 'Datos de entrada inválidos';
+    } else if (response.status === 403) {
+      message = 'Solo el creador del viaje puede actualizar su configuración';
+    } else if (response.status === 404) {
+      message = 'El viaje no existe';
+    } else if (response.status === 401) {
+      message = 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.';
+    }
+
     const error: ApiError = {
-      message: errorData.message || 'Error al obtener estadísticas del viaje',
+      message,
       statusCode: response.status,
     };
 
@@ -220,3 +241,4 @@ export async function getTripStats(id: string): Promise<TripStats> {
 
   return response.json();
 }
+

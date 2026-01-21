@@ -254,6 +254,70 @@ export const Button = () => {
 - Props interfaces: `ComponentNameProps` (e.g., `ButtonProps`).
 - Directory names: lowercase single words (no hyphens) for core folders, e.g., `atoms/`, `molecules/`, `organisms/`, `utils/`.
 
+## Visual Consistency and Alignment Standards
+
+### Button Alignment
+
+- All buttons must use `flex items-center justify-center` in their base styles to ensure proper vertical and horizontal alignment of content (text and icons).
+- Icons inside buttons must have `flex-shrink-0` class to prevent compression or distortion.
+- Buttons with icons and text must maintain consistent spacing between icon and text using `gap-2` or `mr-2`/`ml-2` classes.
+- Touch targets must meet minimum 44x44px (use `w-11 h-11` or `min-w-[44px] min-h-[44px]`) for mobile accessibility.
+- Buttons with fixed size must use explicit padding (`p-2`, `px-3 py-1.5`) instead of relying only on `min-w`/`min-h` to ensure proper icon centering.
+
+### Container Alignment and Symmetry
+
+- Containers must use consistent padding: `p-6` (24px) for cards, `px-6 py-8` (24px horizontal, 32px vertical) for main containers.
+- Flex containers must use `items-center` for vertical alignment and `justify-center` or `justify-between` for horizontal distribution.
+- Grid layouts must use consistent gap spacing: `gap-3` (12px) or `gap-4` (16px).
+- Containers with horizontal scroll must have sufficient lateral padding (`px-6` or `px-8`) to prevent content from touching borders.
+- Centered content must use `mx-auto` or `flex justify-center` consistently.
+- Asymmetric layouts must be intentional and justified by design requirements.
+
+### Content Redundancy Prevention
+
+- Avoid duplicate actions that perform the same function (e.g., two buttons navigating to the same route).
+- Empty states should not include action buttons if the same action is available in the page header or navigation.
+- Follow Design System Guide specifications: action buttons should be above empty states, not inside them.
+- Review components for redundant UI elements that don't add value or create confusion.
+- Each user action should have a single, clear entry point in the interface.
+
+### Icon Alignment
+
+- Icons must always have `flex-shrink-0` when used inside flex containers to prevent distortion.
+- Icons with text must use consistent spacing: `gap-2` for flex containers, `mr-2` or `ml-2` for inline layouts.
+- Icon sizes must be consistent: 16px for buttons, 20px for standard actions, 24px for headers, 64px for empty states.
+- Icons must be properly aligned with text using `flex items-center` on the parent container.
+
+### Spacing Consistency
+
+- Use standard spacing scale: `space-y-4` (16px) for lists, `space-y-6` (24px) for forms, `gap-3` (12px) for flex/grid items.
+- Maintain consistent padding across similar components (all cards use `p-6`, all modals use `p-6`).
+- Vertical spacing between sections must be consistent: `mb-6` (24px) or `space-y-6` (24px).
+- Horizontal spacing in headers and navigation must be symmetric: `px-6` (24px) on both sides.
+
+### Loading State Consistency
+
+- All loading states must use consistent indicators: `Loader2` from lucide-react with `animate-spin` for buttons, `Skeleton` component for content placeholders.
+- Buttons with loading states must show spinner before text: `<Loader2 size={16} className="mr-2 animate-spin flex-shrink-0" />`.
+- Loading text must be consistent: "Guardando...", "Cargando...", "Cerrando..." (present participle in Spanish).
+- Loading indicators must be properly aligned with text using flex layout.
+
+### Empty State Consistency
+
+- Empty states must follow Design System Guide specifications for titles, descriptions, and icons.
+- Action buttons in empty states are only allowed when the action is not available elsewhere in the interface.
+- Empty state descriptions must guide users to the correct action location (e.g., "Toca el botón 'Agregar Gasto' arriba").
+- Icons in empty states must use `slate-300` color and appropriate size (64px for large empty states).
+
+### Navigation and Tabs Consistency
+
+- Sticky navigation elements (tabs, headers) must maintain the same maximum width as page content (`max-w-md mx-auto`) for visual consistency.
+- Tabs containers must use `rounded-t-xl` (rounded top corners) to match the visual style of cards and containers in the design system.
+- Sticky tabs must be wrapped in a container with `max-w-md mx-auto` to align with page content width, not spanning full viewport width.
+- Tabs background and border styles must be applied to the inner container with width constraint, not the outer sticky wrapper, to prevent full-width visual bars.
+- Navigation elements must use consistent padding (`px-6`) to match page content padding.
+- Tabs must maintain visual consistency with other rounded elements (`rounded-xl`) in the design system.
+
 ## Exceptions
 
 - Shared utilities may be in `utils/` directory.

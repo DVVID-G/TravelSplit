@@ -30,7 +30,7 @@ export const EmptyState = ({ icon, title, description, action }: EmptyStateProps
       )}
       <h2 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center">{title}</h2>
       {description && <p className="text-slate-600 text-center mb-6 max-w-md">{description}</p>}
-      {action && <div className="w-full max-w-xs">{action}</div>}
+      {action && <div className="w-full max-w-xs flex justify-center">{action}</div>}
     </div>
   );
 };
