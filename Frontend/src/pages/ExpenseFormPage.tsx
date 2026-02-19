@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { ExpenseForm } from '@/components/molecules/ExpenseForm';
 import { useExpenseForm } from '@/hooks/useExpenseForm';
 import { useExpenseFormData } from '@/hooks/useExpenseFormData';
+import { getTripById } from '@/services/trip.service';
 import { Card } from '@/components/molecules/Card';
 import { Skeleton } from '@/components/atoms/Skeleton';
 import { Toast } from '@/components/atoms/Toast';
 import { DevIndicator } from '@/components/atoms/DevIndicator';
 import { ErrorState } from '@/components/molecules/ErrorState';
+import type { TripCurrency } from '@/types/trip.types';
 
 /**
  * ExpenseFormPage component
@@ -18,6 +21,16 @@ export const ExpenseFormPage = () => {
   const { tripId } = useParams<{ tripId: string }>();
   const { user } = useAuthContext();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Fetch trip data to get currency
+  const { data: trip_data } = useQuery({
+    queryKey: ['trip', tripId],
+    queryFn: () => (tripId ? getTripById(tripId) : null),
+    enabled: !!tripId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const trip_currency: TripCurrency = (trip_data?.currency as TripCurrency) || 'COP';
 
   // Use custom hook to manage form data (categories and participants)
   const { categories, participants, isUsingMockData, isLoading, errors, refetch } =
@@ -149,6 +162,7 @@ export const ExpenseFormPage = () => {
               categories={categories}
               participants={participants}
               currentUserId={user.id}
+              currency={trip_currency}
               onSubmit={submitExpense}
               isLoading={isSubmitting}
               error={expenseError}

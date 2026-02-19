@@ -2,16 +2,16 @@ import {
   Map as MapIcon,
   Users as UsersIcon,
   Calendar as CalendarIcon,
-  DollarSign as DollarSignIcon,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import type { TripResponse, TripListItem } from '@/types/trip.types';
+import type { TripResponse, TripListItem, TripCurrency } from '@/types/trip.types';
 import { formatRelativeDate } from '@/utils/date';
 import { formatCurrency } from '@/utils/currency';
 
 interface TripCardProps {
-  trip: TripResponse;
+  trip?: TripResponse;
   onClick?: () => void;
+  isLoading?: boolean;
 }
 
 /**
@@ -35,10 +35,32 @@ function getParticipantCount(trip: TripResponse): number {
  * Displays trip information in a card format
  * Follows Design System Guide: rounded-xl, shadow-md, microinteraction scale-98
  * Uses semantic Link element for accessibility
+ *
+ * @param trip - Trip data to display (optional if isLoading is true)
+ * @param onClick - Optional click handler (if provided, uses button instead of Link)
+ * @param isLoading - If true, shows skeleton loading state
  */
-export const TripCard = ({ trip, onClick }: TripCardProps) => {
+export const TripCard = ({ trip, onClick, isLoading = false }: TripCardProps) => {
+  // Skeleton loading state
+  if (isLoading || !trip) {
+    return (
+      <div className="bg-white rounded-xl p-6 shadow-md animate-pulse">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="w-5 h-5 bg-slate-200 rounded flex-shrink-0 mt-0.5" />
+          <div className="h-6 bg-slate-200 rounded flex-1" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-4 bg-slate-200 rounded w-32" />
+          <div className="h-4 bg-slate-200 rounded w-24" />
+          <div className="h-4 bg-slate-200 rounded w-28" />
+        </div>
+      </div>
+    );
+  }
+
   const participantCount = getParticipantCount(trip);
   const totalAmount = trip.totalAmount ?? 0;
+  const trip_currency = (trip.currency as TripCurrency) || 'COP';
 
   const cardContent = (
     <div className="bg-white rounded-xl p-6 shadow-md active:scale-[0.98] transition-transform focus-visible:outline-2 focus-visible:outline-violet-600 focus-visible:outline-offset-2">
@@ -56,8 +78,10 @@ export const TripCard = ({ trip, onClick }: TripCardProps) => {
         </div>
 
         <div className="flex items-center gap-2 text-sm">
-          <DollarSignIcon className="w-4 h-4 text-slate-500" aria-hidden="true" />
-          <span className="font-semibold text-slate-900">{formatCurrency(totalAmount)}</span>
+          <span className="font-semibold text-slate-900">
+            {formatCurrency(totalAmount, trip_currency)}
+          </span>
+          <span className="text-xs text-slate-500">({trip_currency})</span>
         </div>
 
         <div className="flex items-center gap-2 text-sm text-slate-500">

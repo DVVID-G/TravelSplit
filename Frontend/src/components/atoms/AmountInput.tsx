@@ -1,6 +1,7 @@
 import { forwardRef } from 'react';
 import type { InputHTMLAttributes } from 'react';
 import { parseCurrency, formatCurrency } from '@/utils/currency';
+import type { TripCurrency } from '@/types/trip.types';
 
 interface AmountInputProps extends Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -9,15 +10,17 @@ interface AmountInputProps extends Omit<
   value?: number;
   onChange?: (value: number) => void;
   error?: string;
+  currency?: TripCurrency; // Optional: Currency type (COP or USD). Defaults to COP for backward compatibility
 }
 
 /**
  * AmountInput atom component
- * Specialized input for currency amounts in COP
- * Follows Design System Guide: large size (text-3xl), $ prefix, no decimals
+ * Specialized input for currency amounts (COP or USD)
+ * Follows Design System Guide: large size (text-3xl), $ prefix
+ * COP: no decimals, USD: with decimals
  */
 export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
-  ({ value = 0, onChange, error, className = '', ...props }, ref) => {
+  ({ value = 0, onChange, error, currency = 'COP', className = '', ...props }, ref) => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const parsed = parseCurrency(e.target.value);
       onChange?.(parsed);
@@ -31,7 +34,8 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
       }
     };
 
-    const displayValue = value > 0 ? formatCurrency(value).replace('$ ', '') : '';
+    const formatted_currency = formatCurrency(value, currency);
+    const displayValue = value > 0 ? formatted_currency.replace('$ ', '') : '';
 
     return (
       <div className="w-full">

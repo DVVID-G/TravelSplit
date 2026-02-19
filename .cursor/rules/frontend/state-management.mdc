@@ -278,6 +278,37 @@ return <div>{data.map(...)}</div>; // Will crash if data is undefined
 - Provide retry functionality with `refetch()`.
 - Handle network errors gracefully.
 
+## Accumulated State with Queries
+
+When combining TanStack Query with local accumulated state (e.g., paginated lists), follow these patterns to avoid stale data and synchronization issues:
+
+### Rules for Accumulated State
+
+- Always reset accumulated state when query parameters change (e.g., `tripId`, `userId`).
+- Include all relevant dependencies in `useEffect` dependency arrays, including IDs that affect the query.
+- Reset accumulated state immediately when the primary parameter changes, before processing new query results.
+- Always reset accumulated state on page 1, even if the query returns empty results.
+- Verify accumulated state matches the current query parameters before rendering.
+
+### Patterns
+
+- Use separate `useEffect` for reset (runs first) and accumulation (runs after).
+- Reset accumulated state when primary ID changes, then accumulate when query data arrives.
+- Include the primary ID (e.g., `tripId`) in accumulation effect dependencies.
+- Handle empty query results explicitly: reset accumulated state even if array is empty.
+
+### Best Practices
+
+1. **Reset First**: Always have a separate `useEffect` that resets accumulated state when the primary parameter changes. This should run first.
+
+2. **Include All Dependencies**: Include the primary ID (e.g., `tripId`, `userId`) in the accumulation effect's dependency array to ensure it re-runs when the ID changes.
+
+3. **Handle Empty Results**: Always reset accumulated state on page 1, even if the query returns an empty array. This ensures previous trip's data is cleared.
+
+4. **Verify State Matches Query**: Before rendering, verify that accumulated state matches the current query parameters. Check both `allExpenses.length === 0` and `expenses.length === 0` for empty state.
+
+5. **Query Key Consistency**: Ensure query keys include all parameters that affect the query, including the primary ID. This ensures TanStack Query properly invalidates and refetches when parameters change.
+
 ## Exceptions
 
 - Test files may use mock implementations instead of TanStack Query.
