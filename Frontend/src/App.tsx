@@ -59,7 +59,11 @@ function App() {
           children: [
             {
               path: '/',
-              element: <HomePage />,
+              element: (
+                <ProtectedRoute>
+                  <HomePage />
+                </ProtectedRoute>
+              ),
             },
             {
               path: '/login',
