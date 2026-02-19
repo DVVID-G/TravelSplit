@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ecosistema Cursor: Agents vs Rules vs Skills</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 p-4 md:p-8">
+
+    <!-- Header Section -->
+    <header class="max-w-6xl mx-auto text-center mb-12">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-4">
+            Ecosistema Cursor
+        </h1>
+        <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+            Comparativa detallada entre la Inteligencia (Agent), el Contexto (Rules) y la Ejecución (Skills).
+        </p>
+    </header>
+
+    <!-- Main Grid -->
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- Column 1: AGENT -->
+        <div class="flex flex-col relative group">
+            <div class="absolute inset-0 bg-gradient-to-b from-blue-100 to-white rounded-2xl transform transition-transform duration-300 group-hover:-translate-y-2 shadow-xl border border-blue-200/60"></div>
+            <div class="relative p-6 flex flex-col h-full">
+                <div class="bg-blue-600 w-14 h-14 rounded-xl flex items-center justify-center mb-4 shadow-lg shadow-blue-300">
+                    <i data-lucide="brain" class="text-white w-8 h-8"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">Cursor Agent</h2>
+                <p class="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-6">El Cerebro / Coordinador</p>
+                
+                <div class="space-y-6 flex-grow">
+                    <!-- Point 1 -->
+                    <div class="flex gap-4">
+                        <div class="mt-1 flex-shrink-0 bg-white p-1.5 rounded-lg shadow-sm border border-slate-100 h-fit">
+                            <i data-lucide="search" class="w-5 h-5 text-blue-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 mb-1">Definición</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed">Es la entidad de IA central que orquesta la interacción. Lee el código, planifica y decide qué herramientas usar.</p>
+                        </div>
+                    </div>
+                    <!-- Point 2 -->
+                    <div class="flex gap-4">
+                        <div class="mt-1 flex-shrink-0 bg-white p-1.5 rounded-lg shadow-sm border border-slate-100 h-fit">
+                            <i data-lucide="zap" class="w-5 h-5 text-blue-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 mb-1">Función Principal</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed">Toma decisiones. Decide si debe consultar una Regla o invocar una Skill.</p>
+                        </div>
+                    </div>
+                    <!-- Point 3 -->
+                    <div class="flex gap-4">
+                        <div class="mt-1 flex-shrink-0 bg-white p-1.5 rounded-lg shadow-sm border border-slate-100 h-fit">
+                            <i data-lucide="terminal" class="w-5 h-5 text-blue-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 mb-1">Naturaleza</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed">Proactiva & Reactiva. Responde al usuario y busca soluciones.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-blue-100">
+                    <p class="text-xs text-slate-500 font-bold mb-2">COMANDO CLAVE</p>
+                    <code class="bg-blue-50 text-blue-800 px-3 py-1 rounded-md text-sm font-mono block w-full text-center border border-blue-200">
+                        Cmd+L / Ctrl+L (Chat)
+                    </code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Column 2: PROJECT RULES -->
+        <div class="flex flex-col relative group">
+            <div class="absolute inset-0 bg-gradient-to-b from-purple-100 to-white rounded-2xl transform transition-transform duration-300 group-hover:-translate-y-2 shadow-xl border border-purple-200/60"></div>
+            <div class="relative p-6 flex flex-col h-full">
+                <div class="bg-purple-600 w-14 h-14 rounded-xl flex items-center justify-center mb-4 shadow-lg shadow-purple-300">
+                    <i data-lucide="scroll-text" class="text-white w-8 h-8"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">Project Rules</h2>
+                <p class="text-sm font-semibold text-purple-600 uppercase tracking-wider mb-6">El Manual de Normas</p>
+                
+                <div class="space-y-6 flex-grow">
+                    <!-- Point 1 -->
+                    <div class="flex gap-4">
+                        <div class="mt-1 flex-shrink-0 bg-white p-1.5 rounded-lg shadow-sm border border-slate-100 h-fit">
+                            <i data-lucide="shield-check" class="w-5 h-5 text-purple-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 mb-1">Definición</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed">Instrucciones de texto que definen el estilo, formato y restricciones del proyecto. Es el 'contexto' persistente.</p>
+                        </div>
+                    </div>
+                    <!-- Point 2 -->
+                    <div class="flex gap-4">
+                        <div class="mt-1 flex-shrink-0 bg-white p-1.5 rounded-lg shadow-sm border border-slate-100 h-fit">
+                            <i data-lucide="zap" class="w-5 h-5 text-purple-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 mb-1">Función Principal</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed">Guía el comportamiento. Le dice al Agente 'CÓMO' debe escribir el código o responder.</p>
+                        </div>
+                    </div>
+                    <!-- Point 3 -->
+                    <div class="flex gap-4">
+                        <div class="mt-1 flex-shrink-0 bg-white p-1.5 rounded-lg shadow-sm border border-slate-100 h-fit">
+                            <i data-lucide="file-text" class="w-5 h-5 text-purple-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 mb-1">Naturaleza</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed">Pasiva. Son leídas por el Agente para modular su respuesta.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-purple-100">
+                    <div class="flex justify-between items-center mb-2">
+                        <p class="text-xs text-slate-500 font-bold">UBICACIÓN</p>
+                        <i data-lucide="file-code" class="w-3 h-3 text-purple-400"></i>
+                    </div>
+                    <code class="bg-purple-50 text-purple-800 px-3 py-1 rounded-md text-sm font-mono block w-full text-center border border-purple-200">
+                        .cursor/rules/*.mdc
+                    </code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Column 3: SKILLS -->
+        <div class="flex flex-col relative group">
+            <div class="absolute inset-0 bg-gradient-to-b from-emerald-100 to-white rounded-2xl transform transition-transform duration-300 group-hover:-translate-y-2 shadow-xl border border-emerald-200/60"></div>
+            <div class="relative p-6 flex flex-col h-full">
+                <div class="bg-emerald-600 w-14 h-14 rounded-xl flex items-center justify-center mb-4 shadow-lg shadow-emerald-300">
+                    <i data-lucide="wrench" class="text-white w-8 h-8"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">Skills</h2>
+                <p class="text-sm font-semibold text-emerald-600 uppercase tracking-wider mb-6">La Caja de Herramientas</p>
+                
+                <div class="space-y-6 flex-grow">
+                    <!-- Point 1 -->
+                    <div class="flex gap-4">
+                        <div class="mt-1 flex-shrink-0 bg-white p-1.5 rounded-lg shadow-sm border border-slate-100 h-fit">
+                            <i data-lucide="terminal" class="w-5 h-5 text-emerald-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 mb-1">Definición</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed">Paquetes de capacidades que pueden incluir scripts ejecutables. Permiten al agente interactuar con sistemas externos.</p>
+                        </div>
+                    </div>
+                    <!-- Point 2 -->
+                    <div class="flex gap-4">
+                        <div class="mt-1 flex-shrink-0 bg-white p-1.5 rounded-lg shadow-sm border border-slate-100 h-fit">
+                            <i data-lucide="zap" class="w-5 h-5 text-emerald-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 mb-1">Función Principal</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed">Ejecuta acciones. Le da al Agente 'habilidades' para realizar tareas (DB, API, Deploy, Testing).</p>
+                        </div>
+                    </div>
+                    <!-- Point 3 -->
+                    <div class="flex gap-4">
+                        <div class="mt-1 flex-shrink-0 bg-white p-1.5 rounded-lg shadow-sm border border-slate-100 h-fit">
+                            <i data-lucide="terminal" class="w-5 h-5 text-emerald-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 mb-1">Naturaleza</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed">Activa / Ejecutable. Puede contener código (.py, .sh) que se corre realmente.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-emerald-100">
+                    <div class="flex justify-between items-center mb-2">
+                        <p class="text-xs text-slate-500 font-bold">UBICACIÓN</p>
+                        <i data-lucide="file-code" class="w-3 h-3 text-emerald-400"></i>
+                    </div>
+                    <code class="bg-emerald-50 text-emerald-800 px-3 py-1 rounded-md text-sm font-mono block w-full text-center border border-emerald-200">
+                        .cursor/skills/nombre/
+                    </code>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Summary / Key Takeaway Section -->
+    <div class="max-w-4xl mx-auto mt-12 bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
+        <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <i data-lucide="map-pin" class="text-rose-500"></i>
+            La Analogía Definitiva
+        </h3>
+        <div class="grid md:grid-cols-2 gap-8 items-center">
+            <div>
+                <p class="text-slate-600 leading-relaxed text-lg">
+                    Si estuvieras contratando a un <strong>Desarrollador Senior</strong> (El Agente)...
+                </p>
+                <ul class="mt-4 space-y-3">
+                    <li class="flex items-start gap-3">
+                        <div class="mt-2 min-w-[6px] h-[6px] rounded-full bg-purple-500"></div>
+                        <span class="text-slate-700">
+                            Las <strong>Rules</strong> serían el documento PDF de "Guía de Estilo" que le entregas el primer día.
+                        </span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <div class="mt-2 min-w-[6px] h-[6px] rounded-full bg-emerald-500"></div>
+                        <span class="text-slate-700">
+                            Las <strong>Skills</strong> serían el acceso a la terminal, las claves de AWS y los scripts de base de datos que le instalas en su laptop.
+                        </span>
+                    </li>
+                </ul>
+            </div>
+            <div class="bg-slate-100 p-6 rounded-xl border border-slate-200">
+                <h4 class="font-bold text-slate-800 mb-3 border-b border-slate-300 pb-2">Ejemplo Práctico</h4>
+                <div class="space-y-4 font-mono text-sm">
+                    <div>
+                        <span class="text-purple-600 font-bold">Rule:</span>
+                        <span class="text-slate-600 block">"Usa siempre functional components en React."</span>
+                    </div>
+                    <div>
+                        <span class="text-emerald-600 font-bold">Skill:</span>
+                        <span class="text-slate-600 block">"Ejecutar script para validar la integridad de la base de datos."</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Initialize Lucide Icons -->
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+```
+```
