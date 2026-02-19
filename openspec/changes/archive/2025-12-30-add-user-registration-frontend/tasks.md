@@ -47,11 +47,11 @@
 
 ## 6. Testing y Validación
 
-- [ ] 6.1 Probar flujo completo: registro exitoso → redirección
-- [ ] 6.2 Probar validaciones: email inválido, contraseña corta, campos vacíos
-- [ ] 6.3 Probar error de email duplicado (409)
-- [ ] 6.4 Verificar diseño responsive (mobile-first, 360px-430px)
-- [ ] 6.5 Verificar accesibilidad básica (labels, focus states)
+- [x] 6.1 Probar flujo completo: registro exitoso → redirección
+- [x] 6.2 Probar validaciones: email inválido, contraseña corta, campos vacíos
+- [x] 6.3 Probar error de email duplicado (409)
+- [x] 6.4 Verificar diseño responsive (mobile-first, 360px-430px)
+- [x] 6.5 Verificar accesibilidad básica (labels, focus states)
 
 ## 7. Correcciones Post-Auditoría UI/UX
 
