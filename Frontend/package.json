@@ -17,6 +17,7 @@
     "@tanstack/react-query": "^5.90.15",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "lucide-react": "^0.468.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "prettier": "^3.7.4",
