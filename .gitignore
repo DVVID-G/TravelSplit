@@ -1,0 +1,4 @@
+# Local environment (secrets). Copy from .env.example and set values.
+.env
+.env.local
+.env.*.local
