@@ -4,9 +4,9 @@ services:
     container_name: travelsplit-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: travelsplit
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-travelsplit}
     ports:
       - '5432:5432'
     volumes:
@@ -32,9 +32,9 @@ services:
       CORS_ORIGINS: http://localhost:5173
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USERNAME: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: travelsplit
+      DB_USERNAME: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB:-travelsplit}
       DB_LOGGING: 'false'
       DB_SYNCHRONIZE: 'false'
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
