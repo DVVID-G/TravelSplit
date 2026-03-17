@@ -17,6 +17,7 @@ import { CreateExpenseDto } from '../dto/create-expense.dto';
 import { ExpenseResponseDto } from '../dto/expense-response.dto';
 import { ExpenseListQueryDto } from '../dto/expense-list-query.dto';
 import { ExpenseListResponseDto } from '../dto/expense-list-response.dto';
+import { ExpenseCategoryResponseDto } from '../dto/expense-category-response.dto';
 import { TripStatus } from '../../trips/enums/trip-status.enum';
 
 /**
@@ -131,6 +132,24 @@ export class ExpensesService {
     }
 
     return category;
+  }
+
+  /**
+   * Returns all active expense categories for use in forms and filters.
+   *
+   * @returns List of active categories
+   */
+  async findAllCategories(): Promise<ExpenseCategoryResponseDto[]> {
+    const categories = await this.expenseCategoryRepository.find({
+      where: { isActive: true },
+      order: { name: 'ASC' },
+    });
+    return categories.map((c) => ({
+      id: c.id,
+      name: c.name,
+      icon: c.icon,
+      is_active: c.isActive,
+    }));
   }
 
   /**
