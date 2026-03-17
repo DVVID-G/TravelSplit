@@ -17,7 +17,7 @@ function getInitials(nombre: string): string {
   return nombre
     .trim()
     .split(/\s+/)
-    .map((part) => part[0])
+    .map(part => part[0])
     .join('')
     .toUpperCase()
     .slice(0, 2);
@@ -65,7 +65,7 @@ export const ProfilePage = () => {
         ...(data.contraseña && data.contraseña.length >= 8 && { contraseña: data.contraseña }),
       });
     },
-    onSuccess: (response) => {
+    onSuccess: response => {
       setUser({
         id: response.id,
         nombre: response.nombre,
