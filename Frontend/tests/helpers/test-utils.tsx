@@ -2,6 +2,7 @@
  * Test render utilities. Add wrappers (QueryClient, Router, etc.) here
  * so components and hooks can be tested with consistent providers.
  */
+/* eslint-disable react-refresh/only-export-components -- Test helper: exports both wrapper component and render utility */
 
 import { ReactElement, ReactNode } from 'react';
 import { render, RenderOptions } from '@testing-library/react';
@@ -37,13 +38,11 @@ function AllProviders({
  */
 function customRender(
   ui: ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'> & { queryClient?: QueryClient }
+  options?: Omit<RenderOptions, 'wrapper'> & { queryClient?: QueryClient },
 ): ReturnType<typeof render> {
   const { queryClient, ...renderOptions } = options ?? {};
   return render(ui, {
-    wrapper: ({ children }) => (
-      <AllProviders queryClient={queryClient}>{children}</AllProviders>
-    ),
+    wrapper: ({ children }) => <AllProviders queryClient={queryClient}>{children}</AllProviders>,
     ...renderOptions,
   });
 }
