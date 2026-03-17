@@ -7,11 +7,13 @@ export const defaultCreateTripPayload = {
   currency: 'COP' as const,
 };
 
-export function buildCreateTripPayload(overrides: {
-  name?: string;
-  currency?: 'COP' | 'USD';
-  memberEmails?: string[];
-} = {}) {
+export function buildCreateTripPayload(
+  overrides: {
+    name?: string;
+    currency?: 'COP' | 'USD';
+    memberEmails?: string[];
+  } = {},
+) {
   return { ...defaultCreateTripPayload, ...overrides };
 }
 

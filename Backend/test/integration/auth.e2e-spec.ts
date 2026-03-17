@@ -82,7 +82,9 @@ describe('AuthController (e2e)', () => {
         .send(defaultLoginPayload)
         .expect(200);
       expect(res.body).toHaveProperty('accessToken');
-      expect(res.body.user).toMatchObject({ email: defaultRegisterPayload.email });
+      expect(res.body.user).toMatchObject({
+        email: defaultRegisterPayload.email,
+      });
     });
 
     it('should return 401 when password is wrong', async () => {

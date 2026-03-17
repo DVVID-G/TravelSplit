@@ -31,12 +31,12 @@ describe('AuthService', () => {
     ({
       create: jest.fn(),
       findByEmail: jest.fn(),
-    } as unknown as jest.Mocked<UsersService>);
+    }) as unknown as jest.Mocked<UsersService>;
 
   const createJwtServiceMock = (): jest.Mocked<JwtService> =>
     ({
       signAsync: jest.fn(),
-    } as unknown as jest.Mocked<JwtService>);
+    }) as unknown as jest.Mocked<JwtService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -152,4 +152,3 @@ describe('AuthService', () => {
     });
   });
 });
-

@@ -11,7 +11,11 @@ export class ExpenseCategoryResponseDto {
   @ApiProperty({ description: 'Category name', example: 'Comida' })
   name!: string;
 
-  @ApiProperty({ description: 'Icon identifier', example: 'comida', nullable: true })
+  @ApiProperty({
+    description: 'Icon identifier',
+    example: 'comida',
+    nullable: true,
+  })
   icon!: string | null;
 
   @ApiProperty({ description: 'Whether the category is active', example: true })

@@ -24,9 +24,12 @@ describe('BalancesController (e2e)', () => {
   });
 
   beforeEach(async () => {
-    const tokens = await registerAndGetToken(app, buildRegisterPayload({
-      email: 'balances-e2e@travelsplit.test',
-    }));
+    const tokens = await registerAndGetToken(
+      app,
+      buildRegisterPayload({
+        email: 'balances-e2e@travelsplit.test',
+      }),
+    );
     accessToken = tokens.accessToken;
     const createRes = await request(app.getHttpServer())
       .post('/api/trips')
@@ -48,9 +51,12 @@ describe('BalancesController (e2e)', () => {
     });
 
     it('should return 403 when user is not participant', async () => {
-      const other = await registerAndGetToken(app, buildRegisterPayload({
-        email: 'other-bal@travelsplit.test',
-      }));
+      const other = await registerAndGetToken(
+        app,
+        buildRegisterPayload({
+          email: 'other-bal@travelsplit.test',
+        }),
+      );
       await request(app.getHttpServer())
         .get(`/api/trips/${tripId}/balances`)
         .set('Authorization', `Bearer ${other.accessToken}`)
@@ -84,9 +90,12 @@ describe('BalancesController (e2e)', () => {
     });
 
     it('should return 403 when user is not participant', async () => {
-      const other = await registerAndGetToken(app, buildRegisterPayload({
-        email: 'other-settle@travelsplit.test',
-      }));
+      const other = await registerAndGetToken(
+        app,
+        buildRegisterPayload({
+          email: 'other-settle@travelsplit.test',
+        }),
+      );
       await request(app.getHttpServer())
         .post(`/api/trips/${tripId}/balances/settle`)
         .set('Authorization', `Bearer ${other.accessToken}`)

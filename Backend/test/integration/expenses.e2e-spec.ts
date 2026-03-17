@@ -26,9 +26,12 @@ describe('ExpensesController (e2e)', () => {
   });
 
   beforeEach(async () => {
-    const tokens = await registerAndGetToken(app, buildRegisterPayload({
-      email: 'expenses-e2e@travelsplit.test',
-    }));
+    const tokens = await registerAndGetToken(
+      app,
+      buildRegisterPayload({
+        email: 'expenses-e2e@travelsplit.test',
+      }),
+    );
     accessToken = tokens.accessToken;
     userId = tokens.userId;
     const createRes = await request(app.getHttpServer())
@@ -51,9 +54,12 @@ describe('ExpensesController (e2e)', () => {
     });
 
     it('should return 403 when user is not participant', async () => {
-      const other = await registerAndGetToken(app, buildRegisterPayload({
-        email: 'other-exp@travelsplit.test',
-      }));
+      const other = await registerAndGetToken(
+        app,
+        buildRegisterPayload({
+          email: 'other-exp@travelsplit.test',
+        }),
+      );
       await request(app.getHttpServer())
         .get(`/api/trips/${tripId}/expenses`)
         .set('Authorization', `Bearer ${other.accessToken}`)
@@ -92,9 +98,12 @@ describe('ExpensesController (e2e)', () => {
     });
 
     it('should return 403 when user is not participant', async () => {
-      const other = await registerAndGetToken(app, buildRegisterPayload({
-        email: 'other-exp2@travelsplit.test',
-      }));
+      const other = await registerAndGetToken(
+        app,
+        buildRegisterPayload({
+          email: 'other-exp2@travelsplit.test',
+        }),
+      );
       const payload = buildCreateExpensePayload([{ user_id: other.userId }]);
       await request(app.getHttpServer())
         .post(`/api/trips/${tripId}/expenses`)
@@ -143,9 +152,12 @@ describe('ExpensesController (e2e)', () => {
     });
 
     it('should return 403 when user is not participant', async () => {
-      const other = await registerAndGetToken(app, buildRegisterPayload({
-        email: 'other-exp3@travelsplit.test',
-      }));
+      const other = await registerAndGetToken(
+        app,
+        buildRegisterPayload({
+          email: 'other-exp3@travelsplit.test',
+        }),
+      );
       await request(app.getHttpServer())
         .get(`/api/trips/${tripId}/expenses/${expenseId}`)
         .set('Authorization', `Bearer ${other.accessToken}`)

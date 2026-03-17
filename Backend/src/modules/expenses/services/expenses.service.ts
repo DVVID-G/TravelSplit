@@ -125,10 +125,10 @@ export class ExpensesService {
     });
 
     if (!category) {
-      this.logger.warn(`Category not found or not active: category_id=${category_id}`);
-      throw new NotFoundException(
-        'La categoría no existe o no está activa',
+      this.logger.warn(
+        `Category not found or not active: category_id=${category_id}`,
       );
+      throw new NotFoundException('La categoría no existe o no está activa');
     }
 
     return category;
@@ -172,9 +172,7 @@ export class ExpensesService {
       select: ['userId'],
     });
 
-    const participant_user_ids = new Set(
-      participants.map((p) => p.userId),
-    );
+    const participant_user_ids = new Set(participants.map((p) => p.userId));
 
     const invalid_user_ids = user_ids.filter(
       (id) => !participant_user_ids.has(id),
@@ -230,18 +228,14 @@ export class ExpensesService {
       this.logger.warn(
         `User is not a participant: trip_id=${trip_id}, user_id=${user_id}`,
       );
-      throw new ForbiddenException(
-        'No eres participante de este viaje',
-      );
+      throw new ForbiddenException('No eres participante de este viaje');
     }
 
     // Verify trip exists and is active
     await this.verifyTripExistsAndActive(trip_id);
 
     // Verify category exists and is active
-    await this.verifyCategoryExistsAndActive(
-      create_expense_dto.category_id,
-    );
+    await this.verifyCategoryExistsAndActive(create_expense_dto.category_id);
 
     // Extract beneficiary user IDs
     const beneficiary_user_ids = create_expense_dto.beneficiaries.map(
@@ -362,9 +356,7 @@ export class ExpensesService {
       this.logger.warn(
         `User is not a participant: trip_id=${trip_id}, user_id=${user_id}`,
       );
-      throw new ForbiddenException(
-        'No eres participante de este viaje',
-      );
+      throw new ForbiddenException('No eres participante de este viaje');
     }
 
     // Verify trip exists (can be active or closed)
@@ -372,10 +364,7 @@ export class ExpensesService {
 
     // Sanitize pagination parameters
     const safe_page = Math.max(1, query_dto.page || 1);
-    const safe_limit = Math.min(
-      Math.max(1, query_dto.limit || 20),
-      100,
-    );
+    const safe_limit = Math.min(Math.max(1, query_dto.limit || 20), 100);
     const skip = (safe_page - 1) * safe_limit;
 
     // Build base query for counting (without pagination)
@@ -466,9 +455,7 @@ export class ExpensesService {
       this.logger.warn(
         `User is not a participant: trip_id=${trip_id}, user_id=${user_id}`,
       );
-      throw new ForbiddenException(
-        'No eres participante de este viaje',
-      );
+      throw new ForbiddenException('No eres participante de este viaje');
     }
 
     // Verify trip exists (can be active or closed)

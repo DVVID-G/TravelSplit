@@ -13,11 +13,13 @@ export const defaultLoginPayload = {
   contraseña: defaultRegisterPayload.contraseña,
 };
 
-export function buildRegisterPayload(overrides: {
-  nombre?: string;
-  email?: string;
-  contraseña?: string;
-} = {}) {
+export function buildRegisterPayload(
+  overrides: {
+    nombre?: string;
+    email?: string;
+    contraseña?: string;
+  } = {},
+) {
   return { ...defaultRegisterPayload, ...overrides };
 }
 

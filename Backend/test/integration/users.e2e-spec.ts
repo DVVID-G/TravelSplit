@@ -89,9 +89,12 @@ describe('UsersController (e2e)', () => {
     });
 
     it('should return 403 when updating another user', async () => {
-      const other = await registerAndGetToken(app, buildRegisterPayload({
-        email: 'other-user@travelsplit.test',
-      }));
+      const other = await registerAndGetToken(
+        app,
+        buildRegisterPayload({
+          email: 'other-user@travelsplit.test',
+        }),
+      );
       await request(app.getHttpServer())
         .put(`/api/users/${userId}`)
         .set('Authorization', `Bearer ${other.accessToken}`)

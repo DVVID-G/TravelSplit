@@ -71,7 +71,7 @@ describe('TripsService', () => {
       get: jest.fn(),
       set: jest.fn(),
       del: jest.fn(),
-    } as unknown as jest.Mocked<Cache>);
+    }) as unknown as jest.Mocked<Cache>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -140,8 +140,8 @@ describe('TripsService', () => {
       (userRepository.find as jest.Mock).mockResolvedValue([memberUser]);
       (tripParticipantRepository.find as jest.Mock).mockResolvedValue([]);
 
-      const createParticipantMock = tripParticipantRepository
-        .create as jest.Mock;
+      const createParticipantMock =
+        tripParticipantRepository.create as jest.Mock;
       createParticipantMock.mockImplementation(
         (data: Partial<TripParticipant>) => ({ ...data }),
       );
@@ -185,10 +185,7 @@ describe('TripsService', () => {
 
       (userRepository.find as jest.Mock).mockResolvedValue([]);
 
-      const result = await service.create(
-        { name: 'Trip With Retry' },
-        userId,
-      );
+      const result = await service.create({ name: 'Trip With Retry' }, userId);
 
       expect(tripRepository.save).toHaveBeenCalledTimes(2);
       expect(result.id).toBe(mockTrip.id);
@@ -238,9 +235,7 @@ describe('TripsService', () => {
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         groupBy: jest.fn().mockReturnThis(),
-        getRawMany: jest
-          .fn()
-          .mockResolvedValue([{ tripId, total: '100.50' }]),
+        getRawMany: jest.fn().mockResolvedValue([{ tripId, total: '100.50' }]),
       };
 
       (expenseRepository.createQueryBuilder as jest.Mock).mockReturnValue(
@@ -287,24 +282,24 @@ describe('TripsService', () => {
     it('should throw NotFoundException when trip not found or not active', async () => {
       (tripRepository.findOne as jest.Mock).mockResolvedValue(null);
 
-      await expect(
-        service.joinByCode('INVALID', userId),
-      ).rejects.toThrow(NotFoundException);
-      await expect(
-        service.joinByCode('INVALID', userId),
-      ).rejects.toThrow('El viaje no existe o está cerrado');
+      await expect(service.joinByCode('INVALID', userId)).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(service.joinByCode('INVALID', userId)).rejects.toThrow(
+        'El viaje no existe o está cerrado',
+      );
     });
 
     it('should throw NotFoundException when user does not exist', async () => {
       (tripRepository.findOne as jest.Mock).mockResolvedValue(mockTrip);
       (userRepository.findOne as jest.Mock).mockResolvedValue(null);
 
-      await expect(
-        service.joinByCode('ABCDEFGH', userId),
-      ).rejects.toThrow(NotFoundException);
-      await expect(
-        service.joinByCode('ABCDEFGH', userId),
-      ).rejects.toThrow('Usuario no encontrado');
+      await expect(service.joinByCode('ABCDEFGH', userId)).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(service.joinByCode('ABCDEFGH', userId)).rejects.toThrow(
+        'Usuario no encontrado',
+      );
     });
 
     it('should throw ConflictException when user already participant', async () => {
@@ -314,23 +309,23 @@ describe('TripsService', () => {
         {} as TripParticipant,
       );
 
-      await expect(
-        service.joinByCode('ABCDEFGH', userId),
-      ).rejects.toThrow(ConflictException);
-      await expect(
-        service.joinByCode('ABCDEFGH', userId),
-      ).rejects.toThrow('Ya eres participante de este viaje');
+      await expect(service.joinByCode('ABCDEFGH', userId)).rejects.toThrow(
+        ConflictException,
+      );
+      await expect(service.joinByCode('ABCDEFGH', userId)).rejects.toThrow(
+        'Ya eres participante de este viaje',
+      );
     });
   });
 
   describe('findOneById', () => {
     it('should throw BadRequestException when tripId is not a valid UUID', async () => {
-      await expect(
-        service.findOneById('not-a-uuid', userId),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.findOneById('not-a-uuid', userId),
-      ).rejects.toThrow('ID de viaje inválido');
+      await expect(service.findOneById('not-a-uuid', userId)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.findOneById('not-a-uuid', userId)).rejects.toThrow(
+        'ID de viaje inválido',
+      );
     });
 
     it('should return cached value when cache hit', async () => {
@@ -361,16 +356,10 @@ describe('TripsService', () => {
       (tripParticipantRepository.findOne as jest.Mock).mockResolvedValue(null);
 
       await expect(
-        service.findOneById(
-          '123e4567-e89b-12d3-a456-426614174000',
-          userId,
-        ),
+        service.findOneById('123e4567-e89b-12d3-a456-426614174000', userId),
       ).rejects.toThrow(ForbiddenException);
       await expect(
-        service.findOneById(
-          '123e4567-e89b-12d3-a456-426614174000',
-          userId,
-        ),
+        service.findOneById('123e4567-e89b-12d3-a456-426614174000', userId),
       ).rejects.toThrow('No tienes acceso a este viaje');
     });
 
@@ -382,16 +371,10 @@ describe('TripsService', () => {
       (tripRepository.findOne as jest.Mock).mockResolvedValue(null);
 
       await expect(
-        service.findOneById(
-          '123e4567-e89b-12d3-a456-426614174000',
-          userId,
-        ),
+        service.findOneById('123e4567-e89b-12d3-a456-426614174000', userId),
       ).rejects.toThrow(NotFoundException);
       await expect(
-        service.findOneById(
-          '123e4567-e89b-12d3-a456-426614174000',
-          userId,
-        ),
+        service.findOneById('123e4567-e89b-12d3-a456-426614174000', userId),
       ).rejects.toThrow('Viaje no encontrado');
     });
   });
@@ -475,4 +458,3 @@ describe('TripsService', () => {
     });
   });
 });
-

@@ -114,9 +114,7 @@ export class BalancesService {
       this.logger.warn(
         `User is not a participant: trip_id=${trip_id}, user_id=${user_id}`,
       );
-      throw new ForbiddenException(
-        'No eres participante de este viaje',
-      );
+      throw new ForbiddenException('No eres participante de este viaje');
     }
 
     // Verify trip exists
@@ -257,10 +255,7 @@ export class BalancesService {
         break;
       }
 
-      const amount = Math.min(
-        Math.abs(debtor.balance),
-        creditor.balance,
-      );
+      const amount = Math.min(Math.abs(debtor.balance), creditor.balance);
 
       if (amount > 0.01) {
         transactions.push({

@@ -353,10 +353,7 @@ describe('ExpensesService', () => {
           '223e4567-e89b-12d3-a456-426614174000',
           userId,
         ),
-      ).rejects.toThrow(
-        'El gasto no existe o no pertenece a este viaje',
-      );
+      ).rejects.toThrow('El gasto no existe o no pertenece a este viaje');
     });
   });
 });
-

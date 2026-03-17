@@ -63,12 +63,12 @@ describe('BalancesService', () => {
     it('should throw ForbiddenException when user is not participant', async () => {
       (tripParticipantRepository.findOne as jest.Mock).mockResolvedValue(null);
 
-      await expect(
-        service.calculateBalances(tripId, userId),
-      ).rejects.toThrow(ForbiddenException);
-      await expect(
-        service.calculateBalances(tripId, userId),
-      ).rejects.toThrow('No eres participante de este viaje');
+      await expect(service.calculateBalances(tripId, userId)).rejects.toThrow(
+        ForbiddenException,
+      );
+      await expect(service.calculateBalances(tripId, userId)).rejects.toThrow(
+        'No eres participante de este viaje',
+      );
     });
 
     it('should throw NotFoundException when trip does not exist', async () => {
@@ -78,12 +78,12 @@ describe('BalancesService', () => {
       } as TripParticipant);
       (tripRepository.findOne as jest.Mock).mockResolvedValue(null);
 
-      await expect(
-        service.calculateBalances(tripId, userId),
-      ).rejects.toThrow(NotFoundException);
-      await expect(
-        service.calculateBalances(tripId, userId),
-      ).rejects.toThrow('El viaje no existe');
+      await expect(service.calculateBalances(tripId, userId)).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(service.calculateBalances(tripId, userId)).rejects.toThrow(
+        'El viaje no existe',
+      );
     });
 
     it('should return zero balances when there are no participants', async () => {
@@ -148,12 +148,10 @@ describe('BalancesService', () => {
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         groupBy: jest.fn().mockReturnThis(),
-        getRawMany: jest
-          .fn()
-          .mockResolvedValue([
-            { user_id: userId, total_spent: '100.00' },
-            { user_id: 'user-id-2', total_spent: '50.00' },
-          ]),
+        getRawMany: jest.fn().mockResolvedValue([
+          { user_id: userId, total_spent: '100.00' },
+          { user_id: 'user-id-2', total_spent: '50.00' },
+        ]),
       };
       const owedQb: any = {
         innerJoin: jest.fn().mockReturnThis(),
@@ -162,12 +160,10 @@ describe('BalancesService', () => {
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         groupBy: jest.fn().mockReturnThis(),
-        getRawMany: jest
-          .fn()
-          .mockResolvedValue([
-            { user_id: userId, total_owed: '30.00' },
-            { user_id: 'user-id-2', total_owed: '120.00' },
-          ]),
+        getRawMany: jest.fn().mockResolvedValue([
+          { user_id: userId, total_owed: '30.00' },
+          { user_id: 'user-id-2', total_owed: '120.00' },
+        ]),
       };
 
       (expenseRepository.createQueryBuilder as jest.Mock)
@@ -184,9 +180,7 @@ describe('BalancesService', () => {
       expect(result.balances).toHaveLength(2);
 
       const user1 = result.balances.find((b) => b.user_id === userId);
-      const user2 = result.balances.find(
-        (b) => b.user_id === 'user-id-2',
-      );
+      const user2 = result.balances.find((b) => b.user_id === 'user-id-2');
 
       expect(user1?.total_spent).toBe(100);
       expect(user1?.total_owed).toBe(30);
@@ -211,14 +205,12 @@ describe('BalancesService', () => {
         },
       ];
 
-      const spy = jest
-        .spyOn(service, 'calculateBalances')
-        .mockResolvedValue({
-          trip_id: tripId,
-          total_expenses: 0,
-          participant_count: 1,
-          balances: balancesZero,
-        });
+      const spy = jest.spyOn(service, 'calculateBalances').mockResolvedValue({
+        trip_id: tripId,
+        total_expenses: 0,
+        participant_count: 1,
+        balances: balancesZero,
+      });
 
       const result = await service.settleBalances(tripId, userId);
 
@@ -266,4 +258,3 @@ describe('BalancesService', () => {
     });
   });
 });
-

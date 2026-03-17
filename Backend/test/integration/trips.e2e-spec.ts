@@ -29,9 +29,12 @@ describe('TripsController (e2e)', () => {
   });
 
   beforeEach(async () => {
-    const tokens = await registerAndGetToken(app, buildRegisterPayload({
-      email: 'trips-e2e@travelsplit.test',
-    }));
+    const tokens = await registerAndGetToken(
+      app,
+      buildRegisterPayload({
+        email: 'trips-e2e@travelsplit.test',
+      }),
+    );
     accessToken = tokens.accessToken;
     userId = tokens.userId;
   });
@@ -107,9 +110,12 @@ describe('TripsController (e2e)', () => {
     });
 
     it('should return 403 when user is not participant', async () => {
-      const other = await registerAndGetToken(app, buildRegisterPayload({
-        email: 'other-trips@travelsplit.test',
-      }));
+      const other = await registerAndGetToken(
+        app,
+        buildRegisterPayload({
+          email: 'other-trips@travelsplit.test',
+        }),
+      );
       await request(app.getHttpServer())
         .get(`/api/trips/${tripId}`)
         .set('Authorization', `Bearer ${other.accessToken}`)
@@ -117,7 +123,9 @@ describe('TripsController (e2e)', () => {
     });
 
     it('should return 401 when not authenticated', async () => {
-      await request(app.getHttpServer()).get(`/api/trips/${tripId}`).expect(401);
+      await request(app.getHttpServer())
+        .get(`/api/trips/${tripId}`)
+        .expect(401);
     });
   });
 
@@ -147,9 +155,12 @@ describe('TripsController (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
       const code = getRes.body.code;
-      const other = await registerAndGetToken(app, buildRegisterPayload({
-        email: 'member-trips@travelsplit.test',
-      }));
+      const other = await registerAndGetToken(
+        app,
+        buildRegisterPayload({
+          email: 'member-trips@travelsplit.test',
+        }),
+      );
       await request(app.getHttpServer())
         .post('/api/trips/join')
         .set('Authorization', `Bearer ${other.accessToken}`)
@@ -179,9 +190,12 @@ describe('TripsController (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
       const code = getRes.body.code;
-      const other = await registerAndGetToken(app, buildRegisterPayload({
-        email: 'joiner@travelsplit.test',
-      }));
+      const other = await registerAndGetToken(
+        app,
+        buildRegisterPayload({
+          email: 'joiner@travelsplit.test',
+        }),
+      );
       const joinRes = await request(app.getHttpServer())
         .post('/api/trips/join')
         .set('Authorization', `Bearer ${other.accessToken}`)
@@ -203,9 +217,12 @@ describe('TripsController (e2e)', () => {
     });
 
     it('should return 404 when code is invalid', async () => {
-      const other = await registerAndGetToken(app, buildRegisterPayload({
-        email: 'joiner2@travelsplit.test',
-      }));
+      const other = await registerAndGetToken(
+        app,
+        buildRegisterPayload({
+          email: 'joiner2@travelsplit.test',
+        }),
+      );
       await request(app.getHttpServer())
         .post('/api/trips/join')
         .set('Authorization', `Bearer ${other.accessToken}`)

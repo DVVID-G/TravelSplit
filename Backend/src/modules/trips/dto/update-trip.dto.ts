@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, MaxLength, IsOptional, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  MaxLength,
+  IsOptional,
+  IsEnum,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { TripStatus } from '../enums/trip-status.enum';
