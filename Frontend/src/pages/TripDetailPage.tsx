@@ -339,7 +339,7 @@ export function TripDetailPage() {
             </div>
 
             {/* Loading state */}
-            {expenses_loading && (
+            {expenses_loading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map(i => (
                   <div key={i} className="animate-pulse">
@@ -347,15 +347,15 @@ export function TripDetailPage() {
                   </div>
                 ))}
               </div>
-            )}
+            ) : null}
 
             {/* Error state */}
-            {expenses_error && !expenses_loading && (
+            {expenses_error && !expenses_loading ? (
               <ErrorState
                 message={cleanErrorMessage(expenses_error) || 'No se pudieron cargar los gastos'}
                 onRetry={() => refetch_expenses()}
               />
-            )}
+            ) : null}
 
             {/* Empty state */}
             {!expenses_loading &&

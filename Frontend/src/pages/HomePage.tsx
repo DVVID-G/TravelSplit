@@ -114,7 +114,7 @@ const HomePageNotAuthenticated = () => {
               {benefits.map(benefit => (
                 <div key={benefit.title} className="bg-slate-50 rounded-xl p-6">
                   <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 mt-1">{benefit.icon}</div>
+                    <div className="shrink-0 mt-1">{benefit.icon}</div>
                     <div>
                       <h3 className="text-xl font-heading font-semibold text-slate-900 mb-2">
                         {benefit.title}
@@ -206,7 +206,6 @@ const HomePageWithTrips = () => {
     balances,
     recentExpenses,
     totalSpent,
-    isLoading,
     balancesLoading,
     expensesLoading,
     error,
@@ -225,9 +224,9 @@ const HomePageWithTrips = () => {
 
           {/* Total Gastado Section */}
           <section>
-          <div className="bg-gradient-to-br from-violet-600 to-violet-700 rounded-2xl p-6 shadow-lg">
+          <div className="bg-linear-to-br from-violet-600 to-violet-700 rounded-2xl p-6 shadow-lg">
             <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="w-6 h-6 text-violet-200 flex-shrink-0" aria-hidden="true" />
+              <DollarSign className="w-6 h-6 text-violet-200 shrink-0" aria-hidden="true" />
               <h2 className="text-lg font-heading font-semibold text-white">Total Gastado</h2>
             </div>
             <p className="text-3xl font-bold text-white mb-1">
@@ -329,14 +328,14 @@ const HomePageWithTrips = () => {
         ) : null}
 
           {/* Error State */}
-          {error && (
+          {error ? (
             <section>
               <ErrorState
                 message="Hubo un problema al cargar algunos datos. Intenta de nuevo."
                 onRetry={() => refetch()}
               />
             </section>
-          )}
+          ) : null}
         </div>
       </main>
     </div>
