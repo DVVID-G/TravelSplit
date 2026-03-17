@@ -47,7 +47,7 @@ export function formatCurrency(amount: number, currency: TripCurrency = 'COP'): 
  * @param currency - Currency type (COP or USD)
  * @returns Currency symbol string
  */
-export function getCurrencySymbol(currency: TripCurrency = 'COP'): string {
+export function getCurrencySymbol(_currency: TripCurrency = 'COP'): string {
   return '$';
 }
 
