@@ -1,11 +1,17 @@
 #!/bin/sh
 # Production entrypoint: wait for PostgreSQL, run migrations, start the app. Use LF line endings only.
 
-echo "Waiting for PostgreSQL at ${DB_HOST:-postgres}:${DB_PORT:-5432}..."
 node -e "
 const net = require('net');
-const host = process.env.DB_HOST || 'postgres';
-const port = parseInt(process.env.DB_PORT || '5432', 10);
+let host = process.env.DB_HOST;
+let port = parseInt(process.env.DB_PORT || '5432', 10);
+if (process.env.DATABASE_URL) {
+  const u = new URL(process.env.DATABASE_URL);
+  host = u.hostname;
+  port = parseInt(u.port || '5432', 10);
+}
+host = host || 'postgres';
+console.log('Waiting for PostgreSQL at ' + host + ':' + port + '...');
 const tryConnect = () => {
   const socket = net.createConnection(port, host, () => {
     socket.destroy();
@@ -17,6 +23,7 @@ const tryConnect = () => {
 };
 tryConnect();
 " || exit
+echo "PostgreSQL is ready."
 
 echo "PostgreSQL is ready."
 

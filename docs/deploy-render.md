@@ -34,19 +34,29 @@ One Render Web Service serves both the React app and the NestJS API from the sam
 
 3. **Environment variables** (no `CORS_ORIGINS` or `VITE_API_BASE_URL` needed; frontend is built with `/api`):
 
+   **Option 1 – Use DATABASE_URL (recommended on Render):**  
+   In the Render dashboard, open your PostgreSQL service and use **Connect** to attach it to this Web Service. Render will set `DATABASE_URL` (Internal Database URL). The app and migrations use it automatically. You only need to add:
+   - `NODE_ENV` = `production`
+   - `API_PREFIX` = `api`
+   - `JWT_SECRET` = long random string (e.g. `openssl rand -base64 32`)
+   - `JWT_EXPIRES_IN` = `3600`  
+   (Optional: `DB_SYNCHRONIZE` = `false`, `DB_LOGGING` = `false`. Do **not** set `PORT`; Render sets it.)
+
+   **Option 2 – Use individual DB_* variables:**
+
    | Key | Value / source |
    |-----|----------------|
-   | `PORT` | `3000` |
+   | `PORT` | Leave unset (Render sets it). |
    | `NODE_ENV` | `production` |
    | `API_PREFIX` | `api` |
-   | `DB_HOST` | From Internal Database URL. |
-   | `DB_PORT` | Usually `5432`. |
-   | `DB_USERNAME` | From Internal Database URL. |
+   | `DB_HOST` | From Internal Database URL (e.g. `dpg-xxxxx-a`). |
+   | `DB_PORT` | `5432` |
+   | `DB_USERNAME` | From Internal Database URL (e.g. `travelsplit_user`). |
    | `DB_PASSWORD` | From Internal Database URL. |
-   | `DB_NAME` | From Internal Database URL. |
+   | `DB_NAME` | From Internal Database URL (e.g. `travelsplit`). |
    | `DB_SYNCHRONIZE` | `false` |
    | `DB_LOGGING` | `false` |
-   | `JWT_SECRET` | Long random string (e.g. `openssl rand -base64 32`). |
+   | `JWT_SECRET` | Long random string. |
    | `JWT_EXPIRES_IN` | `3600` |
 
 4. **Health Check Path** (optional): `api/health`.
