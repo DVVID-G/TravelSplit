@@ -203,7 +203,7 @@ jobs:
   e2e-qa:
     name: E2E QA (Playwright API)
     runs-on: ubuntu-latest
-    if: false
+    if: true
     needs: [e2e-backend]
     env:
       POSTGRES_USER: postgres
