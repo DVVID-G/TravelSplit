@@ -1,5 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { getTripBalances, getTripSettledBalances, mapSettleTransactionsToBalances } from '@/services/balance.service';
+import {
+  getTripBalances,
+  getTripSettledBalances,
+  mapSettleTransactionsToBalances,
+} from '@/services/balance.service';
 import type { BalancesResponse } from '@/types/balance.types';
 import type { Balance } from '@/types/trip.types';
 

@@ -114,10 +114,10 @@ export function useAuth() {
   const setUser = useCallback((user: User | null) => {
     if (user) {
       localStorage.setItem(USER_KEY, JSON.stringify(user));
-      setAuthState((prev) => (prev.token ? { ...prev, user } : prev));
+      setAuthState(prev => (prev.token ? { ...prev, user } : prev));
     } else {
       localStorage.removeItem(USER_KEY);
-      setAuthState((prev) => ({ ...prev, user: null }));
+      setAuthState(prev => ({ ...prev, user: null }));
     }
   }, []);
 
