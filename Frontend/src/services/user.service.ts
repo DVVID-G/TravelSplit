@@ -36,10 +36,7 @@ function getToken(): string | null {
  * @returns Promise with updated user on success
  * @throws ApiError on failure (403 if not own profile, 404 if not found, etc.)
  */
-export async function updateUser(
-  id: string,
-  payload: UpdateUserPayload,
-): Promise<UserResponse> {
+export async function updateUser(id: string, payload: UpdateUserPayload): Promise<UserResponse> {
   const token = getToken();
   if (!token) {
     const error: ApiError = {

@@ -47,6 +47,7 @@ export function formatCurrency(amount: number, currency: TripCurrency = 'COP'): 
  * @param currency - Currency type (COP or USD)
  * @returns Currency symbol string
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Parameter kept for API consistency; symbol is same for COP/USD
 export function getCurrencySymbol(_currency: TripCurrency = 'COP'): string {
   return '$';
 }
