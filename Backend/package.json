@@ -78,7 +78,8 @@
     "typescript-eslint": "^8.20.0"
   },
   "overrides": {
-    "diff": ">=8.0.3"
+    "diff": ">=8.0.3",
+    "ajv": "^8.18.0"
   },
   "jest": {
     "moduleFileExtensions": [
