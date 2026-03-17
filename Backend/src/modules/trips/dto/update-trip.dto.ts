@@ -28,7 +28,12 @@ export class UpdateTripDto {
     required: false,
   })
   @IsOptional()
-  @Transform(({ value }) => (value ? String(value).trim() : value))
+  @Transform(({ value }: { value: unknown }) => {
+    if (value == null || value === '') return undefined;
+    if (typeof value === 'string') return value.trim();
+    if (typeof value === 'number') return String(value);
+    return undefined;
+  })
   @IsString({ message: 'El nombre del viaje debe ser una cadena de texto' })
   @IsNotEmpty({ message: 'El nombre del viaje no puede estar vacío' })
   @MaxLength(255, {

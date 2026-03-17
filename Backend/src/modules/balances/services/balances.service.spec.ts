@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { Repository, IsNull } from 'typeorm';
+import { Repository } from 'typeorm';
 import { BalancesService } from './balances.service';
 import { Expense } from '../../expenses/entities/expense.entity';
 import { ExpenseSplit } from '../../expenses/entities/expense-split.entity';
@@ -183,12 +183,10 @@ describe('BalancesService', () => {
       expect(result.participant_count).toBe(2);
       expect(result.balances).toHaveLength(2);
 
-      const user1 = result.balances.find((b) => b.user_id === userId) as
-        | ParticipantBalanceDto
-        | undefined;
+      const user1 = result.balances.find((b) => b.user_id === userId);
       const user2 = result.balances.find(
         (b) => b.user_id === 'user-id-2',
-      ) as ParticipantBalanceDto | undefined;
+      );
 
       expect(user1?.total_spent).toBe(100);
       expect(user1?.total_owed).toBe(30);
