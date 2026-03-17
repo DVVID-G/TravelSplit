@@ -1,8 +1,8 @@
 ---
 description: Enforces integration testing standards for testing controllers and database interactions in TravelSplit backend.
 globs:
+  - Backend/test/integration/**/*.e2e-spec.ts
   - Backend/test/**/*.spec.ts
-  - Backend/src/**/*.e2e-spec.ts
 alwaysApply: false
 ---
 

@@ -1,0 +1,116 @@
+---
+description: TravelSplit project folder structure in ASCII tree format (reference).
+alwaysApply: true
+---
+
+# Project Folder Structure (ASCII)
+
+Use this tree as the canonical reference for where to place files. Excludes generated/git-ignored dirs (`node_modules`, `dist`, `.git`).
+
+## Repository Root
+
+```
+TravelSplit/
+├── .cursor/
+│   ├── agents/
+│   │   └── diagrams/
+│   │       ├── c4-diagrams/
+│   │       └── er-diagrams/
+│   ├── commands/
+│   ├── rules/
+│   │   ├── architecture/
+│   │   ├── backend/
+│   │   ├── common/
+│   │   ├── frontend/
+│   │   ├── security/
+│   │   ├── testing/
+│   │   └── ui-ux/
+│   └── skills/
+│       └── unit-testing/
+├── Backend/
+│   ├── audits/
+│   │   ├── architect/
+│   │   └── coderabbit/
+│   ├── scripts/
+│   ├── src/
+│   │   ├── common/
+│   │   │   ├── decorators/
+│   │   │   ├── entities/
+│   │   │   ├── filters/
+│   │   │   ├── guards/
+│   │   │   ├── interceptors/
+│   │   │   ├── interfaces/
+│   │   │   ├── mappers/
+│   │   │   └── strategies/
+│   │   ├── config/
+│   │   ├── migrations/
+│   │   └── modules/
+│   │       ├── auth/
+│   │       ├── balances/
+│   │       ├── expenses/
+│   │       ├── health/
+│   │       ├── trips/
+│   │       └── users/
+│   └── test/
+├── data/
+├── docs/
+│   ├── diagrams/
+│   │   ├── c4/
+│   │   └── er/
+│   └── ui-ux/
+├── e2e/
+├── Frontend/
+│   ├── audits/
+│   │   ├── architect/
+│   │   └── UX-UI/
+│   ├── public/
+│   └── src/
+│       ├── assets/
+│       ├── components/
+│       │   ├── atoms/
+│       │   ├── molecules/
+│       │   └── organisms/
+│       ├── config/
+│       ├── contexts/
+│       ├── hooks/
+│       ├── pages/
+│       ├── routes/
+│       ├── schemas/
+│       ├── services/
+│       ├── types/
+│       └── utils/
+├── openapi/
+├── openspec/
+│   ├── changes/
+│   │   └── archive/
+│   └── specs/
+├── schema/
+└── tools/
+```
+
+## Backend Module (CSED) – Per-Module Shape
+
+Each `Backend/src/modules/{resource}/` follows:
+
+```
+modules/{resource}/
+├── controllers/
+│   └── {resource}.controller.ts
+├── services/
+│   └── {resource}.service.ts
+├── entities/
+│   └── {resource}.entity.ts
+├── dto/
+│   ├── create-{resource}.dto.ts
+│   ├── update-{resource}.dto.ts
+│   └── {resource}-response.dto.ts
+├── enums/          (optional)
+└── {resource}.module.ts
+```
+
+## Rules
+
+- Add new source under the matching branch in the ASCII tree.
+- Backend feature code lives under `Backend/src/modules/{resource}/` with the CSED subfolders above.
+- Frontend feature code lives under `Frontend/src/` (pages, components, hooks, services, etc.) as in the tree.
+- Do not create new top-level folders without aligning with this structure and project-structure standards.
