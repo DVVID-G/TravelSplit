@@ -37,4 +37,5 @@ echo "Running migrations..."
 npm run migration:run || exit
 
 echo "Starting application..."
-exec node dist/main.js
+# Nest compila main.ts bajo sourceRoot 'src', por lo que el entrypoint es dist/src/main.js
+exec node dist/src/main.js
