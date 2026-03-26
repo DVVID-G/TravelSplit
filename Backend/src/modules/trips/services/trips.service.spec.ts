@@ -7,7 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import type { ObjectLiteral } from 'typeorm';
-import { Repository, IsNull } from 'typeorm';
+import { Repository, IsNull, DataSource } from 'typeorm';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { TripsService } from './trips.service';
@@ -73,6 +73,23 @@ describe('TripsService', () => {
       del: jest.fn(),
     }) as unknown as jest.Mocked<Cache>;
 
+  const createMockDataSource = () =>
+    ({
+      createQueryRunner: jest.fn(() => ({
+        connect: jest.fn(),
+        startTransaction: jest.fn(),
+        commitTransaction: jest.fn(),
+        rollbackTransaction: jest.fn(),
+        release: jest.fn(),
+        manager: {
+          save: jest.fn(),
+          softRemove: jest.fn(),
+          find: jest.fn(),
+          update: jest.fn(),
+        },
+      })),
+    }) as unknown as DataSource;
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -96,6 +113,10 @@ describe('TripsService', () => {
         {
           provide: CACHE_MANAGER,
           useValue: createMockCache(),
+        },
+        {
+          provide: DataSource,
+          useValue: createMockDataSource(),
         },
       ],
     }).compile();

@@ -194,7 +194,6 @@ export const ExpenseForm = ({
       <BeneficiariesSelector
         participants={participants}
         selectedBeneficiaryIds={selectedBeneficiaryIds}
-        selectedPayerId={selectedPayerId}
         onToggle={handleBeneficiaryToggle}
         onSelectAll={handleSelectAll}
         onDeselectAll={handleDeselectAll}

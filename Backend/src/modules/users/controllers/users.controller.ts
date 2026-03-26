@@ -8,6 +8,8 @@ import {
   HttpCode,
   HttpStatus,
   Request,
+  Query,
+  NotFoundException,
   ParseUUIDPipe,
   ForbiddenException,
   UseGuards,
@@ -21,6 +23,7 @@ import {
   ApiConflictResponse,
   ApiForbiddenResponse,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { UsersService } from '../services/users.service';
 import { UpdateUserDto } from '../dto/update-user.dto';
@@ -74,6 +77,33 @@ export class UsersController {
 
     // Mapear entidades a DTOs de respuesta (sin información sensible)
     return users.map((user) => UserMapper.toResponseDto(user));
+  }
+
+  /**
+   * Busca un usuario por email.
+   *
+   * @method searchByEmail
+   * @param {string} email - Email a buscar
+   * @returns {UserResponseDto} Usuario encontrado
+   */
+  @Get('search')
+  @ApiOperation({ summary: 'Buscar un usuario por email' })
+  @ApiQuery({ name: 'email', required: true, type: String })
+  @ApiResponse({
+    status: 200,
+    description: 'Usuario encontrado',
+    type: UserResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Usuario no registrado',
+  })
+  @UseGuards(JwtAuthGuard)
+  async searchByEmail(@Query('email') email: string): Promise<UserResponseDto> {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      throw new NotFoundException('Usuario no registrado');
+    }
+    return UserMapper.toResponseDto(user);
   }
 
   /**

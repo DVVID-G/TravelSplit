@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Body,
   Query,
   Param,
@@ -256,5 +257,59 @@ export class ExpensesController {
       req.user!.id,
       create_expense_dto,
     );
+  }
+
+  /**
+   * Deletes a specific expense for a trip.
+   * Only the payer of the expense OR the trip CREATOR can delete it.
+   * The trip must be active.
+   *
+   * @method remove
+   * @param {string} trip_id - ID of the trip
+   * @param {string} expense_id - ID of the expense
+   * @param {AuthenticatedRequest} req - Request with authenticated user
+   * @example
+   * // DELETE /trips/123e4567-e89b.../expenses/223e4567-e89b...
+   * // Headers: Authorization: Bearer {token}
+   * // Response: 204 No Content
+   */
+  @Delete(':expense_id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Delete an expense',
+    description:
+      'Deletes an expense. Only the user who paid it (payer) or the trip CREATOR can delete it. The trip must be active.',
+  })
+  @ApiParam({
+    name: 'trip_id',
+    description: 'ID del viaje',
+    type: String,
+  })
+  @ApiParam({
+    name: 'expense_id',
+    description: 'ID del gasto',
+    type: String,
+  })
+  @ApiOkResponse({
+    description: 'Gasto eliminado exitosamente',
+  })
+  @ApiBadRequestResponse({
+    description: 'ID inválido o error de base de datos',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'No autorizado',
+  })
+  @ApiForbiddenResponse({
+    description: 'No eres participante, pagador ni creador',
+  })
+  @ApiNotFoundResponse({
+    description: 'El viaje o el gasto no existe',
+  })
+  async remove(
+    @Param('trip_id', ParseUUIDPipe) trip_id: string,
+    @Param('expense_id', ParseUUIDPipe) expense_id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<void> {
+    return this.expenses_service.remove(trip_id, expense_id, req.user!.id);
   }
 }

@@ -1,4 +1,4 @@
-import { useNavigate, Link } from 'react-router-dom';
+﻿import { useNavigate, Link } from 'react-router-dom';
 import { Map as MapIcon, Users, Receipt, Calculator, Camera, DollarSign } from 'lucide-react';
 import { Header } from '@/components';
 import { EmptyState } from '@/components/molecules/EmptyState';
@@ -70,7 +70,7 @@ const HomePageNotAuthenticated = () => {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="px-6 py-12 md:py-16">
-          <div className="max-w-md mx-auto text-center">
+          <div className="max-w-md md:max-w-2xl mx-auto text-center">
             <div className="flex justify-center mb-6">
               <div className="bg-violet-100 rounded-full p-4">
                 <MapIcon className="w-12 h-12 text-violet-600" aria-hidden="true" />
@@ -83,7 +83,7 @@ const HomePageNotAuthenticated = () => {
               TravelSplit te ayuda a gestionar los gastos de tus viajes grupales de forma simple y
               transparente. Sin hojas de cálculo, sin confusiones.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md md:max-w-2xl mx-auto">
               <Button
                 variant="primary"
                 size="lg"
@@ -106,7 +106,7 @@ const HomePageNotAuthenticated = () => {
 
         {/* Benefits Section */}
         <section className="px-6 py-12 bg-white">
-          <div className="max-w-md mx-auto">
+          <div className="max-w-md md:max-w-2xl mx-auto">
             <h2 className="text-2xl font-heading font-bold text-slate-900 text-center mb-8">
               Todo lo que necesitas para dividir gastos
             </h2>
@@ -130,14 +130,14 @@ const HomePageNotAuthenticated = () => {
 
         {/* CTA Section */}
         <section className="px-6 py-12 pb-16">
-          <div className="max-w-md mx-auto text-center">
+          <div className="max-w-md md:max-w-2xl mx-auto text-center">
             <h2 className="text-2xl font-heading font-bold text-slate-900 mb-4">
               ¿Listo para tu próximo viaje?
             </h2>
             <p className="text-slate-600 mb-6">
               Únete a TravelSplit y disfruta de dividir gastos sin estrés
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md md:max-w-2xl mx-auto">
               <Button
                 variant="primary"
                 size="lg"
@@ -219,7 +219,7 @@ const HomePageWithTrips = () => {
     <div className="min-h-screen bg-slate-50 flex flex-col pb-24">
       <Header />
       <main className="px-6 py-8">
-        <div className="max-w-md mx-auto space-y-8">
+        <div className="max-w-md md:max-w-2xl mx-auto space-y-8">
           <h1 className="sr-only">Resumen general de viajes</h1>
 
           {/* Total Gastado Section */}

@@ -4,7 +4,6 @@ import { EmailSearchInput } from './EmailSearchInput';
 interface BeneficiariesSelectorProps {
   participants: TripParticipant[];
   selectedBeneficiaryIds: string[];
-  selectedPayerId?: string;
   onToggle: (userId: string) => void;
   onSelectAll: () => void;
   onDeselectAll: () => void;
@@ -21,7 +20,6 @@ interface BeneficiariesSelectorProps {
 export const BeneficiariesSelector = ({
   participants,
   selectedBeneficiaryIds,
-  selectedPayerId,
   onToggle,
   onSelectAll,
   onDeselectAll,
@@ -29,10 +27,8 @@ export const BeneficiariesSelector = ({
   onInviteByEmail,
   error,
 }: BeneficiariesSelectorProps) => {
-  // Filter out the payer from beneficiaries list
-  const availableBeneficiaries = selectedPayerId
-    ? participants.filter(p => p.user_id !== selectedPayerId)
-    : participants;
+  // Allow payer to be a beneficiary
+  const availableBeneficiaries = participants;
 
   return (
     <div className="w-full">
@@ -49,7 +45,7 @@ export const BeneficiariesSelector = ({
           <button
             type="button"
             onClick={onDeselectAll}
-            className="text-xs text-slate-500 hover:text-slate-700 active:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-1 rounded px-1 font-medium transition-colors"
+            className="text-xs text-slate-600 hover:text-slate-700 active:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-1 rounded px-1 font-medium transition-colors"
           >
             Ninguno
           </button>
@@ -66,8 +62,8 @@ export const BeneficiariesSelector = ({
       )}
       <div className="space-y-2 max-h-48 overflow-y-auto">
         {availableBeneficiaries.length === 0 ? (
-          <p className="text-sm text-slate-500 text-center py-4">
-            No hay otros participantes disponibles. El pagador no puede ser beneficiario.
+          <p className="text-sm text-slate-600 text-center py-4">
+            No hay participantes disponibles en este viaje.
           </p>
         ) : (
           availableBeneficiaries.map(participant => {

@@ -1,4 +1,4 @@
-import { Utensils, Car, Bed, Film, Package, Users } from 'lucide-react';
+﻿import { Utensils, Car, Bed, Film, Package, Users } from 'lucide-react';
 import type { RecentExpense, ExpenseCategory, TripCurrency } from '@/types/trip.types';
 import { formatCurrency } from '@/utils/currency';
 import { format, parseISO, isValid } from 'date-fns';
@@ -94,7 +94,7 @@ export const RecentExpenseCard = ({
         {/* Center: Title and payer info */}
         <div className="flex-1 min-w-0">
           <h4 className="text-base font-medium text-slate-900 truncate mb-1">{expense.title}</h4>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-600">
             Pagó {expense.paidBy} • {formatShortDate(expense.date)}
           </p>
         </div>
@@ -104,7 +104,7 @@ export const RecentExpenseCard = ({
           <p className="text-base font-semibold text-slate-900 mb-1">
             {formatCurrency(expense.amount, currency)}
           </p>
-          <div className="flex items-center justify-end gap-1 text-sm text-slate-500">
+          <div className="flex items-center justify-end gap-1 text-sm text-slate-600">
             <Users size={20} aria-hidden="true" />
             <span>{expense.participantCount}</span>
           </div>

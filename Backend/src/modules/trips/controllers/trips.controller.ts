@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Patch,
+  Delete,
   Body,
   Query,
   Param,
@@ -318,5 +319,90 @@ export class TripsController {
     @Request() req: AuthenticatedRequest,
   ): Promise<TripResponseDto> {
     return this.tripsService.update(id, req.user!.id, updateTripDto);
+  }
+
+  /**
+   * Elimina un participante del viaje.
+   * Un CREATOR puede expulsar a un MEMBER, o un usuario puede abandonar el viaje.
+   *
+   * @method removeParticipant
+   * @param {string} id - ID del viaje
+   * @param {string} userId - ID del usuario a eliminar
+   * @param {AuthenticatedRequest} req - Request con usuario autenticado
+   * @throws {ForbiddenException} Si un MEMBER intenta expulsar a otro o el CREATOR intenta abandonar.
+   * @throws {BadRequestException} Si el usuario tiene gastos activos.
+   */
+  @Delete(':id/participants/:userId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Eliminar participante de un viaje',
+    description:
+      'Permite a un CREATOR expulsar a un participante, o a un usuario abandonarlo por sí mismo.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID único del viaje (UUID)',
+    type: String,
+  })
+  @ApiParam({
+    name: 'userId',
+    description: 'ID único del usuario a eliminar (UUID)',
+    type: String,
+  })
+  @ApiOkResponse({
+    description: 'Participante eliminado exitosamente',
+  })
+  @ApiForbiddenResponse({
+    description: 'No tienes permisos o el creador intenta abandonar',
+  })
+  @ApiBadRequestResponse({
+    description: 'Usuario involucrado en gastos activos',
+  })
+  @ApiNotFoundResponse({
+    description: 'Viaje o usuario no encontrado',
+  })
+  async removeParticipant(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<void> {
+    return this.tripsService.removeParticipant(id, userId, req.user!.id);
+  }
+
+  /**
+   * Elimina un viaje completo (soft delete en cascada).
+   * Solo el CREATOR original puede ejecutar esta acción extrema.
+   *
+   * @method remove
+   * @param {string} id - ID del viaje a eliminar
+   * @param {AuthenticatedRequest} req - Request con usuario autenticado
+   * @throws {ForbiddenException} si un MEMBER intenta eliminar el viaje
+   */
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Eliminar viaje completo',
+    description:
+      'Elimina el viaje, todos sus miembros, los gastos asociados y las deudas. Solo el CREATOR puede borrarlo.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID único del viaje (UUID)',
+    type: String,
+  })
+  @ApiOkResponse({
+    description: 'Viaje y datos asociados eliminados exitosamente',
+  })
+  @ApiForbiddenResponse({
+    description: 'Solo el creador puede eliminar el viaje completo',
+  })
+  @ApiNotFoundResponse({
+    description: 'Viaje no encontrado',
+  })
+  async remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<void> {
+    return this.tripsService.remove(id, req.user!.id);
   }
 }

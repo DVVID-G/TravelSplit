@@ -51,7 +51,7 @@ interface HeaderProps {
  *
  * UX/UI: Muestra diferentes acciones según el estado de autenticación:
  * - No autenticado: Botón "Iniciar Sesión"
- * - Autenticado: Nombre del usuario y botón "Cerrar Sesión"
+ * - Autenticado: Nombre del usuario y botón "Cerrar sesión"
  */
 export const Header = ({
   showActions = true,
@@ -90,7 +90,7 @@ export const Header = ({
       )}
       {user && <span className="text-slate-700 text-sm font-medium">{user.nombre}</span>}
       <Button variant="secondary" size="sm" onClick={handleLogout}>
-        Cerrar Sesión
+        Cerrar sesión
       </Button>
     </nav>
   ) : (

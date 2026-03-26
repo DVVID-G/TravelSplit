@@ -8,7 +8,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull, In } from 'typeorm';
+import { Repository, IsNull, In, DataSource } from 'typeorm';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { isUUID } from 'class-validator';
@@ -16,6 +16,7 @@ import { Trip } from '../entities/trip.entity';
 import { TripParticipant } from '../entities/trip-participant.entity';
 import { User } from '../../users/entities/user.entity';
 import { Expense } from '../../expenses/entities/expense.entity';
+import { ExpenseSplit } from '../../expenses/entities/expense-split.entity';
 import { CreateTripDto } from '../dto/create-trip.dto';
 import { UpdateTripDto } from '../dto/update-trip.dto';
 import { TripResponseDto } from '../dto/trip-response.dto';
@@ -46,6 +47,7 @@ export class TripsService {
     private readonly expenseRepository: Repository<Expense>,
     @Inject(CACHE_MANAGER)
     private readonly cacheManager: Cache,
+    private readonly dataSource: DataSource,
   ) {}
 
   /**
@@ -714,6 +716,175 @@ export class TripsService {
       this.logger.debug(`Cache invalidated for key ${key}`);
     } catch (error) {
       this.logger.error(`Error al invalidar caché del viaje ${tripId}:`, error);
+    }
+  }
+
+  /**
+   * Permite eliminar un participante de un viaje (expulsar o abandonar).
+   * @param tripId - ID del viaje
+   * @param targetUserId - ID del usuario a eliminar
+   * @param requesterUserId - ID del usuario solicitando la acción
+   * @throws BadRequestException si tiene gastos o UUID inválido
+   * @throws ForbiddenException por roles
+   */
+  async removeParticipant(
+    tripId: string,
+    targetUserId: string,
+    requesterUserId: string,
+  ): Promise<void> {
+    if (!isUUID(tripId) || !isUUID(targetUserId)) {
+      throw new BadRequestException('ID de viaje o usuario inválido');
+    }
+
+    const trip = await this.tripRepository.findOne({
+      where: { id: tripId, deletedAt: IsNull() },
+    });
+    if (!trip) throw new NotFoundException('Viaje no encontrado');
+
+    const requester = await this.tripParticipantRepository.findOne({
+      where: { tripId, userId: requesterUserId, deletedAt: IsNull() },
+    });
+    if (!requester)
+      throw new ForbiddenException('No tienes acceso a este viaje');
+
+    const target = await this.tripParticipantRepository.findOne({
+      where: { tripId, userId: targetUserId, deletedAt: IsNull() },
+    });
+    if (!target)
+      throw new NotFoundException('El usuario no es participante del viaje');
+
+    // Role validation
+    const isSelfLeaving = targetUserId === requesterUserId;
+    if (!isSelfLeaving && requester.role !== ParticipantRole.CREATOR) {
+      throw new ForbiddenException(
+        'Solo el creador del viaje puede expulsar participantes',
+      );
+    }
+    if (isSelfLeaving && target.role === ParticipantRole.CREATOR) {
+      throw new ForbiddenException(
+        'El creador no puede abandonar el viaje directamente. Debe eliminar el viaje.',
+      );
+    }
+
+    // Financial involvement check
+    const expensesAsPayer = await this.expenseRepository.count({
+      where: { tripId, payerId: targetUserId, deletedAt: IsNull() },
+    });
+
+    // Check if target is beneficiary
+    const expensesAsBeneficiary = await this.expenseRepository
+      .createQueryBuilder('expense')
+      .innerJoin('expense.splits', 'split')
+      .where('expense.tripId = :tripId', { tripId })
+      .andWhere('split.userId = :targetUserId', { targetUserId })
+      .andWhere('expense.deletedAt IS NULL')
+      .andWhere('split.deletedAt IS NULL')
+      .getCount();
+
+    if (expensesAsPayer > 0 || expensesAsBeneficiary > 0) {
+      throw new BadRequestException(
+        'No se puede eliminar al participante porque tiene movimientos registrados en este viaje. Debe saldar o eliminar sus gastos primero.',
+      );
+    }
+
+    // Soft delete
+    await this.tripParticipantRepository.softDelete(target.id);
+    this.logger.log(
+      `User ${targetUserId} removed from trip ${tripId} by User ${requesterUserId}`,
+    );
+
+    // Invalidate Cache for target and all remaining
+    const remainingParticipants = await this.tripParticipantRepository.find({
+      where: { tripId, deletedAt: IsNull() },
+      select: { userId: true },
+    });
+
+    const idsToInvalidate = [
+      targetUserId,
+      ...remainingParticipants.map((p) => p.userId),
+    ];
+
+    await Promise.all(
+      idsToInvalidate.map((uid) => this.invalidateTripCache(tripId, uid)),
+    );
+  }
+
+  /**
+   * Elimina un viaje completo (soft delete en cascada).
+   * Solo el CREATOR original puede usar este endpoint.
+   *
+   * @param tripId - ID del viaje
+   * @param requesterUserId - ID del usuario autenticado
+   * @throws BadRequestException si el UUID es inválido
+   * @throws ForbiddenException si el usuario no es el CREATOR
+   */
+  async remove(tripId: string, requesterUserId: string): Promise<void> {
+    if (!isUUID(tripId)) {
+      throw new BadRequestException('ID de viaje inválido');
+    }
+
+    const trip = await this.tripRepository.findOne({
+      where: { id: tripId, deletedAt: IsNull() },
+    });
+    if (!trip) throw new NotFoundException('Viaje no encontrado');
+
+    const requester = await this.tripParticipantRepository.findOne({
+      where: { tripId, userId: requesterUserId, deletedAt: IsNull() },
+    });
+
+    if (!requester || requester.role !== ParticipantRole.CREATOR) {
+      throw new ForbiddenException(
+        'Solo el creador puede eliminar el viaje completo',
+      );
+    }
+
+    const query_runner = this.dataSource.createQueryRunner();
+    await query_runner.connect();
+    await query_runner.startTransaction();
+
+    try {
+      // 1. Soft Delete Expense Splits
+      const expenses = await query_runner.manager.find(Expense, {
+        where: { tripId, deletedAt: IsNull() },
+        relations: ['splits'],
+      });
+
+      const allSplits = expenses.flatMap((e: Expense) => e.splits || []);
+      if (allSplits.length > 0) {
+        await query_runner.manager.softRemove(ExpenseSplit, allSplits);
+      }
+
+      // 2. Soft Delete Expenses
+      if (expenses.length > 0) {
+        await query_runner.manager.softRemove(Expense, expenses);
+      }
+
+      // 3. Soft Delete TripParticipants
+      const participants = await query_runner.manager.find(TripParticipant, {
+        where: { tripId, deletedAt: IsNull() },
+      });
+      if (participants.length > 0) {
+        await query_runner.manager.softRemove(TripParticipant, participants);
+      }
+
+      // 4. Soft Delete Trip
+      await query_runner.manager.softRemove(Trip, trip);
+
+      await query_runner.commitTransaction();
+      this.logger.log(
+        `Trip ${tripId} completely deleted by user ${requesterUserId}`,
+      );
+
+      // Invalidate cache for all participants
+      await Promise.all(
+        participants.map((p) => this.invalidateTripCache(tripId, p.userId)),
+      );
+    } catch (error) {
+      await query_runner.rollbackTransaction();
+      this.logger.error(`Failed to delete trip ${tripId}`, error);
+      throw new BadRequestException('Error al eliminar el viaje completo');
+    } finally {
+      await query_runner.release();
     }
   }
 }

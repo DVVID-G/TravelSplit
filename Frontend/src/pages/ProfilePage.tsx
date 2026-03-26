@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+﻿import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
@@ -125,7 +125,7 @@ export const ProfilePage = () => {
     <div className="min-h-screen bg-slate-50 flex flex-col pb-24">
       <Header title="Perfil" showBackButton={false} />
 
-      <main className="flex-1 max-w-md mx-auto w-full px-6 py-8">
+      <main className="flex-1 max-w-md md:max-w-2xl mx-auto w-full px-6 py-8">
         <div className="space-y-6">
           {/* Identity card */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -138,7 +138,7 @@ export const ProfilePage = () => {
               </div>
               <div className="text-center">
                 <p className="text-lg font-heading font-semibold text-slate-900">{user.nombre}</p>
-                <p className="text-sm text-slate-500">{user.email}</p>
+                <p className="text-sm text-slate-600">{user.email}</p>
               </div>
             </div>
           </div>

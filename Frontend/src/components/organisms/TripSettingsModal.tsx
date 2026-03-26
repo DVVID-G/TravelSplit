@@ -292,7 +292,7 @@ export function TripSettingsModal({
                 <label className="text-sm font-medium text-slate-900 mb-1 block">
                   Estado del viaje
                 </label>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-600">
                   {status === 'ACTIVE'
                     ? 'El viaje está activo y permite agregar gastos'
                     : 'El viaje está cerrado y no permite agregar nuevos gastos'}
@@ -362,11 +362,11 @@ export function TripSettingsModal({
           {/* Read-only fields */}
           <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-4">
             <div>
-              <label className="text-xs font-medium text-slate-500">Moneda</label>
+              <label className="text-xs font-medium text-slate-600">Moneda</label>
               <p className="text-sm font-medium text-slate-900">{trip.currency || 'COP'}</p>
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-500">Código</label>
+              <label className="text-xs font-medium text-slate-600">Código</label>
               <p className="text-sm font-medium text-slate-900 font-mono">{trip.code}</p>
             </div>
           </div>
@@ -404,10 +404,8 @@ export function TripSettingsModal({
                   <Loader2 size={16} className="mr-2 animate-spin flex-shrink-0" />
                   Guardando...
                 </>
-              ) : hasChanges ? (
-                'Guardar cambios'
               ) : (
-                'Sin cambios'
+                'Guardar cambios'
               )}
             </Button>
           </div>

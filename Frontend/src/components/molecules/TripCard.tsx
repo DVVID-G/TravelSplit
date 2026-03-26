@@ -1,4 +1,4 @@
-import { Map as MapIcon, Users as UsersIcon, Calendar as CalendarIcon } from 'lucide-react';
+﻿import { Map as MapIcon, Users as UsersIcon, Calendar as CalendarIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { TripResponse, TripListItem, TripCurrency } from '@/types/trip.types';
 import { formatRelativeDate } from '@/utils/date';
@@ -61,12 +61,12 @@ export const TripCard = ({ trip, onClick, isLoading = false }: TripCardProps) =>
   const cardContent = (
     <div className="bg-white rounded-xl p-6 shadow-md active:scale-[0.98] transition-transform focus-visible:outline-2 focus-visible:outline-violet-600 focus-visible:outline-offset-2">
       <div className="flex items-start gap-3 mb-4">
-        <MapIcon className="w-5 h-5 text-slate-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
+        <MapIcon className="w-5 h-5 text-slate-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
         <h3 className="text-lg font-heading font-semibold text-slate-900 flex-1">{trip.name}</h3>
       </div>
 
       <div className="space-y-2">
-        <div className="flex items-center gap-2 text-sm text-slate-500">
+        <div className="flex items-center gap-2 text-sm text-slate-600">
           <UsersIcon className="w-4 h-4" aria-hidden="true" />
           <span>
             {participantCount} {participantCount === 1 ? 'participante' : 'participantes'}
@@ -77,10 +77,10 @@ export const TripCard = ({ trip, onClick, isLoading = false }: TripCardProps) =>
           <span className="font-semibold text-slate-900">
             {formatCurrency(totalAmount, trip_currency)}
           </span>
-          <span className="text-xs text-slate-500">({trip_currency})</span>
+          <span className="text-xs text-slate-600">({trip_currency})</span>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-slate-500">
+        <div className="flex items-center gap-2 text-sm text-slate-600">
           <CalendarIcon className="w-4 h-4" aria-hidden="true" />
           <span>{formatRelativeDate(trip.createdAt)}</span>
         </div>

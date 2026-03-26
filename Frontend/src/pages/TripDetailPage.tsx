@@ -1,7 +1,7 @@
-import { useParams, useNavigate } from 'react-router-dom';
+﻿import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Users, Calendar, DollarSign, Settings, Crown, User, Receipt } from 'lucide-react';
-import { Header } from '@/components';
+import { Users, Calendar, DollarSign, Settings, Crown, User, Receipt, Copy } from 'lucide-react';
+import { Header, Toast } from '@/components';
 import { ErrorState } from '@/components/molecules/ErrorState';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { ExpenseCard } from '@/components/molecules/ExpenseCard';
@@ -27,7 +27,7 @@ type StatCardProps = {
 
 const StatCard = ({ label, value }: StatCardProps) => (
   <div className="rounded-lg border border-slate-200 p-4 bg-white shadow-sm">
-    <p className="text-xs text-slate-500 mb-1">{label}</p>
+    <p className="text-xs text-slate-600 mb-1">{label}</p>
     <p className="text-lg font-semibold text-slate-900">{value}</p>
   </div>
 );
@@ -97,6 +97,18 @@ export function TripDetailPage() {
   const [expenses_page, set_expenses_page] = useState(1);
   const [all_expenses, set_all_expenses] = useState<ExpenseListItem[]>([]);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [showCopyToast, setShowCopyToast] = useState(false);
+
+  const handleCopyCode = async () => {
+    if (trip?.code) {
+      try {
+        await navigator.clipboard.writeText(trip.code);
+        setShowCopyToast(true);
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+      }
+    }
+  };
 
   const {
     trip,
@@ -228,13 +240,26 @@ export function TripDetailPage() {
       <Header title={trip.name} showBackButton={true} onBack={() => navigate('/trips')} />
 
       <main className="flex-1 px-6 py-8">
-        <div className="max-w-md mx-auto space-y-6">
+        <div className="max-w-md md:max-w-2xl mx-auto space-y-6">
           {/* Trip Info Card */}
           <div className="bg-white rounded-xl p-6 shadow-md space-y-6">
             <div className="flex items-start justify-between">
               <div className="space-y-2">
                 <h2 className="text-2xl font-heading font-bold text-slate-900">{trip.name}</h2>
-                <p className="text-sm text-slate-500">Código: {trip.code}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-slate-600">
+                    Código: <span className="font-semibold text-slate-700">{trip.code}</span>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleCopyCode}
+                    className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+                    aria-label="Copiar código"
+                    title="Copiar código al portapapeles"
+                  >
+                    <Copy size={16} />
+                  </button>
+                </div>
               </div>
               {trip.userRole === 'CREATOR' && (
                 <button
@@ -255,7 +280,7 @@ export function TripDetailPage() {
                   <Users className="w-5 h-5 text-violet-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Participantes</p>
+                  <p className="text-xs text-slate-600">Participantes</p>
                   <p className="text-lg font-semibold text-slate-900">{participantCount}</p>
                 </div>
               </div>
@@ -265,16 +290,16 @@ export function TripDetailPage() {
                   <DollarSign className="w-5 h-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Total gastado</p>
+                  <p className="text-xs text-slate-600">Total gastado</p>
                   <p className="text-lg font-semibold text-slate-900">
                     {formatCurrency(totalAmount, trip_currency)}
-                    <span className="text-xs text-slate-500 ml-1">({trip_currency})</span>
+                    <span className="text-xs text-slate-600 ml-1">({trip_currency})</span>
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-sm text-slate-500 border-t border-slate-200 pt-6">
+            <div className="flex items-center gap-2 text-sm text-slate-600 border-t border-slate-200 pt-6">
               <Calendar className="w-4 h-4" />
               <span>Creado {createdDate}</span>
             </div>
@@ -295,7 +320,7 @@ export function TripDetailPage() {
 
         {/* Tabs - Sticky with max-w-md for consistency */}
         <div className="sticky top-16 z-30 bg-slate-50">
-          <div className="max-w-md mx-auto bg-white rounded-t-xl border-b border-slate-200 shadow-sm">
+          <div className="max-w-md md:max-w-2xl mx-auto bg-white rounded-t-xl border-b border-slate-200 shadow-sm">
             <nav role="tablist" className="flex px-6">
               {[
                 { key: 'gastos', label: 'Gastos' },
@@ -313,7 +338,7 @@ export function TripDetailPage() {
                   className={`flex-1 px-3 py-3 text-sm font-medium transition-all duration-200 focus-visible:outline-2 focus-visible:outline-violet-600 focus-visible:outline-offset-2 ${
                     activeTab === tab.key
                       ? 'text-violet-600 font-semibold border-b-2 border-violet-600'
-                      : 'text-slate-500 hover:text-slate-700'
+                      : 'text-slate-600 hover:text-slate-700'
                   }`}
                 >
                   {tab.label}
@@ -325,7 +350,7 @@ export function TripDetailPage() {
 
         {/* Expenses Section */}
         {activeTab === 'gastos' && (
-          <div className="max-w-md mx-auto space-y-6">
+          <div className="max-w-md md:max-w-2xl mx-auto space-y-6">
             <section
               role="tabpanel"
               id="gastos-panel"
@@ -409,7 +434,7 @@ export function TripDetailPage() {
 
                   {/* Total count info */}
                   {expenses_meta.total > 0 && (
-                    <p className="mt-6 pt-4 border-t border-slate-200 text-center text-sm text-slate-500">
+                    <p className="mt-6 pt-4 border-t border-slate-200 text-center text-sm text-slate-600">
                       Mostrando {all_expenses.length} de {expenses_meta.total} gastos
                     </p>
                   )}
@@ -421,7 +446,7 @@ export function TripDetailPage() {
 
         {/* Statistics Section */}
         {activeTab === 'saldos' && (
-          <div className="max-w-md mx-auto space-y-6">
+          <div className="max-w-md md:max-w-2xl mx-auto space-y-6">
             <section
               role="tabpanel"
               id="saldos-panel"
@@ -501,7 +526,7 @@ export function TripDetailPage() {
                     </div>
                   </>
                 ) : (
-                  <p className="text-sm text-slate-500">Sin datos de saldo disponibles.</p>
+                  <p className="text-sm text-slate-600">Sin datos de saldo disponibles.</p>
                 )}
               </div>
 
@@ -546,7 +571,7 @@ export function TripDetailPage() {
                   <h3 className="text-lg font-heading font-semibold text-slate-900">
                     Saldos Simplificados
                   </h3>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-slate-600">
                     Transacciones necesarias para equilibrar todas las cuentas
                   </p>
                   {settledLoading ? (
@@ -594,7 +619,7 @@ export function TripDetailPage() {
 
         {/* Participants Section */}
         {activeTab === 'participantes' && (
-          <div className="max-w-md mx-auto space-y-6">
+          <div className="max-w-md md:max-w-2xl mx-auto space-y-6">
             <section
               role="tabpanel"
               id="participantes-panel"
@@ -618,47 +643,53 @@ export function TripDetailPage() {
                   }
                   action={
                     trip.userRole === 'CREATOR' ? (
-                      <Button
-                        onClick={() => {
-                          /* TODO: Open invite modal */
-                        }}
-                      >
-                        Invitar Participante
-                      </Button>
+                      <Button onClick={handleCopyCode}>Copiar Código de Invitación</Button>
                     ) : undefined
                   }
                 />
               ) : (
-                <ul className="space-y-3">
-                  {participants.map((participant: TripParticipantDetail) => (
-                    <li
-                      key={participant.id}
-                      className="flex items-center justify-between rounded-lg border border-slate-200 p-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
-                          <User className="w-5 h-5 text-slate-500" aria-hidden="true" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">
-                            {participant.user?.nombre || participant.user?.email}
-                          </p>
-                          <p className="text-xs text-slate-500">{participant.user?.email}</p>
-                        </div>
-                      </div>
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                          participant.role === 'CREATOR'
-                            ? 'bg-amber-100 text-amber-800'
-                            : 'bg-slate-100 text-slate-700'
-                        }`}
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm font-medium text-slate-700">
+                      Miembros ({participantCount})
+                    </p>
+                    {trip.userRole === 'CREATOR' && (
+                      <Button size="sm" variant="secondary" onClick={handleCopyCode}>
+                        + Invitar
+                      </Button>
+                    )}
+                  </div>
+                  <ul className="space-y-3">
+                    {participants.map((participant: TripParticipantDetail) => (
+                      <li
+                        key={participant.id}
+                        className="flex items-center justify-between rounded-lg border border-slate-200 p-3"
                       >
-                        {participant.role === 'CREATOR' ? <Crown size={14} /> : null}
-                        {participant.role === 'CREATOR' ? 'Creador' : 'Miembro'}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                            <User className="w-5 h-5 text-slate-600" aria-hidden="true" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900">
+                              {participant.user?.nombre || participant.user?.email}
+                            </p>
+                            <p className="text-xs text-slate-600">{participant.user?.email}</p>
+                          </div>
+                        </div>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                            participant.role === 'CREATOR'
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-slate-100 text-slate-700'
+                          }`}
+                        >
+                          {participant.role === 'CREATOR' ? <Crown size={14} /> : null}
+                          {participant.role === 'CREATOR' ? 'Creador' : 'Miembro'}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
               )}
             </section>
           </div>
@@ -674,6 +705,13 @@ export function TripDetailPage() {
           onSuccess={handleSettingsSuccess}
         />
       )}
+
+      <Toast
+        message="Código copiado al portapapeles"
+        type="success"
+        isVisible={showCopyToast}
+        onClose={() => setShowCopyToast(false)}
+      />
     </div>
   );
 }
