@@ -18,11 +18,11 @@ export const BottomTabBar = () => {
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-lg">
       <div className="max-w-md mx-auto">
         {/* Grid with 3 equal columns for symmetric distribution */}
-        <div className="grid grid-cols-3 items-center h-16 px-2">
+        <div className="grid grid-cols-3 h-16 px-2">
           {/* Home - Column 1 */}
           <Link
             to="/"
-            className={`flex flex-col items-center justify-center gap-1 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2 rounded-lg p-1 ${
+            className={`flex h-full w-full flex-col items-center justify-center gap-1 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2 rounded-lg ${
               isActive('/') ? 'text-violet-600' : 'text-slate-400'
             }`}
           >
@@ -33,7 +33,7 @@ export const BottomTabBar = () => {
           {/* Mis Viajes - Column 2 */}
           <Link
             to="/trips"
-            className={`flex flex-col items-center justify-center gap-1 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2 rounded-lg p-1 ${
+            className={`flex h-full w-full flex-col items-center justify-center gap-1 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2 rounded-lg ${
               isActive('/trips') ? 'text-violet-600' : 'text-slate-400'
             }`}
           >
@@ -44,7 +44,7 @@ export const BottomTabBar = () => {
           {/* Perfil - Column 3 */}
           <Link
             to="/profile"
-            className={`flex flex-col items-center justify-center gap-1 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2 rounded-lg p-1 ${
+            className={`flex h-full w-full flex-col items-center justify-center gap-1 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2 rounded-lg ${
               isActive('/profile') ? 'text-violet-600' : 'text-slate-400'
             }`}
           >

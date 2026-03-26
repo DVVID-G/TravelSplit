@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Users, Calendar, DollarSign, Settings, Crown, User, Receipt } from 'lucide-react';
-import { Header } from '@/components';
+import { Users, Calendar, DollarSign, Settings, Crown, User, Receipt, Copy } from 'lucide-react';
+import { Header, Toast } from '@/components';
 import { ErrorState } from '@/components/molecules/ErrorState';
 import { EmptyState } from '@/components/molecules/EmptyState';
 import { ExpenseCard } from '@/components/molecules/ExpenseCard';
@@ -97,6 +97,18 @@ export function TripDetailPage() {
   const [expenses_page, set_expenses_page] = useState(1);
   const [all_expenses, set_all_expenses] = useState<ExpenseListItem[]>([]);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [showCopyToast, setShowCopyToast] = useState(false);
+
+  const handleCopyCode = async () => {
+    if (trip?.code) {
+      try {
+        await navigator.clipboard.writeText(trip.code);
+        setShowCopyToast(true);
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+      }
+    }
+  };
 
   const {
     trip,
@@ -234,7 +246,20 @@ export function TripDetailPage() {
             <div className="flex items-start justify-between">
               <div className="space-y-2">
                 <h2 className="text-2xl font-heading font-bold text-slate-900">{trip.name}</h2>
-                <p className="text-sm text-slate-500">Código: {trip.code}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-slate-500">
+                    Código: <span className="font-semibold text-slate-700">{trip.code}</span>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleCopyCode}
+                    className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+                    aria-label="Copiar código"
+                    title="Copiar código al portapapeles"
+                  >
+                    <Copy size={16} />
+                  </button>
+                </div>
               </div>
               {trip.userRole === 'CREATOR' && (
                 <button
@@ -619,18 +644,27 @@ export function TripDetailPage() {
                   action={
                     trip.userRole === 'CREATOR' ? (
                       <Button
-                        onClick={() => {
-                          /* TODO: Open invite modal */
-                        }}
+                        onClick={handleCopyCode}
                       >
-                        Invitar Participante
+                        Copiar Código de Invitación
                       </Button>
                     ) : undefined
                   }
                 />
               ) : (
-                <ul className="space-y-3">
-                  {participants.map((participant: TripParticipantDetail) => (
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm font-medium text-slate-700">
+                      Miembros ({participantCount})
+                    </p>
+                    {trip.userRole === 'CREATOR' && (
+                      <Button size="sm" variant="secondary" onClick={handleCopyCode}>
+                        + Invitar
+                      </Button>
+                    )}
+                  </div>
+                  <ul className="space-y-3">
+                    {participants.map((participant: TripParticipantDetail) => (
                     <li
                       key={participant.id}
                       className="flex items-center justify-between rounded-lg border border-slate-200 p-3"
@@ -658,7 +692,8 @@ export function TripDetailPage() {
                       </span>
                     </li>
                   ))}
-                </ul>
+                  </ul>
+                </>
               )}
             </section>
           </div>
@@ -674,6 +709,13 @@ export function TripDetailPage() {
           onSuccess={handleSettingsSuccess}
         />
       )}
+      
+      <Toast 
+        message="Código copiado al portapapeles" 
+        type="success" 
+        isVisible={showCopyToast} 
+        onClose={() => setShowCopyToast(false)} 
+      />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Search, UserCheck, UserX, X } from 'lucide-react';
-import { Header } from '@/components';
+import { Header, Toast } from '@/components';
 import { createTripSchema } from '@/schemas/trip.schema';
 
 /** Form input type (currency optional before default is applied). */
@@ -59,6 +59,10 @@ export function CreateTripPage() {
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
   const [isSearching, setIsSearching] = useState(false);
 
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error'>('success');
+
   // Participants state - Creator is added by default
   const [participants, setParticipants] = useState<Participant[]>([]);
 
@@ -98,10 +102,13 @@ export function CreateTripPage() {
   const mutation = useMutation({
     mutationFn: createTrip,
     onSuccess: () => {
-      // Invalidate trips query to refetch updated list
+      setToastType('success');
+      setToastMessage('Viaje creado exitosamente');
+      setShowToast(true);
       queryClient.invalidateQueries({ queryKey: ['user-trips'] });
-      // Navigate back to trips list
-      navigate('/trips');
+      setTimeout(() => {
+        navigate('/trips');
+      }, 1500);
     },
     onError: (error: ApiError) => {
       // Display user-friendly error message
@@ -381,6 +388,12 @@ export function CreateTripPage() {
           </form>
         </div>
       </main>
+      <Toast 
+        message={toastMessage} 
+        type={toastType} 
+        isVisible={showToast} 
+        onClose={() => setShowToast(false)} 
+      />
     </div>
   );
 }

@@ -19,6 +19,7 @@ import { ExpenseListQueryDto } from '../dto/expense-list-query.dto';
 import { ExpenseListResponseDto } from '../dto/expense-list-response.dto';
 import { ExpenseCategoryResponseDto } from '../dto/expense-category-response.dto';
 import { TripStatus } from '../../trips/enums/trip-status.enum';
+import { ParticipantRole } from '../../trips/enums/participant-role.enum';
 
 /**
  * Service for Expenses.
@@ -486,6 +487,88 @@ export class ExpensesService {
 
     // Map and return
     return this.mapToResponseDto(expense);
+  }
+
+  /**
+   * Deletes a specific expense for a trip.
+   * Only the payer of the expense OR the trip CREATOR can delete it.
+   * The trip must be active.
+   *
+   * @param trip_id - ID of the trip
+   * @param expense_id - ID of the expense
+   * @param user_id - ID of the user requesting deletion
+   * @throws BadRequestException if UUIDs are invalid
+   * @throws ForbiddenException if user lacks role permissions
+   * @throws NotFoundException if trip/expense doesn't exist
+   */
+  async remove(
+    trip_id: string,
+    expense_id: string,
+    user_id: string,
+  ): Promise<void> {
+    if (!isUUID(trip_id) || !isUUID(expense_id)) {
+      throw new BadRequestException('ID de viaje o gasto inválido');
+    }
+
+    // Verify trip exists and is active (cannot delete expenses in closed trips)
+    await this.verifyTripExistsAndActive(trip_id);
+
+    // Verify user is participant and get their role
+    const participant = await this.tripParticipantRepository.findOne({
+      where: {
+        tripId: trip_id,
+        userId: user_id,
+        deletedAt: IsNull(),
+      },
+    });
+
+    if (!participant) {
+      this.logger.warn(`Removal denied: User ${user_id} is not in trip ${trip_id}`);
+      throw new ForbiddenException('No eres participante de este viaje');
+    }
+
+    // Find expense with splits
+    const expense = await this.expenseRepository.findOne({
+      where: {
+        id: expense_id,
+        tripId: trip_id,
+        deletedAt: IsNull(),
+      },
+      relations: ['splits'],
+    });
+
+    if (!expense) {
+      throw new NotFoundException('El gasto no existe o no pertenece a este viaje');
+    }
+
+    // Role Check: User must be payer OR CREATOR
+    if (expense.payerId !== user_id && participant.role !== ParticipantRole.CREATOR) {
+      this.logger.warn(`Removal denied: User ${user_id} is not payer or CREATOR for expense ${expense_id}`);
+      throw new ForbiddenException(
+        'Solo el pagador del gasto o el administrador del viaje pueden eliminarlo',
+      );
+    }
+
+    // Use transaction for consistency in soft deleting the expense and splits
+    const query_runner = this.dataSource.createQueryRunner();
+    await query_runner.connect();
+    await query_runner.startTransaction();
+
+    try {
+      if (expense.splits && expense.splits.length > 0) {
+        await query_runner.manager.softRemove(ExpenseSplit, expense.splits);
+      }
+      await query_runner.manager.softRemove(Expense, expense);
+
+      await query_runner.commitTransaction();
+      this.logger.log(`User ${user_id} successfully deleted expense ${expense_id}`);
+    } catch (error) {
+      await query_runner.rollbackTransaction();
+      this.logger.error(`Failed to delete expense: ${expense_id}`, error);
+      throw new BadRequestException('Error al eliminar el gasto');
+    } finally {
+      await query_runner.release();
+    }
   }
 
   /**

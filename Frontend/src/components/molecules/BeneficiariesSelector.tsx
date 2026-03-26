@@ -29,10 +29,8 @@ export const BeneficiariesSelector = ({
   onInviteByEmail,
   error,
 }: BeneficiariesSelectorProps) => {
-  // Filter out the payer from beneficiaries list
-  const availableBeneficiaries = selectedPayerId
-    ? participants.filter(p => p.user_id !== selectedPayerId)
-    : participants;
+  // Allow payer to be a beneficiary
+  const availableBeneficiaries = participants;
 
   return (
     <div className="w-full">
@@ -67,7 +65,7 @@ export const BeneficiariesSelector = ({
       <div className="space-y-2 max-h-48 overflow-y-auto">
         {availableBeneficiaries.length === 0 ? (
           <p className="text-sm text-slate-500 text-center py-4">
-            No hay otros participantes disponibles. El pagador no puede ser beneficiario.
+            No hay participantes disponibles en este viaje.
           </p>
         ) : (
           availableBeneficiaries.map(participant => {

@@ -3,8 +3,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
+import { useState } from 'react';
 import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms/Button';
+import { Toast } from '@/components';
 import { registerUser, type RegisterRequest } from '@/services/auth.service';
 import type { ApiError } from '@/types/api.types';
 
@@ -26,6 +28,9 @@ type RegisterFormData = z.infer<typeof registerSchema>;
  */
 export const RegisterPage = () => {
   const navigate = useNavigate();
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error'>('success');
 
   const {
     register,
@@ -39,8 +44,12 @@ export const RegisterPage = () => {
   const mutation = useMutation({
     mutationFn: (data: RegisterRequest) => registerUser(data),
     onSuccess: () => {
-      // Redirect to login after successful registration
-      navigate('/login');
+      setToastType('success');
+      setToastMessage('Registro exitoso. Iniciando sesión...');
+      setShowToast(true);
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
     },
     onError: (error: ApiError) => {
       // Handle different error types
@@ -171,6 +180,12 @@ export const RegisterPage = () => {
           </div>
         </div>
       </div>
+      <Toast 
+        message={toastMessage} 
+        type={toastType} 
+        isVisible={showToast} 
+        onClose={() => setShowToast(false)} 
+      />
     </div>
   );
 };
