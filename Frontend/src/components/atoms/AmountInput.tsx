@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+﻿import { forwardRef } from 'react';
 import type { InputHTMLAttributes } from 'react';
 import { parseCurrency, formatCurrency } from '@/utils/currency';
 import type { TripCurrency } from '@/types/trip.types';
@@ -40,7 +40,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     return (
       <div className="w-full">
         <div className="relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-3xl font-medium">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 text-3xl font-medium">
             $
           </span>
           <input
@@ -66,3 +66,4 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
 );
 
 AmountInput.displayName = 'AmountInput';
+

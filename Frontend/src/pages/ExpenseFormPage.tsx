@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -67,7 +67,7 @@ export const ExpenseFormPage = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 pb-24">
-        <div className="max-w-md mx-auto px-6 py-8">
+        <div className="max-w-md md:max-w-2xl mx-auto px-6 py-8">
           <Skeleton className="h-8 w-48 mb-6" />
           <Card>
             <div className="space-y-6">
@@ -104,7 +104,7 @@ export const ExpenseFormPage = () => {
             No hay participantes en este viaje. Invita a tus amigos primero.
           </p>
           {!tripId && import.meta.env.DEV && (
-            <p className="text-center text-sm text-slate-500 mt-2">
+            <p className="text-center text-sm text-slate-600 mt-2">
               Nota: Estás en modo desarrollo. El formulario requiere un tripId para funcionar
               completamente.
             </p>
@@ -151,7 +151,7 @@ export const ExpenseFormPage = () => {
         />
       )}
       <div className="min-h-screen bg-slate-50 pb-24">
-        <div className="max-w-md mx-auto px-6 py-8">
+        <div className="max-w-md md:max-w-2xl mx-auto px-6 py-8">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-heading font-bold text-slate-900">Nuevo Gasto</h1>
             <DevIndicator isUsingMockData={isUsingMockData} />
@@ -173,3 +173,4 @@ export const ExpenseFormPage = () => {
     </>
   );
 };
+

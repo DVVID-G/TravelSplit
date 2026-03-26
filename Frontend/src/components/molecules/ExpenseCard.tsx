@@ -1,4 +1,4 @@
-import { Utensils, Car, Home, Film, ShoppingBag, Coffee, Users, Calendar } from 'lucide-react';
+﻿import { Utensils, Car, Home, Film, ShoppingBag, Coffee, Users, Calendar } from 'lucide-react';
 import type { ExpenseListItem, TripCurrency } from '@/types/expense.types';
 import { formatCurrency } from '@/utils/currency';
 import { format, parseISO, isValid } from 'date-fns';
@@ -98,7 +98,7 @@ export const ExpenseCard = ({ expense, currency = 'COP', onClick }: ExpenseCardP
           <h4 className="text-base font-semibold text-slate-900 truncate text-left">
             {expense.title}
           </h4>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
             <span className="inline-flex items-center gap-1">
               <span>{expense.category_name}</span>
             </span>
@@ -110,7 +110,7 @@ export const ExpenseCard = ({ expense, currency = 'COP', onClick }: ExpenseCardP
           </div>
           {expense.payer?.nombre && (
             <p className="text-xs text-slate-400">
-              Pagó: <span className="font-medium text-slate-500">{expense.payer.nombre}</span>
+              Pagó: <span className="font-medium text-slate-600">{expense.payer.nombre}</span>
             </p>
           )}
         </div>
@@ -121,7 +121,7 @@ export const ExpenseCard = ({ expense, currency = 'COP', onClick }: ExpenseCardP
             {formatCurrency(expense.amount, currency)}
           </p>
           {beneficiary_count > 0 && (
-            <div className="flex items-center justify-end gap-1.5 text-xs text-slate-500 bg-slate-50 rounded-full px-2 py-1">
+            <div className="flex items-center justify-end gap-1.5 text-xs text-slate-600 bg-slate-50 rounded-full px-2 py-1">
               <Users size={14} aria-hidden="true" />
               <span className="font-medium">{beneficiary_count}</span>
             </div>
@@ -131,3 +131,4 @@ export const ExpenseCard = ({ expense, currency = 'COP', onClick }: ExpenseCardP
     </Container>
   );
 };
+

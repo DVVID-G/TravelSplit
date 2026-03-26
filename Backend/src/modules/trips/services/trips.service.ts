@@ -843,7 +843,7 @@ export class TripsService {
         relations: ['splits'],
       });
 
-      const allSplits = expenses.flatMap((e) => e.splits || []);
+      const allSplits = expenses.flatMap((e: Expense) => e.splits || []);
       if (allSplits.length > 0) {
         await query_runner.manager.softRemove(ExpenseSplit, allSplits);
       }

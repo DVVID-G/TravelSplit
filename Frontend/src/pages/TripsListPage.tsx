@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+﻿import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Map as MapIcon, Plus } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -216,7 +216,7 @@ export function TripsListPage() {
       />
       <main className="flex-1 px-6 py-8">
         {/* Mobile-first: Content centered on desktop to simulate app experience */}
-        <div className="max-w-md mx-auto">
+        <div className="max-w-md md:max-w-2xl mx-auto">
           <div className="space-y-6">
             {/* Join Trip Button */}
             <JoinTripButton
@@ -258,3 +258,4 @@ export function TripsListPage() {
     </div>
   );
 }
+

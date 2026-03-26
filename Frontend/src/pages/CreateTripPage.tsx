@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -230,7 +230,7 @@ export function CreateTripPage() {
       <Header title="Crear Viaje" showBackButton={true} />
 
       <main className="flex-1 px-6 py-8">
-        <div className="max-w-md mx-auto">
+        <div className="max-w-md md:max-w-2xl mx-auto">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Card wrapper */}
             <div className="bg-white rounded-xl p-6 space-y-6">
@@ -256,7 +256,7 @@ export function CreateTripPage() {
 
               {/* Information about code generation */}
               <div className="space-y-2">
-                <p className="text-sm text-slate-500 flex items-center gap-2">
+                <p className="text-sm text-slate-600 flex items-center gap-2">
                   <span className="text-base">ℹ️</span>
                   <span>Se generará un código único para invitar</span>
                 </p>
@@ -312,7 +312,7 @@ export function CreateTripPage() {
                           <p className="text-sm font-medium text-slate-900">
                             {searchResult.exists ? 'Usuario encontrado' : 'Usuario no registrado'}
                           </p>
-                          <p className="text-xs text-slate-500">{searchResult.email}</p>
+                          <p className="text-xs text-slate-600">{searchResult.email}</p>
                         </div>
                       </div>
                       <Button
@@ -397,3 +397,4 @@ export function CreateTripPage() {
     </div>
   );
 }
+

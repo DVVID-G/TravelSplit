@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+﻿import { Link, useLocation } from 'react-router-dom';
 import { Home, Map, User } from 'lucide-react';
 
 /**
@@ -16,7 +16,7 @@ export const BottomTabBar = () => {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-lg">
-      <div className="max-w-md mx-auto">
+      <div className="max-w-md md:max-w-2xl mx-auto">
         {/* Grid with 3 equal columns for symmetric distribution */}
         <div className="grid grid-cols-3 h-16 px-2">
           {/* Home - Column 1 */}
@@ -56,3 +56,4 @@ export const BottomTabBar = () => {
     </nav>
   );
 };
+

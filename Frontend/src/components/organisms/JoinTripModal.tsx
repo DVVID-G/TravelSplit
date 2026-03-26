@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+﻿import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Key, Loader2 } from 'lucide-react';
 import { joinTripByCode } from '@/services/trip.service';
 import type { TripResponse } from '@/types/trip.types';
@@ -185,7 +185,7 @@ export function JoinTripModal({ isOpen, onClose, onSuccess, onError }: JoinTripM
               autoComplete="off"
             />
             <p
-              className={`mt-2 text-xs ${code.length === 8 ? 'text-violet-600' : 'text-slate-500'}`}
+              className={`mt-2 text-xs ${code.length === 8 ? 'text-violet-600' : 'text-slate-600'}`}
             >
               {code.length > 0
                 ? `${code.length}/8 caracteres`
@@ -230,3 +230,4 @@ export function JoinTripModal({ isOpen, onClose, onSuccess, onError }: JoinTripM
     </div>
   );
 }
+

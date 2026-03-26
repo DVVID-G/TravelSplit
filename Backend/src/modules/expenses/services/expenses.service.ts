@@ -145,7 +145,7 @@ export class ExpensesService {
       where: { isActive: true },
       order: { name: 'ASC' },
     });
-    return categories.map((c) => ({
+    return categories.map((c: ExpenseCategory) => ({
       id: c.id,
       name: c.name,
       icon: c.icon,
@@ -173,7 +173,7 @@ export class ExpensesService {
       select: ['userId'],
     });
 
-    const participant_user_ids = new Set(participants.map((p) => p.userId));
+    const participant_user_ids = new Set(participants.map((p: TripParticipant) => p.userId));
 
     const invalid_user_ids = user_ids.filter(
       (id) => !participant_user_ids.has(id),
@@ -403,7 +403,7 @@ export class ExpensesService {
     const expenses = await query_builder.getMany();
 
     // Map expenses to DTOs
-    const expense_dtos = expenses.map((expense) =>
+    const expense_dtos = expenses.map((expense: Expense) =>
       this.mapToResponseDto(expense),
     );
 

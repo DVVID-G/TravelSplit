@@ -1,4 +1,4 @@
-import { User } from 'lucide-react';
+﻿import { User } from 'lucide-react';
 import type { ParticipantBalance, TripCurrency } from '@/types/balance.types';
 import { formatCurrency } from '@/utils/currency';
 
@@ -41,12 +41,12 @@ export const ParticipantBalanceCard = ({
           <div className="flex items-center gap-2 mb-1">
             <h4 className="text-base font-semibold text-slate-900 truncate">{user_name}</h4>
             {isCurrentUser && (
-              <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
                 Tú
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-500 truncate">{participantBalance.user_email}</p>
+          <p className="text-xs text-slate-600 truncate">{participantBalance.user_email}</p>
         </div>
       </div>
 
@@ -79,3 +79,4 @@ export const ParticipantBalanceCard = ({
     </div>
   );
 };
+

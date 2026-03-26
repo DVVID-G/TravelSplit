@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+﻿import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
@@ -89,12 +89,12 @@ export const RegisterPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md md:max-w-2xl">
         <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
           <h1 className="text-2xl md:text-3xl font-heading font-bold text-slate-900 mb-2">
             Crear cuenta
           </h1>
-          <p className="text-slate-500 mb-6">Regístrate para empezar a dividir gastos</p>
+          <p className="text-slate-600 mb-6">Regístrate para empezar a dividir gastos</p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Input
@@ -189,3 +189,4 @@ export const RegisterPage = () => {
     </div>
   );
 };
+
