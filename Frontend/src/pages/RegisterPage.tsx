@@ -180,13 +180,12 @@ export const RegisterPage = () => {
           </div>
         </div>
       </div>
-      <Toast 
-        message={toastMessage} 
-        type={toastType} 
-        isVisible={showToast} 
-        onClose={() => setShowToast(false)} 
+      <Toast
+        message={toastMessage}
+        type={toastType}
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
       />
     </div>
   );
 };
-

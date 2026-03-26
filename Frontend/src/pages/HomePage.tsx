@@ -401,4 +401,3 @@ export const HomePage = () => {
   // State 3: Authenticated with trips
   return <HomePageWithTrips />;
 };
-

@@ -414,4 +414,3 @@ export function TripSettingsModal({
     </div>
   );
 }
-

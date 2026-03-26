@@ -230,4 +230,3 @@ export function JoinTripModal({ isOpen, onClose, onSuccess, onError }: JoinTripM
     </div>
   );
 }
-

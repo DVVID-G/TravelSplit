@@ -173,7 +173,9 @@ export class ExpensesService {
       select: ['userId'],
     });
 
-    const participant_user_ids = new Set(participants.map((p: TripParticipant) => p.userId));
+    const participant_user_ids = new Set(
+      participants.map((p: TripParticipant) => p.userId),
+    );
 
     const invalid_user_ids = user_ids.filter(
       (id) => !participant_user_ids.has(id),
@@ -523,7 +525,9 @@ export class ExpensesService {
     });
 
     if (!participant) {
-      this.logger.warn(`Removal denied: User ${user_id} is not in trip ${trip_id}`);
+      this.logger.warn(
+        `Removal denied: User ${user_id} is not in trip ${trip_id}`,
+      );
       throw new ForbiddenException('No eres participante de este viaje');
     }
 
@@ -538,12 +542,19 @@ export class ExpensesService {
     });
 
     if (!expense) {
-      throw new NotFoundException('El gasto no existe o no pertenece a este viaje');
+      throw new NotFoundException(
+        'El gasto no existe o no pertenece a este viaje',
+      );
     }
 
     // Role Check: User must be payer OR CREATOR
-    if (expense.payerId !== user_id && participant.role !== ParticipantRole.CREATOR) {
-      this.logger.warn(`Removal denied: User ${user_id} is not payer or CREATOR for expense ${expense_id}`);
+    if (
+      expense.payerId !== user_id &&
+      participant.role !== ParticipantRole.CREATOR
+    ) {
+      this.logger.warn(
+        `Removal denied: User ${user_id} is not payer or CREATOR for expense ${expense_id}`,
+      );
       throw new ForbiddenException(
         'Solo el pagador del gasto o el administrador del viaje pueden eliminarlo',
       );
@@ -561,7 +572,9 @@ export class ExpensesService {
       await query_runner.manager.softRemove(Expense, expense);
 
       await query_runner.commitTransaction();
-      this.logger.log(`User ${user_id} successfully deleted expense ${expense_id}`);
+      this.logger.log(
+        `User ${user_id} successfully deleted expense ${expense_id}`,
+      );
     } catch (error) {
       await query_runner.rollbackTransaction();
       this.logger.error(`Failed to delete expense: ${expense_id}`, error);

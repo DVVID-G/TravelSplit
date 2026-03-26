@@ -643,11 +643,7 @@ export function TripDetailPage() {
                   }
                   action={
                     trip.userRole === 'CREATOR' ? (
-                      <Button
-                        onClick={handleCopyCode}
-                      >
-                        Copiar Código de Invitación
-                      </Button>
+                      <Button onClick={handleCopyCode}>Copiar Código de Invitación</Button>
                     ) : undefined
                   }
                 />
@@ -665,33 +661,33 @@ export function TripDetailPage() {
                   </div>
                   <ul className="space-y-3">
                     {participants.map((participant: TripParticipantDetail) => (
-                    <li
-                      key={participant.id}
-                      className="flex items-center justify-between rounded-lg border border-slate-200 p-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
-                          <User className="w-5 h-5 text-slate-600" aria-hidden="true" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">
-                            {participant.user?.nombre || participant.user?.email}
-                          </p>
-                          <p className="text-xs text-slate-600">{participant.user?.email}</p>
-                        </div>
-                      </div>
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                          participant.role === 'CREATOR'
-                            ? 'bg-amber-100 text-amber-800'
-                            : 'bg-slate-100 text-slate-700'
-                        }`}
+                      <li
+                        key={participant.id}
+                        className="flex items-center justify-between rounded-lg border border-slate-200 p-3"
                       >
-                        {participant.role === 'CREATOR' ? <Crown size={14} /> : null}
-                        {participant.role === 'CREATOR' ? 'Creador' : 'Miembro'}
-                      </span>
-                    </li>
-                  ))}
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                            <User className="w-5 h-5 text-slate-600" aria-hidden="true" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900">
+                              {participant.user?.nombre || participant.user?.email}
+                            </p>
+                            <p className="text-xs text-slate-600">{participant.user?.email}</p>
+                          </div>
+                        </div>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                            participant.role === 'CREATOR'
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-slate-100 text-slate-700'
+                          }`}
+                        >
+                          {participant.role === 'CREATOR' ? <Crown size={14} /> : null}
+                          {participant.role === 'CREATOR' ? 'Creador' : 'Miembro'}
+                        </span>
+                      </li>
+                    ))}
                   </ul>
                 </>
               )}
@@ -709,14 +705,13 @@ export function TripDetailPage() {
           onSuccess={handleSettingsSuccess}
         />
       )}
-      
-      <Toast 
-        message="Código copiado al portapapeles" 
-        type="success" 
-        isVisible={showCopyToast} 
-        onClose={() => setShowCopyToast(false)} 
+
+      <Toast
+        message="Código copiado al portapapeles"
+        type="success"
+        isVisible={showCopyToast}
+        onClose={() => setShowCopyToast(false)}
       />
     </div>
   );
 }
-

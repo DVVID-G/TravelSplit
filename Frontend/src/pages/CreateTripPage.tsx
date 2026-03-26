@@ -388,13 +388,12 @@ export function CreateTripPage() {
           </form>
         </div>
       </main>
-      <Toast 
-        message={toastMessage} 
-        type={toastType} 
-        isVisible={showToast} 
-        onClose={() => setShowToast(false)} 
+      <Toast
+        message={toastMessage}
+        type={toastType}
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
       />
     </div>
   );
 }
-

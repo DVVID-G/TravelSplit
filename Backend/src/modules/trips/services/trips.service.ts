@@ -744,17 +744,21 @@ export class TripsService {
     const requester = await this.tripParticipantRepository.findOne({
       where: { tripId, userId: requesterUserId, deletedAt: IsNull() },
     });
-    if (!requester) throw new ForbiddenException('No tienes acceso a este viaje');
+    if (!requester)
+      throw new ForbiddenException('No tienes acceso a este viaje');
 
     const target = await this.tripParticipantRepository.findOne({
       where: { tripId, userId: targetUserId, deletedAt: IsNull() },
     });
-    if (!target) throw new NotFoundException('El usuario no es participante del viaje');
+    if (!target)
+      throw new NotFoundException('El usuario no es participante del viaje');
 
     // Role validation
     const isSelfLeaving = targetUserId === requesterUserId;
     if (!isSelfLeaving && requester.role !== ParticipantRole.CREATOR) {
-      throw new ForbiddenException('Solo el creador del viaje puede expulsar participantes');
+      throw new ForbiddenException(
+        'Solo el creador del viaje puede expulsar participantes',
+      );
     }
     if (isSelfLeaving && target.role === ParticipantRole.CREATOR) {
       throw new ForbiddenException(
@@ -766,7 +770,7 @@ export class TripsService {
     const expensesAsPayer = await this.expenseRepository.count({
       where: { tripId, payerId: targetUserId, deletedAt: IsNull() },
     });
-    
+
     // Check if target is beneficiary
     const expensesAsBeneficiary = await this.expenseRepository
       .createQueryBuilder('expense')
@@ -794,12 +798,12 @@ export class TripsService {
       where: { tripId, deletedAt: IsNull() },
       select: { userId: true },
     });
-    
+
     const idsToInvalidate = [
       targetUserId,
       ...remainingParticipants.map((p) => p.userId),
     ];
-    
+
     await Promise.all(
       idsToInvalidate.map((uid) => this.invalidateTripCache(tripId, uid)),
     );
@@ -829,7 +833,9 @@ export class TripsService {
     });
 
     if (!requester || requester.role !== ParticipantRole.CREATOR) {
-      throw new ForbiddenException('Solo el creador puede eliminar el viaje completo');
+      throw new ForbiddenException(
+        'Solo el creador puede eliminar el viaje completo',
+      );
     }
 
     const query_runner = this.dataSource.createQueryRunner();
@@ -865,11 +871,13 @@ export class TripsService {
       await query_runner.manager.softRemove(Trip, trip);
 
       await query_runner.commitTransaction();
-      this.logger.log(`Trip ${tripId} completely deleted by user ${requesterUserId}`);
+      this.logger.log(
+        `Trip ${tripId} completely deleted by user ${requesterUserId}`,
+      );
 
       // Invalidate cache for all participants
       await Promise.all(
-        participants.map((p) => this.invalidateTripCache(tripId, p.userId))
+        participants.map((p) => this.invalidateTripCache(tripId, p.userId)),
       );
     } catch (error) {
       await query_runner.rollbackTransaction();

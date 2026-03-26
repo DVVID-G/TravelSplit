@@ -131,4 +131,3 @@ export const ExpenseCard = ({ expense, currency = 'COP', onClick }: ExpenseCardP
     </Container>
   );
 };
-

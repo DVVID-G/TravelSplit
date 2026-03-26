@@ -382,7 +382,8 @@ export class TripsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Eliminar viaje completo',
-    description: 'Elimina el viaje, todos sus miembros, los gastos asociados y las deudas. Solo el CREATOR puede borrarlo.',
+    description:
+      'Elimina el viaje, todos sus miembros, los gastos asociados y las deudas. Solo el CREATOR puede borrarlo.',
   })
   @ApiParam({
     name: 'id',

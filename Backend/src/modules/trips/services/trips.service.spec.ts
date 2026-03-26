@@ -81,7 +81,12 @@ describe('TripsService', () => {
         commitTransaction: jest.fn(),
         rollbackTransaction: jest.fn(),
         release: jest.fn(),
-        manager: { save: jest.fn(), softRemove: jest.fn(), find: jest.fn(), update: jest.fn() },
+        manager: {
+          save: jest.fn(),
+          softRemove: jest.fn(),
+          find: jest.fn(),
+          update: jest.fn(),
+        },
       })),
     }) as unknown as DataSource;
 

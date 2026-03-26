@@ -109,4 +109,3 @@ export const TripCard = ({ trip, onClick, isLoading = false }: TripCardProps) =>
     </Link>
   );
 };
-
